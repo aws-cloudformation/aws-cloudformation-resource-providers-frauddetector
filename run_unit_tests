@@ -1,0 +1,1 @@
+pytest --cov=./ -v --cov-report html --cov-report term-missing

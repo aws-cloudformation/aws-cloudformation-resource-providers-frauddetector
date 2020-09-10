@@ -1,0 +1,5 @@
+{
+  "Name": "cfntestoutcome2",
+  "Description": "outcome for cfn contract tests",
+  "Arn": "testarn"
+}
