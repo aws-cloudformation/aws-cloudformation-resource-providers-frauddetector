@@ -1,0 +1,9 @@
+# configuration for pytest / coverage
+[run]
+omit =
+    */src/*/models.py
+
+[report]
+omit =
+    */src/tests/*
+fail_under = 90.0

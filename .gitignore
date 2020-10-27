@@ -1,0 +1,6 @@
+bin
+
+# pytest generated files
+htmlcov
+.coverage
+assets

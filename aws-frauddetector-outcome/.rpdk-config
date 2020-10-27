@@ -1,0 +1,11 @@
+{
+    "typeName": "AWS::FraudDetector::Outcome",
+    "language": "python37",
+    "runtime": "python3.7",
+    "entrypoint": "aws_frauddetector_outcome.handlers.resource",
+    "testEntrypoint": "aws_frauddetector_outcome.handlers.test_entrypoint",
+    "settings": {
+        "use_docker": true,
+        "protocolVersion": "2.0.0"
+    }
+}
