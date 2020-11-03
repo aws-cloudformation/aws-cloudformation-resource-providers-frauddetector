@@ -1,0 +1,39 @@
+AFD_RP_PACKAGE_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+if [ $# -eq 1 ]
+then
+  DESTINATIONS=("${1}")
+else
+  echo "run this command with a destination as an argument, e.g. ./cfn_copy_common aws-frauddetector-variable"
+  exit 1
+fi
+
+HELPERS_SOURCE_PATH="${AFD_RP_PACKAGE_ROOT}/common/helpers"
+TESTS_SOURCE_PATH="${AFD_RP_PACKAGE_ROOT}/common/tests"
+
+# remove pycache folders if they exist
+rm -rf "${AFD_RP_PACKAGE_ROOT}/common/helpers/__pycache__"
+rm -rf "${AFD_RP_PACKAGE_ROOT}/common/tests/__pycache__"
+rm -rf "${AFD_RP_PACKAGE_ROOT}/common/tests/helpers/__pycache__"
+
+for destination in "${DESTINATIONS[@]}"
+do
+    HELPERS_DESTINATION="${AFD_RP_PACKAGE_ROOT}/${destination}/src/${destination//-/_}"
+    TESTS_DESTINATION="${AFD_RP_PACKAGE_ROOT}/${destination}/src/${destination//-/_}"
+
+    # create resource provider destination directories if they don't exist
+
+    echo "Creating ${HELPERS_DESTINATION} directory if it doesn't exist..."
+    mkdir -p ${HELPERS_DESTINATION}
+
+    echo "Creating ${TESTS_DESTINATION} directory if it doesn't exist..."
+    mkdir -p ${TESTS_DESTINATION}
+
+    # copy common source to resource provider destinations
+
+    echo "Copying ${HELPERS_SOURCE_PATH} to ${HELPERS_DESTINATION}..."
+    cp -a ${HELPERS_SOURCE_PATH} ${HELPERS_DESTINATION}
+
+    echo "Copying ${TESTS_SOURCE_PATH} to ${TESTS_DESTINATION}..."
+    cp -a ${TESTS_SOURCE_PATH} ${TESTS_DESTINATION}
+done

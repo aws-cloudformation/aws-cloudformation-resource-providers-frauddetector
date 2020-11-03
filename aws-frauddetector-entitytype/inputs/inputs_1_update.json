@@ -1,0 +1,10 @@
+{
+  "Name": "cfntestentitytype",
+  "Description": "entitytype for cfn contract tests - updated description",
+  "Tags": [
+    {
+      "Key": "cfncontracttest2",
+      "Value": "1"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "Name": "cfntestentitytype2",
+  "Description": "entitytype for cfn contract tests",
+  "Arn": "testarn",
+  "Tags": [
+    {
+      "Key": "cfncontracttest",
+      "Value": "1"
+    }
+  ]
+}

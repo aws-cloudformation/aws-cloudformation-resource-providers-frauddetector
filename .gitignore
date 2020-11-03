@@ -4,3 +4,7 @@ bin
 htmlcov
 .coverage
 assets
+
+# pycache
+__pycache__/
+*.py[cod]
