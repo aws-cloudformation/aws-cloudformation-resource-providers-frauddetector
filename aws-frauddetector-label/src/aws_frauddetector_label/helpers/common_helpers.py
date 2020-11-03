@@ -4,7 +4,7 @@ from cloudformation_cli_python_lib import (
 )
 from typing import List
 from ..models import Tag
-from . import model_helpers, api_helpers
+from . import model_helpers, api_helpers, validation_helpers
 
 import logging
 
@@ -12,25 +12,25 @@ import logging
 LOG = logging.getLogger(__name__)
 
 
-# Outcomes
+# Labels
 
 
-def put_outcome_and_return_progress(frauddetector_client, model, progress):
+def put_label_and_return_progress(frauddetector_client, model, progress):
     try:
         if hasattr(model, 'Tags'):
             tags = model_helpers.get_tags_from_tag_models(model.Tags)
-            api_helpers.call_put_outcome(frauddetector_client,
-                                         outcome_name=model.Name,
-                                         outcome_tags=tags,
-                                         outcome_description=model.Description)
+            api_helpers.call_put_label(frauddetector_client,
+                                       label_name=model.Name,
+                                       label_tags=tags,
+                                       label_description=model.Description)
         else:
-            api_helpers.call_put_outcome(frauddetector_client,
-                                         outcome_name=model.Name,
-                                         outcome_description=model.Description)
-        progress.resourceModel = model_helpers.get_outcomes_and_return_model_for_outcome(frauddetector_client,
+            api_helpers.call_put_label(frauddetector_client,
+                                       label_name=model.Name,
+                                       label_description=model.Description)
+        progress.resourceModel = model_helpers.get_labels_and_return_model_for_label(frauddetector_client,
                                                                                          model.Name)
         progress.status = OperationStatus.SUCCESS
-        LOG.info(f'just finished a put outcome call: {progress.resourceModel}')
+        LOG.info(f'just finished a put label call: {progress.resourceModel}')
     except RuntimeError as e:
         raise exceptions.InternalFailure(f"Error occurred: {e}")
     return progress

@@ -1,6 +1,6 @@
 {
-  "typeName": "AWS::FraudDetector::Outcome",
-  "description": "An outcome for rule evaluation.",
+  "typeName": "AWS::FraudDetector::Label",
+  "description": "An label for fraud detector.",
   "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
   "definitions": {
     "Tag": {
@@ -26,14 +26,14 @@
   },
   "properties": {
     "Name": {
-      "description": "The name of the outcome.",
+      "description": "The name of the label.",
       "type": "string",
       "pattern": "^[0-9a-z_-]+$",
       "minLength": 1,
       "maxLength": 64
     },
     "Tags": {
-      "description": "Tags associated with this outcome.",
+      "description": "Tags associated with this label.",
       "type": "array",
       "uniqueItems": false,
       "insertionOrder": false,
@@ -43,21 +43,21 @@
       }
     },
     "Description": {
-      "description": "The outcome description.",
+      "description": "The label description.",
       "type": "string",
       "minLength": 1,
       "maxLength": 128
     },
     "Arn": {
-      "description": "The outcome ARN.",
+      "description": "The label ARN.",
       "type": "string"
     },
     "CreatedTime": {
-      "description": "The timestamp when the outcome was created.",
+      "description": "The timestamp when the label was created.",
       "type": "string"
     },
     "LastUpdatedTime": {
-      "description": "The timestamp when the outcome was last updated.",
+      "description": "The timestamp when the label was last updated.",
       "type": "string"
     }
   },
@@ -79,21 +79,21 @@
   "handlers": {
     "create": {
       "permissions": [
-        "frauddetector:GetOutcomes",
-        "frauddetector:PutOutcome",
+        "frauddetector:GetLabels",
+        "frauddetector:PutLabel",
         "frauddetector:ListTagsForResource"
       ]
     },
     "read": {
       "permissions": [
-        "frauddetector:GetOutcomes",
+        "frauddetector:GetLabels",
         "frauddetector:ListTagsForResource"
       ]
     },
     "update": {
       "permissions": [
-        "frauddetector:GetOutcomes",
-        "frauddetector:PutOutcome",
+        "frauddetector:GetLabels",
+        "frauddetector:PutLabel",
         "frauddetector:ListTagsForResource",
         "frauddetector:TagResource",
         "frauddetector:UntagResource"
@@ -101,13 +101,13 @@
     },
     "delete": {
       "permissions": [
-        "frauddetector:GetOutcomes",
-        "frauddetector:DeleteOutcome"
+        "frauddetector:GetLabels",
+        "frauddetector:DeleteLabel"
       ]
     },
     "list": {
       "permissions": [
-        "frauddetector:GetOutcomes",
+        "frauddetector:GetLabels",
         "frauddetector:ListTagsForResource"
       ]
     }

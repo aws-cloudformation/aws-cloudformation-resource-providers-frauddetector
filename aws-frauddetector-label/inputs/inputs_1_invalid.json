@@ -1,0 +1,5 @@
+{
+  "Name": "cfntestlabel2",
+  "Description": "label for cfn contract tests",
+  "Arn": "testarn"
+}

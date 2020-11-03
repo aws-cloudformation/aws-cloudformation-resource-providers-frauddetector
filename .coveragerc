@@ -6,4 +6,6 @@ omit =
 [report]
 omit =
     */src/tests/*
+    */src/*/tests/*
+    common/*
 fail_under = 90.0

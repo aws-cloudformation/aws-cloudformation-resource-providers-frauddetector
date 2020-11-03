@@ -1,0 +1,15 @@
+{
+  "Name": "cfncontracttestvariable2",
+  "Description": "variable for cfn contract tests",
+  "DataSource": "EVENT",
+  "DataType": "STRING",
+  "DefaultValue": "DEFAULT",
+  "VariableType": "IP_ADDRESS",
+  "Tags": [
+    {
+      "Key": "cfncontracttest",
+      "Value": "1"
+    }
+  ],
+  "Arn": "NotNone"
+}
