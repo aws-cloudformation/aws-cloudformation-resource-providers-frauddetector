@@ -1,0 +1,45 @@
+{
+  "Name": "cfntesteventtype2",
+  "Description": "eventtype for cfn contract tests - updated description",
+  "Tags": [
+    {
+      "Key": "cfncontracttestnew",
+      "Value": "new tag with update"
+    },
+    {
+      "Key": "cfncontracttest",
+      "Value": "updated tag value"
+    }
+  ],
+  "EventVariables": [
+    {
+      "Inline": false,
+      "Name": "email_var_new",
+      "Arn": "arn:aws:frauddetector:us-west-2:123123123123:variable/email_var_new"
+    },
+    {
+      "Inline": false,
+      "Name": "ip_var_new",
+      "Arn": "arn:aws:frauddetector:us-west-2:123123123123:variable/ip_var_new"
+    }
+  ],
+  "Labels": [
+    {
+      "Inline": false,
+      "Name": "fraud_label_from_cfn",
+      "Arn": "arn:aws:frauddetector:us-west-2:123123123123:label/fraud_label_from_cfn"
+    },
+    {
+      "Inline": false,
+      "Name": "legit_label_from_cfn",
+      "Arn": "arn:aws:frauddetector:us-west-2:123123123123:label/legit_label_from_cfn"
+    }
+  ],
+  "EntityTypes": [
+    {
+      "Inline": false,
+      "Name": "new_entity_type_from_cfn",
+      "Arn": "arn:aws:frauddetector:us-west-2:123123123123:entity-type/new_entity_type_from_cfn"
+    }
+  ]
+}

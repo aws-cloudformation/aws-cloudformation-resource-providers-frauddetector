@@ -1,0 +1,44 @@
+{
+  "Name": "cfntesteventtype",
+  "Description": "eventtype for cfn contract tests",
+  "Tags": [
+    {
+      "Key": "cfncontracttest",
+      "Value": "1"
+    }
+  ],
+  "EventVariables": [
+    {
+      "Name": "email_var_new_cfn_contract_test",
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "EMAIL_ADDRESS"
+    },
+    {
+      "Name": "ip_var_new_cfn_contract_test",
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "IP_ADDRESS"
+    }
+  ],
+  "Labels": [
+    {
+      "Inline": true,
+      "Name": "legit_label_from_cfn_contract_test"
+    },
+    {
+      "Inline": true,
+      "Name": "fraud_label_from_cfn_contract_test"
+    }
+  ],
+  "EntityTypes": [
+    {
+      "Inline": true,
+      "Name": "new_entity_type_from_cfn_contract_test"
+    }
+  ]
+}

@@ -71,7 +71,7 @@ def update_variable_and_return_progress(frauddetector_client, model, progress):
         progress.resourceModel = model_helpers.get_variables_and_return_model_for_variable(frauddetector_client,
                                                                                            model.Name)
         progress.status = OperationStatus.SUCCESS
-        LOG.info(f'just finished a create variable call: {progress.resourceModel}')
+        LOG.info(f'just finished an update variable call: {progress.resourceModel}')
     except RuntimeError as e:
         raise exceptions.InternalFailure(f"Error occurred: {e}")
     return progress
