@@ -21,7 +21,7 @@ def api_call_with_debug_logs(func):
     """
     @functools.wraps(func)
     def log_wrapper(*args, **kwargs):
-        LOG.debug(f'Starting function {func.__name__!r} ...')
+        LOG.debug(f'Starting function {func.__name__!r} with args {args} and kwargs {kwargs}')
         value = func(*args, **kwargs)
         LOG.debug(f'Finished function {func.__name__!r}, returning {value}')
         return value
@@ -137,6 +137,7 @@ def call_list_tags_for_resource(frauddetector_client, resource_arn: str):
     return frauddetector_client.list_tags_for_resource(resourceARN=resource_arn)
 
 
+@api_call_with_debug_logs
 def call_tag_resource(frauddetector_client, resource_arn: str, tags: List[dict]):
     """
     Call tag_resource with the given frauddetector client and parameters.
@@ -148,6 +149,7 @@ def call_tag_resource(frauddetector_client, resource_arn: str, tags: List[dict])
     return frauddetector_client.tag_resource(resourceARN=resource_arn, tags=tags)
 
 
+@api_call_with_debug_logs
 def call_untag_resource(frauddetector_client, resource_arn: str, tag_keys: List[str]):
     """
     Call untag_resource with the given frauddetector client and parameters.

@@ -1,0 +1,53 @@
+{
+  "Name": "cfntesteventtype",
+  "Description": "eventtype for cfn contract tests - updated description",
+  "Tags": [
+    {
+      "Key": "cfncontracttestnew",
+      "Value": "new tag with update"
+    },
+    {
+      "Key": "cfncontracttest",
+      "Value": "updated tag value"
+    }
+  ],
+  "EventVariables": [
+    {
+      "Name": "email_var_new_cfn_contract_test",
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "EMAIL_ADDRESS",
+      "Description": "Added description"
+    },
+    {
+      "Name": "ip_var_new_cfn_contract_test",
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "IP_ADDRESS",
+      "Description": "Added description"
+    }
+  ],
+  "Labels": [
+    {
+      "Inline": true,
+      "Name": "legit_label_from_cfn_contract_test",
+      "Description": "Added description"
+    },
+    {
+      "Inline": true,
+      "Name": "fraud_label_from_cfn_contract_test",
+      "Description": "Added description"
+    }
+  ],
+  "EntityTypes": [
+    {
+      "Inline": true,
+      "Name": "new_entity_type_from_cfn_contract_test",
+      "Description": "Added description"
+    }
+  ]
+}

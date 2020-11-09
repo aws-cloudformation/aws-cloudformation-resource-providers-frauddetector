@@ -1,4 +1,4 @@
-cloudformation-cli==0.2.1
+cloudformation-cli==0.2.7
 cloudformation-cli-python-lib==2.1.5
 cloudformation-cli-python-plugin==2.1.2
 botocore
