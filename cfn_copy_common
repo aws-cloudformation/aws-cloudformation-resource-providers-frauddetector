@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 AFD_RP_PACKAGE_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [ $# -eq 1 ]
@@ -24,16 +26,16 @@ do
     # create resource provider destination directories if they don't exist
 
     echo "Creating ${HELPERS_DESTINATION} directory if it doesn't exist..."
-    mkdir -p ${HELPERS_DESTINATION}
+    mkdir -p "${HELPERS_DESTINATION}"
 
     echo "Creating ${TESTS_DESTINATION} directory if it doesn't exist..."
-    mkdir -p ${TESTS_DESTINATION}
+    mkdir -p "${TESTS_DESTINATION}"
 
     # copy common source to resource provider destinations
 
     echo "Copying ${HELPERS_SOURCE_PATH} to ${HELPERS_DESTINATION}..."
-    cp -a ${HELPERS_SOURCE_PATH} ${HELPERS_DESTINATION}
+    cp -a "${HELPERS_SOURCE_PATH}" "${HELPERS_DESTINATION}"
 
     echo "Copying ${TESTS_SOURCE_PATH} to ${TESTS_DESTINATION}..."
-    cp -a ${TESTS_SOURCE_PATH} ${TESTS_DESTINATION}
+    cp -a "${TESTS_SOURCE_PATH}" "${TESTS_DESTINATION}"
 done
