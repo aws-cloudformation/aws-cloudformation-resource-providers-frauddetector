@@ -8,4 +8,5 @@ omit =
     */src/tests/*
     */src/*/tests/*
     common/*
+    */__init__.py
 fail_under = 90.0
