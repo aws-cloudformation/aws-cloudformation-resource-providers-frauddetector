@@ -50,7 +50,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### Tags
 
-Tags associated with this detector.
+Tags associated with this outcome.
 
 _Required_: No
 
