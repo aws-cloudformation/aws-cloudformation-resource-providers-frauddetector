@@ -60,7 +60,7 @@ def get_variables_and_return_model_for_variable(frauddetector_client, variable_n
     try:
         get_variables_response = api_helpers.call_get_variables(frauddetector_client, variable_name=variable_name)
         variables = get_variables_response.get('variables', [])
-        if len(variables) > 0:
+        if variables:
             return get_model_for_variable(frauddetector_client, variables[0])
         # if get variables worked but did not return any variables, we have major problems
         error_msg = f"get_variables for {variable_name} worked but did not return any variables!"

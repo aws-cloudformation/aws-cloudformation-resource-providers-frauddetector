@@ -43,11 +43,17 @@ def update_tags(frauddetector_client, afd_resource_arn: str, new_tags: List[Tag]
     try:
         list_tags_response = api_helpers.call_list_tags_for_resource(frauddetector_client, afd_resource_arn)
         attached_tags = list_tags_response.get("tags", [])
-        attached_tag_keys = [tag.get('key', '') for tag in attached_tags]
-        if len(attached_tag_keys) > 0:
-            api_helpers.call_untag_resource(frauddetector_client, afd_resource_arn, attached_tag_keys)
-        if new_tags is not None:
-            tags_to_add = model_helpers.get_tags_from_tag_models(new_tags)
+        attached_tags_dict = {tag.get('key', ''): tag.get('value', None) for tag in attached_tags}
+
+        tags_to_add = [model_helpers.get_tags_from_tag_models(new_tags), {}][new_tags is None]
+        tags_to_add_dict = {tag.get('key', ''): tag.get('value', None) for tag in tags_to_add}
+
+        if attached_tags_dict == tags_to_add_dict:
+            return
+
+        if attached_tags:
+            api_helpers.call_untag_resource(frauddetector_client, afd_resource_arn, list(attached_tags_dict.keys()))
+        if tags_to_add_dict:
             api_helpers.call_tag_resource(frauddetector_client, afd_resource_arn, tags_to_add)
 
     except RuntimeError as e:

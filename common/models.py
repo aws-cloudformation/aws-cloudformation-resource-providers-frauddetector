@@ -37,6 +37,46 @@ class ResourceHandlerRequest(BaseResourceHandlerRequest):
 
 
 @dataclass
+class ResourceModelForVariable(BaseModel):
+    Name: Optional[str]
+    DataSource: Optional[str]
+    DataType: Optional[str]
+    DefaultValue: Optional[str]
+    Description: Optional[str]
+    Tags: Optional[Sequence["_Tag"]]
+    VariableType: Optional[str]
+    Arn: Optional[str]
+    CreatedTime: Optional[str]
+    LastUpdatedTime: Optional[str]
+
+    @classmethod
+    def _deserialize(
+            cls: Type["_ResourceModelForVariable"],
+            json_data: Optional[Mapping[str, Any]],
+    ) -> Optional["_ResourceModelForVariable"]:
+        if not json_data:
+            return None
+        dataclasses = {n: o for n, o in getmembers(sys.modules[__name__]) if isclass(o)}
+        recast_object(cls, json_data, dataclasses)
+        return cls(
+            Name=json_data.get("Name"),
+            DataSource=json_data.get("DataSource"),
+            DataType=json_data.get("DataType"),
+            DefaultValue=json_data.get("DefaultValue"),
+            Description=json_data.get("Description"),
+            Tags=deserialize_list(json_data.get("Tags"), Tag),
+            VariableType=json_data.get("VariableType"),
+            Arn=json_data.get("Arn"),
+            CreatedTime=json_data.get("CreatedTime"),
+            LastUpdatedTime=json_data.get("LastUpdatedTime"),
+        )
+
+
+# work around possible type aliasing issues when variable has same name as a model
+_ResourceModelForVariable = ResourceModelForVariable
+
+
+@dataclass
 class ResourceModel(BaseModel):
     Name: Optional[str]
     Description: Optional[str]

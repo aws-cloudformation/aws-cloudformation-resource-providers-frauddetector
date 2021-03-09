@@ -46,20 +46,13 @@ def execute_update_variable_handler_work(session, model, progress, request):
     previous_name = previous_resource_state.Name
     if model.Name != previous_name:
         raise exceptions.NotUpdatable(f"Error occurred: cannot update create-only property 'Name'")
-
-    variables_list = get_variables_response.get('variables', [])
-    variable = {}
-    if len(variables_list) > 0:
-        variable = variables_list[0]
-    variable_arn = variable.get('arn', '')
     if model.Tags is None:
         # API does not handle 'None' property gracefully
         del model.Tags
-        common_helpers.update_tags(afd_client, afd_resource_arn=variable_arn)
+        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn)
     else:
         # since update_variable does not update tags, update tags separately
-        # NOTE: currently, this won't remove tags when customers want to specifically remove tags...
-        common_helpers.update_tags(afd_client, afd_resource_arn=variable_arn, new_tags=model.Tags)
+        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
 
     # after satisfying contract call update variable
     return common_helpers.update_variable_and_return_progress(afd_client, model, progress)
@@ -94,7 +87,7 @@ def execute_read_variable_handler_work(session, model, progress):
 
     try:
         variables = get_variables_response.get('variables', [])
-        if len(variables) > 0:
+        if variables:
             model = model_helpers.get_model_for_variable(afd_client, variables[0])
         progress.resourceModel = model
         progress.status = OperationStatus.SUCCESS
