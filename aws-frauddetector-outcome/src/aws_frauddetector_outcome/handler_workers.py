@@ -47,19 +47,13 @@ def execute_update_outcome_handler_work(session, model, progress, request):
     if model.Name != previous_name:
         raise exceptions.NotUpdatable(f"Error occurred: cannot update create-only property 'Name'")
 
-    outcomes_list = get_outcomes_response.get('outcomes', [])
-    outcome = {}
-    if len(outcomes_list) > 0:
-        outcome = outcomes_list[0]
-    outcome_arn = outcome.get('arn', '')
     if model.Tags is None:
         # API does not handle 'None' property gracefully
         del model.Tags
-        common_helpers.update_tags(afd_client, afd_resource_arn=outcome_arn)
+        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn)
     else:
         # since put_outcome does not update tags, update tags separately
-        # NOTE: currently, this won't remove tags when customers want to specifically remove tags...
-        common_helpers.update_tags(afd_client, afd_resource_arn=outcome_arn, new_tags=model.Tags)
+        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
 
     # after satisfying contract call put outcome
     return common_helpers.put_outcome_and_return_progress(afd_client, model, progress)
@@ -94,7 +88,7 @@ def execute_read_outcome_handler_work(session, model, progress):
 
     try:
         outcomes = get_outcomes_response.get('outcomes', [])
-        if len(outcomes) > 0:
+        if outcomes:
             model = model_helpers.get_model_for_outcome(afd_client, outcomes[0])
         progress.resourceModel = model
         progress.status = OperationStatus.SUCCESS

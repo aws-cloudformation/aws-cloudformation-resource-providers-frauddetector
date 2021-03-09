@@ -5,7 +5,7 @@ from cloudformation_cli_python_lib import (
     exceptions,
 )
 
-from ..models import ResourceModel, EventVariable, Tag
+from ..models import ResourceModel, EventVariable, Tag, ResourceModelForVariable
 from . import api_helpers, validation_helpers
 
 import logging
@@ -58,7 +58,7 @@ def get_outcomes_and_return_model_for_outcome(frauddetector_client, outcome_name
     try:
         get_outcomes_response = api_helpers.call_get_outcomes(frauddetector_client, outcome_name=outcome_name)
         outcomes = get_outcomes_response.get('outcomes', [])
-        if len(outcomes) > 0:
+        if outcomes:
             return get_model_for_outcome(frauddetector_client, outcomes[0])
         # if get outcomes worked but did not return any outcomes, we have major problems
         error_msg = f"get_outcomes for {outcome_name} worked but did not return any outcomes!"
@@ -90,7 +90,7 @@ def get_labels_and_return_model_for_label(frauddetector_client, label_name):
     try:
         get_labels_response = api_helpers.call_get_labels(frauddetector_client, label_name=label_name)
         labels = get_labels_response.get('labels', [])
-        if len(labels) > 0:
+        if labels:
             return get_model_for_label(frauddetector_client, labels[0])
         # if get labels worked but did not return any labels, we have major problems
         error_msg = f"get_labels for {label_name} worked but did not return any labels!"
@@ -123,7 +123,7 @@ def get_entity_types_and_return_model_for_entity_type(frauddetector_client, enti
         get_entity_types_response = api_helpers.call_get_entity_types(frauddetector_client,
                                                                       entity_type_name=entity_type_name)
         entity_types = get_entity_types_response.get('entityTypes', [])
-        if len(entity_types) > 0:
+        if entity_types:
             return get_model_for_entity_type(frauddetector_client, entity_types[0])
         # if get entity_types worked but did not return any entity_types, we have major problems
         error_msg = f"get_entity_types for {entity_type_name} worked but did not return any entity_types!"
@@ -131,3 +131,39 @@ def get_entity_types_and_return_model_for_entity_type(frauddetector_client, enti
         raise RuntimeError(error_msg)
     except RuntimeError as e:
         raise exceptions.InternalFailure(f"Error occurred while getting an entity_type: {e}")
+
+
+# Variables
+
+
+def get_model_for_variable(frauddetector_client, variable):
+    variable_arn = variable.get('arn', '')
+    list_tags_response = api_helpers.call_list_tags_for_resource(frauddetector_client, resource_arn=variable_arn)
+    attached_tags = list_tags_response.get("tags", [])
+    tag_models = get_tag_models_from_tags(attached_tags)
+    return ResourceModelForVariable(
+        Name=variable.get('name', ''),
+        Arn=variable_arn,
+        Tags=tag_models,
+        Description=variable.get('description', ''),
+        DataType=variable.get('dataType', ''),
+        DataSource=variable.get('dataSource', ''),
+        DefaultValue=variable.get('defaultValue', ''),
+        VariableType=variable.get('variableType', ''),
+        CreatedTime=variable.get('createdTime', ''),
+        LastUpdatedTime=variable.get('lastUpdatedTime', '')
+    )
+
+
+def get_variables_and_return_model_for_variable(frauddetector_client, variable_name):
+    try:
+        get_variables_response = api_helpers.call_get_variables(frauddetector_client, variable_name=variable_name)
+        variables = get_variables_response.get('variables', [])
+        if variables:
+            return get_model_for_variable(frauddetector_client, variables[0])
+        # if get variables worked but did not return any variables, we have major problems
+        error_msg = f"get_variables for {variable_name} worked but did not return any variables!"
+        LOG.error(error_msg)
+        raise RuntimeError(error_msg)
+    except RuntimeError as e:
+        raise exceptions.InternalFailure(f"Error occurred while getting an variable: {e}")

@@ -47,19 +47,13 @@ def execute_update_label_handler_work(session, model, progress, request):
     if model.Name != previous_name:
         raise exceptions.NotUpdatable(f"Error occurred: cannot update create-only property 'Name'")
 
-    labels_list = get_labels_response.get('labels', [])
-    label = {}
-    if len(labels_list) > 0:
-        label = labels_list[0]
-    label_arn = label.get('arn', '')
     if model.Tags is None:
         # API does not handle 'None' property gracefully
         del model.Tags
-        common_helpers.update_tags(afd_client, afd_resource_arn=label_arn)
+        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn)
     else:
         # since put_label does not update tags, update tags separately
-        # NOTE: currently, this won't remove tags when customers want to specifically remove tags...
-        common_helpers.update_tags(afd_client, afd_resource_arn=label_arn, new_tags=model.Tags)
+        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
 
     # after satisfying contract call put label
     return common_helpers.put_label_and_return_progress(afd_client, model, progress)
@@ -94,7 +88,7 @@ def execute_read_label_handler_work(session, model, progress):
 
     try:
         labels = get_labels_response.get('labels', [])
-        if len(labels) > 0:
+        if labels:
             model = model_helpers.get_model_for_label(afd_client, labels[0])
         progress.resourceModel = model
         progress.status = OperationStatus.SUCCESS

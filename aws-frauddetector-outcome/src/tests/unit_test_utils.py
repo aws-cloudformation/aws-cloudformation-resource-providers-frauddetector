@@ -11,6 +11,14 @@ FAKE_TAG_MODELS = [
 FAKE_TAGS = [
     {'key': 'cfnunittest', 'value': '1'}
 ]
+FAKE_TAG_MODELS_DIFFERENT = [
+    Tag(Key='cfnunittest', Value='different_value'),
+    Tag(Key='new_key', Value='value'),
+]
+FAKE_TAGS_DIFFERENT = [
+    {'key': 'cfnunittest', 'value': 'different_value'},
+    {'key': 'new_key', 'value': 'value'}
+]
 FAKE_DESCRIPTION = 'a cfnunittest description'
 FAKE_OUTCOME = {
     'arn': FAKE_ARN,

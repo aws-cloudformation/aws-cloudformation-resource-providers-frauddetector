@@ -83,12 +83,29 @@ def test_update_tags():
     mock_afd_client.untag_resource = MagicMock()
 
     # Act
-    common_helpers.update_tags(mock_afd_client, unit_test_utils.FAKE_ARN, unit_test_utils.FAKE_TAG_MODELS)
+    common_helpers.update_tags(mock_afd_client, unit_test_utils.FAKE_ARN, unit_test_utils.FAKE_TAG_MODELS_DIFFERENT)
 
     # Assert
     mock_afd_client.untag_resource.assert_called_once_with(resourceARN=unit_test_utils.FAKE_ARN, tagKeys=fake_tag_keys)
     mock_afd_client.tag_resource.assert_called_once_with(resourceARN=unit_test_utils.FAKE_ARN,
-                                                         tags=unit_test_utils.FAKE_TAGS)
+                                                         tags=unit_test_utils.FAKE_TAGS_DIFFERENT)
+
+
+def test_update_tags_no_tag_difference_dont_call_apis():
+    # Arrange
+    list_tags_response = {'tags': unit_test_utils.FAKE_TAGS}
+
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    mock_afd_client.list_tags_for_resource = MagicMock(return_value=list_tags_response)
+    mock_afd_client.tag_resource = MagicMock()
+    mock_afd_client.untag_resource = MagicMock()
+
+    # Act
+    common_helpers.update_tags(mock_afd_client, unit_test_utils.FAKE_ARN, unit_test_utils.FAKE_TAG_MODELS)
+
+    # Assert
+    mock_afd_client.untag_resource.assert_not_called()
+    mock_afd_client.tag_resource.assert_not_called()
 
 
 def _setup_put_outcome_test():

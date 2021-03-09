@@ -57,7 +57,7 @@ def get_entity_types_and_return_model_for_entity_type(frauddetector_client, enti
         get_entity_types_response = api_helpers.call_get_entity_types(frauddetector_client,
                                                                       entity_type_name=entity_type_name)
         entity_types = get_entity_types_response.get('entityTypes', [])
-        if len(entity_types) > 0:
+        if entity_types:
             return get_model_for_entity_type(frauddetector_client, entity_types[0])
         # if get entity_types worked but did not return any entity_types, we have major problems
         error_msg = f"get_entity_types for {entity_type_name} worked but did not return any entity_types!"

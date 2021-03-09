@@ -38,7 +38,8 @@ def execute_update_entity_type_handler_work(session, model, progress, request):
 
     # For contract_update_non_existent_resource, we need to fail if the resource DNE
     # get entity_types will throw RNF Exception if entity_type DNE
-    get_entity_types_works, get_entity_types_response = validation_helpers.check_if_get_entity_types_succeeds(afd_client, model.Name)
+    get_entity_types_works, get_entity_types_response =\
+        validation_helpers.check_if_get_entity_types_succeeds(afd_client, model.Name)
     if not get_entity_types_works:
         raise exceptions.NotFound('entity_type', model.Name)
 
@@ -47,19 +48,13 @@ def execute_update_entity_type_handler_work(session, model, progress, request):
     if model.Name != previous_name:
         raise exceptions.NotUpdatable(f"Error occurred: cannot update create-only property 'Name'")
 
-    entity_types_list = get_entity_types_response.get('entityTypes', [])
-    entity_type = {}
-    if len(entity_types_list) > 0:
-        entity_type = entity_types_list[0]
-    entity_type_arn = entity_type.get('arn', '')
     if model.Tags is None:
         # API does not handle 'None' property gracefully
         del model.Tags
-        common_helpers.update_tags(afd_client, afd_resource_arn=entity_type_arn)
+        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn)
     else:
         # since put_entity_type does not update tags, update tags separately
-        # NOTE: currently, this won't remove tags when customers want to specifically remove tags...
-        common_helpers.update_tags(afd_client, afd_resource_arn=entity_type_arn, new_tags=model.Tags)
+        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
 
     # after satisfying contract call put entity_type
     return common_helpers.put_entity_type_and_return_progress(afd_client, model, progress)
@@ -94,7 +89,7 @@ def execute_read_entity_type_handler_work(session, model, progress):
 
     try:
         entity_types = get_entity_types_response.get('entityTypes', [])
-        if len(entity_types) > 0:
+        if entity_types:
             model = model_helpers.get_model_for_entity_type(afd_client, entity_types[0])
         progress.resourceModel = model
         progress.status = OperationStatus.SUCCESS
