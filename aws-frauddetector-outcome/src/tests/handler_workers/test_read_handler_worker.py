@@ -34,7 +34,7 @@ def test_execute_read_outcome_handler_work_outcome_dne_gets_not_found_error(monk
 
 
 def _setup_execute_read_outcome_handler_work_test(monkeypatch):
-    model = unit_test_utils.create_fake_model()
+    model = unit_test_utils.create_fake_model(is_output_model=True)
     progress = ProgressEvent(
         status=OperationStatus.IN_PROGRESS,
         resourceModel=model

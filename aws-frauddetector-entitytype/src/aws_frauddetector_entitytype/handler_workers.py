@@ -80,6 +80,8 @@ def execute_delete_entity_type_handler_work(session, model, progress):
 
 def execute_read_entity_type_handler_work(session, model, progress):
     afd_client = client_helpers.get_singleton_afd_client(session)
+    # read requests only include primary identifier (Arn). Extract Name from Arn
+    model.Name = model.Arn.split('/')[-1]
 
     # For contract_delete_read, we need to fail if the resource DNE
     # get entity_types will throw RNF Exception if entity_type DNE
