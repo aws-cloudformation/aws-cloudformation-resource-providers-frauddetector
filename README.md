@@ -24,7 +24,7 @@ This repository contains AWS-owned resource providers for the `AWS::FraudDetecto
     - to test a single contract test, use `-- -k <test-name>` arguments, e.g. `cfn test -- -k contract_update_list_success`
 
 #### Manual Testing
-1. In resource provider directory, run `cfn submit --set-default` to register the type as a custom resource you can access via CloudFormation
+1. In the root directory, run `./cfn_submit ${resource_provider}` to register the type as a custom resource you can access via CloudFormation, e.g. `./cfn_submit outcome`
 2. Use either the AWS CLI or the AWS console to interact with the new custom resource via CloudFormation
 
 ## License

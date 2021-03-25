@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2155
+export AFD_RP_PACKAGE_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+if [ $# -eq 1 ]
+then
+  RP_WITH_DASHES="aws-frauddetector-${1}"
+else
+  echo "run this command with the rp name, e.g. ./cfn_submit variable"
+  exit 1
+fi
+
+bash ./bin/cfn_submit.sh "${RP_WITH_DASHES}"
