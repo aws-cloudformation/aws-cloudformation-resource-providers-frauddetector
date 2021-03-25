@@ -18,6 +18,11 @@ then
   pre-commit run --all-files
   printf "\r\nrunning pre-commit again ...\r\n"
   pre-commit run --all-files
+  if [ $? -ne 0 ]
+  then
+    printf "\r\nERROR - pre-commit needs to pass!\r\n"
+    exit 1
+  fi
   printf "\r\nsubmitting cfn dry run ...\r\n"
   cfn submit --dry-run
   printf "\r\nstarting sam local lambda ...\r\n"
