@@ -23,8 +23,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - "frauddetector:BatchCreateVariable"
-                - "frauddetector:BatchGetVariable"
+                - "frauddetector:CreateVariable"
                 - "frauddetector:DeleteEntityType"
                 - "frauddetector:DeleteEventType"
                 - "frauddetector:DeleteLabel"
@@ -32,6 +31,7 @@ Resources:
                 - "frauddetector:GetEntityTypes"
                 - "frauddetector:GetEventTypes"
                 - "frauddetector:GetLabels"
+                - "frauddetector:GetVariables"
                 - "frauddetector:ListTagsForResource"
                 - "frauddetector:PutEntityType"
                 - "frauddetector:PutEventType"

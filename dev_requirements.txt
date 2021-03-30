@@ -5,4 +5,4 @@ botocore
 boto3
 pre-commit
 pytest-cov
-aws-sam-cli
+git+https://github.com/privetjr/cloudformation-cli.git@develop_readonly_sequence_members_clean_squashed
