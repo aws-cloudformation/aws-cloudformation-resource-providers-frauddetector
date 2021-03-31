@@ -40,7 +40,7 @@ def execute_create_event_type_handler_work(session, model, progress):
     # Validate existence of referenced resources, validate and create inline resources
     create_worker_helpers.validate_dependencies_for_create(afd_client, model)
 
-    # after satisfying contract call put entity_type
+    # after satisfying contract call put event_type
     return common_helpers.put_event_type_and_return_progress(afd_client, model, progress)
 
 
