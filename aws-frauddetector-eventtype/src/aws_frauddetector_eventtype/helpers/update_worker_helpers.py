@@ -35,15 +35,13 @@ def _validate_event_variables_for_update(afd_client, model: ResourceModel, previ
 
 
 def _validate_event_variable_for_update(afd_client, event_variable, previous_variables):
-    # either support referenced variable via Arn, or inline variable w/ Name
-    if not event_variable.Inline:
-        _validate_referenced_event_variable_for_update(afd_client, event_variable)
-    else:
+    if event_variable.Inline:
         _validate_inline_event_variable_for_update(afd_client, event_variable, previous_variables)
+    else:
+        _validate_referenced_event_variable_for_update(afd_client, event_variable)
 
 
 def _validate_referenced_event_variable_for_update(afd_client, event_variable):
-    # throw not found exception if referenced variable does not exist
     event_variable_name = util.extract_name_from_arn(event_variable.Arn)
     get_variables_worked, _ = \
         validation_helpers.check_if_get_variables_succeeds(afd_client, event_variable_name)
@@ -104,15 +102,13 @@ def _validate_entity_types_for_update(afd_client, model: ResourceModel, previous
 
 
 def _validate_entity_type_for_update(afd_client, entity_type, previous_entity_types):
-    # either support referenced entity_type via Arn, or inline entity_type w/ Name
-    if not entity_type.Inline:
-        _validate_referenced_entity_type_for_update(afd_client, entity_type)
-    else:
+    if entity_type.Inline:
         _validate_inline_entity_type_for_update(afd_client, entity_type, previous_entity_types)
+    else:
+        _validate_referenced_entity_type_for_update(afd_client, entity_type)
 
 
 def _validate_referenced_entity_type_for_update(afd_client, entity_type):
-    # throw not found exception if reference entity type does not exist
     entity_type_name = util.extract_name_from_arn(entity_type.Arn)
     get_entity_types_worked, _ = validation_helpers.check_if_get_entity_types_succeeds(afd_client, entity_type_name)
     if not get_entity_types_worked:
@@ -157,15 +153,13 @@ def _validate_labels_for_update(afd_client, model: ResourceModel, previous_model
 
 
 def _validate_label_for_update(afd_client, label, previous_labels):
-    # either support referenced label via Arn, or inline label w/ Name
-    if not label.Inline:
-        _validate_referenced_label_for_update(afd_client, label)
-    else:
+    if label.Inline:
         _validate_inline_label_for_update(afd_client, label, previous_labels)
+    else:
+        _validate_referenced_label_for_update(afd_client, label)
 
 
 def _validate_referenced_label_for_update(afd_client, label):
-    # throw not found exception if reference entity type does not exist
     label_name = util.extract_name_from_arn(label.Arn)
     get_labels_worked, _ = validation_helpers.check_if_get_labels_succeeds(afd_client, label_name)
     if not get_labels_worked:
