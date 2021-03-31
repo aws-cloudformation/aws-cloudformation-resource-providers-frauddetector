@@ -46,7 +46,7 @@ def get_event_type_and_return_model(frauddetector_client, event_type_model: mode
     try:
         get_event_types_response = api_helpers.call_get_event_types(frauddetector_client, event_type_name)
         event_types = get_event_types_response.get('eventTypes', [])
-        if len(event_types) > 0:
+        if event_types:
             return get_model_for_event_type(frauddetector_client, event_types[0], referenced_resources)
         # if get event types worked but did not return any event types, we have major problems
         error_msg = f"get_event_types for {event_type_name} worked but did not return any event types!"
@@ -166,7 +166,7 @@ def _get_labels_and_return_labels_model(frauddetector_client, label_names, refer
     for label_name in label_names:
         get_labels_response = api_helpers.call_get_labels(frauddetector_client, label_name)
         labels = get_labels_response.get('labels', [])
-        if len(labels) <= 0:
+        if not labels:
             raise RuntimeError(f"Error! Expected an existing label, but label did not exist! label name {label_name}")
         label = labels[0]
         label_arn = label.get('arn', '')
@@ -258,15 +258,9 @@ def get_referenced_resources(event_type_model: models.ResourceModel) -> dict:
     LOG.debug(f"building referenced resources for model: {event_type_model}")
     if not event_type_model:
         return referenced_resources
-    for event_variable in event_type_model.EventVariables:
-        if not event_variable.Inline:
-            referenced_resources['event_variables'].add(event_variable.Name)
-    for label in event_type_model.Labels:
-        if not label.Inline:
-            referenced_resources['labels'].add(label.Name)
-    for entity_type in event_type_model.EntityTypes:
-        if not entity_type.Inline:
-            referenced_resources['entity_types'].add(entity_type.Name)
+    referenced_resources['event_variables'] = {ev.Name for ev in event_type_model.EventVariables if not ev.Inline}
+    referenced_resources['labels'] = {label.Name for label in event_type_model.Labels if not label.Inline}
+    referenced_resources['entity_types'] = {et.Name for et in event_type_model.EntityTypes if not et.Inline}
     LOG.debug(f"returning referenced resources: {referenced_resources}")
     return referenced_resources
 
@@ -280,14 +274,8 @@ def get_inline_resources(event_type_model: models.ResourceModel) -> dict:
     LOG.debug(f"building inline resources for model: {event_type_model}")
     if not event_type_model:
         return inline_resources
-    for event_variable in event_type_model.EventVariables:
-        if event_variable.Inline:
-            inline_resources['event_variables'].add(event_variable.Name)
-    for label in event_type_model.Labels:
-        if label.Inline:
-            inline_resources['labels'].add(label.Name)
-    for entity_type in event_type_model.EntityTypes:
-        if entity_type.Inline:
-            inline_resources['entity_types'].add(entity_type.Name)
+    inline_resources['event_variables'] = {ev.Name for ev in event_type_model.EventVariables if ev.Inline}
+    inline_resources['labels'] = {label.Name for label in event_type_model.Labels if label.Inline}
+    inline_resources['entity_types'] = {et.Name for et in event_type_model.EntityTypes if et.Inline}
     LOG.debug(f"returning inline resources: {inline_resources}")
     return inline_resources
