@@ -39,16 +39,16 @@ class ResourceHandlerRequest(BaseResourceHandlerRequest):
 
 @dataclass
 class ResourceModel(BaseModel):
-    TPSCode: Optional[str]
-    Title: Optional[str]
-    CoverSheetIncluded: Optional[bool]
-    DueDate: Optional[str]
-    ApprovalDate: Optional[str]
-    Memo: Optional["_Memo"]
-    SecondCopyOfMemo: Optional["_Memo"]
-    TestCode: Optional[str]
-    Authors: Optional[Sequence[str]]
-    Tags: Optional[AbstractSet["_Tag"]]
+    DetectorId: Optional[str]
+    DetectorVersionStatus: Optional[str]
+    DetectorVersionId: Optional[str]
+    RuleExecutionMode: Optional[str]
+    Tags: Optional[Sequence["_Tag"]]
+    Description: Optional[str]
+    Rules: Optional[Sequence["_Rule"]]
+    Arn: Optional[str]
+    CreatedTime: Optional[str]
+    LastUpdatedTime: Optional[str]
 
     @classmethod
     def _deserialize(
@@ -60,43 +60,21 @@ class ResourceModel(BaseModel):
         dataclasses = {n: o for n, o in getmembers(sys.modules[__name__]) if isclass(o)}
         recast_object(cls, json_data, dataclasses)
         return cls(
-            TPSCode=json_data.get("TPSCode"),
-            Title=json_data.get("Title"),
-            CoverSheetIncluded=json_data.get("CoverSheetIncluded"),
-            DueDate=json_data.get("DueDate"),
-            ApprovalDate=json_data.get("ApprovalDate"),
-            Memo=Memo._deserialize(json_data.get("Memo")),
-            SecondCopyOfMemo=Memo._deserialize(json_data.get("SecondCopyOfMemo")),
-            TestCode=json_data.get("TestCode"),
-            Authors=json_data.get("Authors"),
-            Tags=set_or_none(json_data.get("Tags")),
+            DetectorId=json_data.get("DetectorId"),
+            DetectorVersionStatus=json_data.get("DetectorVersionStatus"),
+            DetectorVersionId=json_data.get("DetectorVersionId"),
+            RuleExecutionMode=json_data.get("RuleExecutionMode"),
+            Tags=deserialize_list(json_data.get("Tags"), Tag),
+            Description=json_data.get("Description"),
+            Rules=deserialize_list(json_data.get("Rules"), Rule),
+            Arn=json_data.get("Arn"),
+            CreatedTime=json_data.get("CreatedTime"),
+            LastUpdatedTime=json_data.get("LastUpdatedTime"),
         )
 
 
 # work around possible type aliasing issues when variable has same name as a model
 _ResourceModel = ResourceModel
-
-
-@dataclass
-class Memo(BaseModel):
-    Heading: Optional[str]
-    Body: Optional[str]
-
-    @classmethod
-    def _deserialize(
-        cls: Type["_Memo"],
-        json_data: Optional[Mapping[str, Any]],
-    ) -> Optional["_Memo"]:
-        if not json_data:
-            return None
-        return cls(
-            Heading=json_data.get("Heading"),
-            Body=json_data.get("Body"),
-        )
-
-
-# work around possible type aliasing issues when variable has same name as a model
-_Memo = Memo
 
 
 @dataclass
@@ -121,3 +99,73 @@ class Tag(BaseModel):
 _Tag = Tag
 
 
+@dataclass
+class Rule(BaseModel):
+    RuleId: Optional[str]
+    RuleVersion: Optional[str]
+    DetectorId: Optional[str]
+    Expression: Optional[str]
+    Language: Optional[str]
+    Outcomes: Optional[Sequence["_Outcome"]]
+    Arn: Optional[str]
+    Description: Optional[str]
+    Tags: Optional[Sequence["_Tag"]]
+    CreatedTime: Optional[str]
+    LastUpdatedTime: Optional[str]
+
+    @classmethod
+    def _deserialize(
+        cls: Type["_Rule"],
+        json_data: Optional[Mapping[str, Any]],
+    ) -> Optional["_Rule"]:
+        if not json_data:
+            return None
+        return cls(
+            RuleId=json_data.get("RuleId"),
+            RuleVersion=json_data.get("RuleVersion"),
+            DetectorId=json_data.get("DetectorId"),
+            Expression=json_data.get("Expression"),
+            Language=json_data.get("Language"),
+            Outcomes=deserialize_list(json_data.get("Outcomes"), Outcome),
+            Arn=json_data.get("Arn"),
+            Description=json_data.get("Description"),
+            Tags=deserialize_list(json_data.get("Tags"), Tag),
+            CreatedTime=json_data.get("CreatedTime"),
+            LastUpdatedTime=json_data.get("LastUpdatedTime"),
+        )
+
+
+# work around possible type aliasing issues when variable has same name as a model
+_Rule = Rule
+
+
+@dataclass
+class Outcome(BaseModel):
+    Arn: Optional[str]
+    Inline: Optional[bool]
+    Name: Optional[str]
+    Description: Optional[str]
+    Tags: Optional[Sequence["_Tag"]]
+    CreatedTime: Optional[str]
+    LastUpdatedTime: Optional[str]
+
+    @classmethod
+    def _deserialize(
+        cls: Type["_Outcome"],
+        json_data: Optional[Mapping[str, Any]],
+    ) -> Optional["_Outcome"]:
+        if not json_data:
+            return None
+        return cls(
+            Arn=json_data.get("Arn"),
+            Inline=json_data.get("Inline"),
+            Name=json_data.get("Name"),
+            Description=json_data.get("Description"),
+            Tags=deserialize_list(json_data.get("Tags"), Tag),
+            CreatedTime=json_data.get("CreatedTime"),
+            LastUpdatedTime=json_data.get("LastUpdatedTime"),
+        )
+
+
+# work around possible type aliasing issues when variable has same name as a model
+_Outcome = Outcome
