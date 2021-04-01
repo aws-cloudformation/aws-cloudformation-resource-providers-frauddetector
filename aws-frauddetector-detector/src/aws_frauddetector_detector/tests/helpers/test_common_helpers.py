@@ -29,7 +29,8 @@ def test_update_tags():
 
 def test_put_event_type_and_return_event_type_model(monkeypatch):
     # Arrange
-    mock_afd_client, input_model, output_model = _setup_put_event_type_test()
+    mock_afd_client, _, output_model = _setup_put_event_type_test()
+    input_model = unit_test_utils.create_fake_model()
     fake_output_model = unit_test_utils.create_fake_event_type(True)
     fake_output_model = _add_extra_attributes_for_event_type(fake_output_model)
     mock_get_event_type_and_return_event_type_model = MagicMock(return_value=fake_output_model)
@@ -163,7 +164,7 @@ def _add_extra_attributes_for_variable(model):
 
 
 def _act_and_assert_put_event_type_for_given_model(afd_client, input_model, output_model):
-    result_model = common_helpers.put_event_type_and_return_event_type_model(afd_client, input_model)
+    result_model = common_helpers.put_event_type_and_return_event_type_model_for_detector_model(afd_client, input_model)
     # Need to assert each sub-attribute, otherwise full equivalence will check readonly properties too (e.g. Arn)
     assert result_model.Name == output_model.Name
     assert result_model.Tags == output_model.Tags

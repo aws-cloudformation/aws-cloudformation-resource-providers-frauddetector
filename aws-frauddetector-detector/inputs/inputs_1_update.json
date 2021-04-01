@@ -1,0 +1,47 @@
+{
+  "DetectorId": "cfntestdetector1",
+  "DetectorVersionStatus": "ACTIVE",
+  "RuleExecutionMode": "ALL_MATCHED",
+  "Tags": [
+    {
+      "Key": "cfncontracttest2",
+      "Value": "2"
+    },
+    {
+      "Key": "cfncontracttest",
+      "Value": "1"
+    }
+  ],
+  "Description": "detector for cfn contract tests - updated description",
+  "Rules": [
+    {
+      "RuleId": "cfntestrule",
+      "DetectorId": "cfntestdetector1",
+      "Expression": "1 == 5",
+      "Language": "DETECTORPL",
+      "Outcomes": [
+        {
+          "Inline": false,
+          "Name": "reference_outcome_for_detector",
+          "Arn": "arn:aws:frauddetector:us-west-2:123123123123:outcome/reference_outcome_for_detector"
+        }
+      ],
+      "Description": "Rule for cfn contract tests - updated description",
+      "Tags": [
+        {
+          "Key": "cfncontracttest2",
+          "Value": "2"
+        },
+        {
+          "Key": "cfncontracttest",
+          "Value": "1"
+        }
+      ]
+    }
+  ],
+  "EventType": {
+    "Inline": false,
+    "Name": "reference_event_type_for_detector",
+    "Arn": "arn:aws:frauddetector:us-west-2:123123123123:event_type/reference_event_type_for_detector"
+  }
+}

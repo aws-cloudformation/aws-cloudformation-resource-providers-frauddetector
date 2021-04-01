@@ -69,6 +69,31 @@ def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_
 
 
 @api_call_with_debug_logs
+def call_put_detector(frauddetector_client,
+                      detector_id: str,
+                      detector_event_type_name: str,
+                      detector_tags: List[dict] = None,
+                      detector_description: str = None):
+    """
+    Call put_detector with the given frauddetector client and the given arguments.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param detector_id: id of the detector
+    :param detector_event_type_name: event type to attach to the detector
+    :param detector_tags: tags to attach to the detector (default is None)
+    :param detector_description: description of the detector (default is None)
+    :return: API response from frauddetector_client
+    """
+    args = {
+        "detectorId": detector_id,
+        "eventTypeName": detector_event_type_name,
+        "tags": detector_tags,
+        "description": detector_description
+    }
+    args = validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.put_detector(**args)
+
+
+@api_call_with_debug_logs
 def call_put_outcome(frauddetector_client,
                      outcome_name: str,
                      outcome_tags: List[dict] = None,
@@ -190,6 +215,50 @@ def call_create_variable(frauddetector_client,
     return frauddetector_client.create_variable(**args)
 
 
+@api_call_with_debug_logs
+def call_create_rule(frauddetector_client,
+                     rule_id: str,
+                     detector_id: str,
+                     rule_expression: str,
+                     rule_language: str,
+                     rule_outcomes: List[str],
+                     rule_description: str = None,
+                     rule_tags: List[dict] = None):
+    args = {
+        "ruleId": rule_id,
+        "detectorId": detector_id,
+        "expression": rule_expression,
+        "language": rule_language,
+        "outcomes": rule_outcomes,
+        "description": rule_description,
+        "tags": rule_tags
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.create_rule(**args)
+
+
+@api_call_with_debug_logs
+def call_create_detector_version(frauddetector_client,
+                                 detector_id: str,
+                                 rules: List[dict],
+                                 rule_execution_mode: str = None,
+                                 model_versions: List[dict] = None,
+                                 external_model_endpoints: List[str] = None,
+                                 detector_version_description: str = None,
+                                 detector_version_tags: List[dict] = None):
+    args = {
+        "detectorId": detector_id,
+        "rules": rules,
+        "ruleExecutionMode": rule_execution_mode,
+        "modelVersions": model_versions,
+        "externalModelEndpoints": external_model_endpoints,
+        "description": detector_version_description,
+        "tags": detector_version_tags
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.create_detector_version(**args)
+
+
 # Update APIs
 
 
@@ -217,6 +286,28 @@ def call_update_variable(frauddetector_client,
     }
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.update_variable(**args)
+
+
+@api_call_with_debug_logs
+def call_update_detector_version_status(frauddetector_client,
+                                        detector_id: str,
+                                        detector_version_id: str,
+                                        status: str):
+    """
+    Calls update_variable with the given frauddetector client
+    :param detector_id: detector id to update a detector version status for
+    :param detector_version_id: detector version id to update the status for
+    :param status: ACTIVE, INACTIVE, or DRAFT
+    :param frauddetector_client: boto3 client to make the call with
+    :return: API response from update_detector_version_status
+    """
+    # Only update description, variable type, and default value
+    args = {
+        "detectorId": detector_id,
+        "detectorVersionId": detector_version_id,
+        "status": status
+    }
+    return frauddetector_client.update_detector_version_status(**args)
 
 
 # Describe APIs

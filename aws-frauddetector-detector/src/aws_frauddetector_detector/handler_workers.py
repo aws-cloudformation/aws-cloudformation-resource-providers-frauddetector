@@ -13,6 +13,7 @@ from .helpers import (
     validation_helpers,
     model_helpers,
     create_worker_helpers,
+    read_worker_helpers,
     update_worker_helpers,
     delete_worker_helpers,
     api_helpers
@@ -23,8 +24,50 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
 
+DRAFT_STATUS = 'DRAFT'
+
+
 def execute_create_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):
-    pass
+    afd_client = client_helpers.get_singleton_afd_client(session)
+
+    # For contract_create_duplicate, we need to fail if the resource already exists
+    get_detectors_works, _ = validation_helpers.check_if_get_detectors_succeeds(afd_client, model.DetectorId)
+    if get_detectors_works:
+        raise exceptions.AlreadyExists('detector', model.DetectorId)
+
+    # For contract_invalid_create, fail if any read-only properties are present
+    if model.Arn is not None or model.CreatedTime is not None or model.LastUpdatedTime is not None:
+        raise exceptions.InvalidRequest("Error occurred: cannot create read-only properties.")
+
+    # API does not handle 'None' property gracefully
+    if model.Tags is None:
+        del model.Tags
+
+    # Validate existence of referenced resources, validate and create inline resources (except for Rules, Detector)
+    # TODO: split out creation from validation
+    create_worker_helpers.validate_dependencies_for_detector_create(afd_client, model)
+
+    # Create Detector, Rules, Detector Version ID
+    model_helpers.put_detector_for_model(afd_client, model)
+    rule_dicts = create_worker_helpers.create_rules_for_detector_resource(afd_client, model)
+    detector_version_response = create_worker_helpers.create_detector_version_for_detector_resource(afd_client,
+                                                                                                    model,
+                                                                                                    rule_dicts)
+    if model.DetectorVersionStatus != DRAFT_STATUS:
+        api_helpers.call_update_detector_version_status(
+            frauddetector_client=afd_client,
+            detector_id=model.DetectorId,
+            detector_version_id=detector_version_response.get('detectorVersionId', '1'),  # version here should be 1
+            status=model.DetectorVersionStatus
+        )
+
+    # after satisfying all contract tests and AFD requirements, get the resulting model
+    model = read_worker_helpers.validate_detector_exists_and_return_detector_resource_model(afd_client, model)
+    progress.resourceModel = model
+    progress.status = OperationStatus.SUCCESS
+
+    LOG.info(f"Returning Progress with status: {progress.status}")
+    return progress
 
 
 def execute_update_detector_handler_work(session: SessionProxy,
@@ -44,23 +87,12 @@ def execute_read_detector_handler_work(session: SessionProxy, model: models.Reso
     if not model.DetectorId:
         model.DetectorId = model.Arn.split('/')[-1]
 
-    # For contract_delete_read, we need to fail if the resource DNE
-    get_detectors_works, get_detectors_response = validation_helpers.check_if_get_detectors_succeeds(afd_client,
-                                                                                                     model.DetectorId)
+    model = read_worker_helpers.validate_detector_exists_and_return_detector_resource_model(afd_client, model)
+    progress.resourceModel = model
+    progress.status = OperationStatus.SUCCESS
 
-    if not get_detectors_works:
-        raise exceptions.NotFound('detector', model.DetectorId)
-
-    try:
-        detectors = get_detectors_response.get('detectors', [])
-        if not detectors:
-            raise exceptions.NotFound('detector', model.DetectorId)
-        model = model_helpers.get_model_for_detector(afd_client, detectors[0], model)
-        progress.resourceModel = model
-        progress.status = OperationStatus.SUCCESS
-    except RuntimeError as e:
-        raise exceptions.InternalFailure(f"Error occurred: {e}")
     LOG.info(f"Returning Progress with status: {progress.status}")
+    return progress
 
 
 def execute_list_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):

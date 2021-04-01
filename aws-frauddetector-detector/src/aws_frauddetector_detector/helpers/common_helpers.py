@@ -17,19 +17,11 @@ LOG.setLevel(logging.DEBUG)
 # Event Types
 
 
-def put_event_type_and_return_event_type_model(frauddetector_client, model):
+def put_event_type_and_return_event_type_model_for_detector_model(frauddetector_client, model: models.ResourceModel):
     try:
-        if hasattr(model, 'Tags'):
-            tags = model_helpers.get_tags_from_tag_models(model.Tags)
-            put_event_type_func = partial(api_helpers.call_put_event_type,
-                                          frauddetector_client=frauddetector_client,
-                                          event_type_tags=tags)
-        else:
-            put_event_type_func = partial(api_helpers.call_put_event_type,
-                                          frauddetector_client=frauddetector_client)
-
-        put_event_type_for_event_type_model(put_event_type_func, model)
-        model_to_return = model_helpers.get_event_type_and_return_event_type_model(frauddetector_client, model)
+        put_event_type_for_detector_model(frauddetector_client, model)
+        model_to_return = model_helpers.get_event_type_and_return_event_type_model(frauddetector_client,
+                                                                                   model.EventType)
         LOG.debug(f'just finished a put event_type call for event type: {model_to_return.Name}')
 
     except RuntimeError as e:
@@ -38,7 +30,22 @@ def put_event_type_and_return_event_type_model(frauddetector_client, model):
     return model_to_return
 
 
-def put_event_type_for_event_type_model(put_event_type_func: Callable, model: models.EventType):
+def put_event_type_for_detector_model(frauddetector_client, detector_model: models.ResourceModel):
+    if hasattr(detector_model.EventType, 'Tags'):
+        tags = model_helpers.get_tags_from_tag_models(detector_model.EventType.Tags)
+        put_event_type_func = partial(api_helpers.call_put_event_type,
+                                      frauddetector_client=frauddetector_client,
+                                      event_type_tags=tags)
+    else:
+        put_event_type_func = partial(api_helpers.call_put_event_type,
+                                      frauddetector_client=frauddetector_client)
+
+    put_event_type_for_event_type_model(put_event_type_func, detector_model.EventType)
+
+
+def put_event_type_for_event_type_model(
+        put_event_type_func: Callable,
+        model: models.EventType):
     # get entity names
     event_variable_names = [
         [util.extract_name_from_arn(var.Arn), var.Name][var.Arn is None]

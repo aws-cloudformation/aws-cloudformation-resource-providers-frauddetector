@@ -94,6 +94,21 @@ def check_if_get_labels_succeeds(frauddetector_client, label_name):
         return False, None
 
 
+def check_if_get_outcomes_succeeds(frauddetector_client, outcome_name):
+    """
+    This calls get_outcomes and returns True if it worked, along with the API response (True, response)
+    If the call to get_outcomes fails, this returns (False, None)
+    :param frauddetector_client: afd boto3 client to use to make the request
+    :param outcome_name:  the name of the outcome you want to get
+    :return: a tuple: (bool, apiResponse)
+    """
+    try:
+        get_outcomes_response = api_helpers.call_get_outcomes(frauddetector_client, outcome_name)
+        return True, get_outcomes_response
+    except frauddetector_client.exceptions.ResourceNotFoundException as RNF:
+        return False, None
+
+
 def check_variable_differences(existing_event_variable, desired_event_variable):
     return {
         "defaultValue": existing_event_variable.DefaultValue != desired_event_variable.DefaultValue,
