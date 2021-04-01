@@ -35,29 +35,155 @@ def _get_tags_for_given_arn(frauddetector_client, arn):
     return list_tags_response.get("tags", [])
 
 
+# Detectors
+
+
+def get_model_for_detector(frauddetector_client, detector, model: models.ResourceModel):
+    # build model from detector
+    detector_id = detector.get('detectorId', '')
+    detector_arn = detector.get('arn', '')
+    referenced_resources = get_referenced_resources_for_detector(model)
+    model_to_return = models.ResourceModel(DetectorId=detector_id,
+                                           Arn=detector_arn,
+                                           CreatedTime=detector.get('createdTime', ''),
+                                           LastUpdatedTime=detector.get('lastUpdatedTime', ''),
+                                           Description=detector.get('description', ''),
+                                           EventType=None,
+                                           DetectorVersionId=None,
+                                           DetectorVersionStatus=None,
+                                           RuleExecutionMode=None,
+                                           Rules=[],
+                                           Tags=None)
+
+    # get event type model
+    event_type_model = get_event_type_and_return_event_type_model(frauddetector_client,
+                                                                  model.EventType,
+                                                                  referenced_resources.get('event_type'))
+    model_to_return.EventType = event_type_model
+
+    # get latest detector version info to attach to model
+    if model.DetectorVersionId:
+        desired_detector_version = api_helpers.call_get_detector_version(frauddetector_client,
+                                                                         model.DetectorId,
+                                                                         model.DetectorVersionId)
+    else:
+        describe_detectors_response = api_helpers.call_describe_detector(frauddetector_client, detector_id)
+        detector_version_summaries = describe_detectors_response.get('detectorVersionSummaries', [])
+        max_version_id =\
+            max({int(dv_summary.get('detectorVersionId', '-1')) for dv_summary in detector_version_summaries})
+        desired_detector_version = api_helpers.call_get_detector_version(frauddetector_client,
+                                                                         model.DetectorId,
+                                                                         str(max_version_id))
+    model_to_return.DetectorVersionId = desired_detector_version.get('detectorVersionId', '-1')
+    model_to_return.DetectorVersionStatus = desired_detector_version.get('status', '')
+    model_to_return.RuleExecutionMode = desired_detector_version.get('ruleExecutionMode', '')
+
+    # get rule models to attach
+    referenced_outcome_names = get_referenced_resources_for_detector(model).get('rule_outcomes')
+    for rule in desired_detector_version.get('rules', []):
+        rule_detector_id = rule.get('detectorId', '')
+        rule_id = rule.get('ruleId', '')
+        rule_version = rule.get('ruleVersion', '-1')
+        rule_to_append = get_rule_and_return_rule_model(frauddetector_client,
+                                                        rule_detector_id,
+                                                        rule_id,
+                                                        rule_version,
+                                                        referenced_outcome_names)
+        model.Rules.append(rule_to_append)
+
+    # get tags
+    detector_tags = _get_tags_for_given_arn(frauddetector_client, detector_arn)
+    # TODO: reorder tags to the same order as the input model to work around contract test bug?
+    model.Tags = get_tag_models_from_tags(detector_tags)
+
+    return model_to_return
+
+
+# Rules
+
+
+def get_rule_and_return_rule_model(
+        frauddetector_client,
+        detector_id: str,
+        rule_id: str,
+        rule_version: str,
+        referenced_outcomes: set
+) -> models.Rule:
+    get_rules_response = api_helpers.call_get_rules(frauddetector_client=frauddetector_client,
+                                                    detector_id=detector_id,
+                                                    rule_id=rule_id,
+                                                    rule_version=rule_version)
+    if len(get_rules_response) != 1:
+        raise exceptions.NotFound('ruleId:ruleVersion', f'{rule_id}:{rule_version}')
+    rule_detail = get_rules_response[0]
+    rule_arn = rule_detail.get('arn', '')
+    rule_outcome_names = rule_detail.get('outcomes', '')
+    model_to_return = models.Rule(
+        Arn=rule_arn,
+        CreatedTime=rule_detail.get('createdTime', ''),
+        Description=rule_detail.get('description', ''),
+        DetectorId=rule_detail.get('detectorId', ''),
+        Expression=rule_detail.get('expression', ''),
+        Language=rule_detail.get('language', ''),
+        LastUpdatedTime=rule_detail.get('lastUpdatedTime', ''),
+        Outcomes=[],
+        RuleId=rule_detail.get('ruleId', ''),
+        RuleVersion=rule_detail.get('ruleVersion', ''),
+        Tags=None
+    )
+
+    # attach tag models
+    rule_tags = _get_tags_for_given_arn(frauddetector_client, rule_arn)
+    model_to_return.Tags = get_tag_models_from_tags(rule_tags)
+
+    # attach outcome models
+    model_to_return.Outcomes = _get_outcomes_model_for_given_outcome_names(frauddetector_client=frauddetector_client,
+                                                                           outcome_names=rule_outcome_names,
+                                                                           reference_outcome_names=referenced_outcomes)
+    return model_to_return
+
+
 # EventTypes
 
 
-def get_event_type_and_return_event_type_model(frauddetector_client, event_type_model: models.EventType):
+def get_event_type_and_return_event_type_model(frauddetector_client,
+                                               event_type_model: models.EventType,
+                                               referenced_event_types: set
+                                               ) -> models.EventType:
     event_type_name = event_type_model.Name
-    referenced_resources = get_referenced_resources_for_event_type(event_type_model)
     try:
         get_event_types_response = api_helpers.call_get_event_types(frauddetector_client, event_type_name)
         event_types = get_event_types_response.get('eventTypes', [])
-        if event_types:
-            return get_model_for_event_type(frauddetector_client,
-                                            event_types[0],
-                                            referenced_resources,
-                                            event_type_model.Inline)
-        # if get event types worked but did not return any event types, we have major problems
-        error_msg = f"get_event_types for {event_type_name} worked but did not return any event types!"
-        LOG.error(error_msg)
-        raise RuntimeError(error_msg)
+        if len(event_types) != 1:
+            # if get event types worked but did not return any event types, we have major problems
+            error_msg = f"get_event_types for {event_type_name} worked but did not return any event types!"
+            LOG.error(error_msg)
+            raise exceptions.NotFound('event_type', event_type_name)
+        LOG.debug(f"checking if {event_type_name} is in {referenced_event_types}")
+        event_type = event_types[0]
+        if event_type_name in referenced_event_types:
+            LOG.debug(f"in reference set, {event_type_name} is not inline")
+            return models.EventType(Name=event_type.get('name', ''),
+                                    Arn=event_type.get('arn', ''),
+                                    Tags=None,
+                                    Description=None,
+                                    EventVariables=None,
+                                    Labels=None,
+                                    EntityTypes=None,
+                                    CreatedTime=None,
+                                    LastUpdatedTime=None,
+                                    Inline=False)
+        else:
+            LOG.debug(f"not in reference set, {event_type_name} is inline")
+            referenced_resources = get_referenced_resources_for_event_type(event_type_model)
+            return get_model_for_inline_event_type(frauddetector_client,
+                                                   event_type,
+                                                   referenced_resources)
     except RuntimeError as e:
         raise exceptions.InternalFailure(f"Error occurred while getting an event type: {e}")
 
 
-def get_model_for_event_type(frauddetector_client, event_type, referenced_resources: dict, is_inline: bool):
+def get_model_for_inline_event_type(frauddetector_client, event_type, referenced_resources: dict):
     # build model from event type
     model = models.EventType(Name=event_type.get('name', ''),
                              Tags=[],
@@ -68,12 +194,12 @@ def get_model_for_event_type(frauddetector_client, event_type, referenced_resour
                              Arn=event_type.get('arn', ''),
                              CreatedTime=event_type.get('createdTime', ''),
                              LastUpdatedTime=event_type.get('lastUpdatedTime', ''),
-                             Inline=is_inline)
+                             Inline=True)
 
     # attach Tags
     event_type_arn = event_type.get('arn', '')
     event_type_tags = _get_tags_for_given_arn(frauddetector_client, event_type_arn)
-    # TODO: reorder tags to the same order as the input model to work around contract test bug
+    # TODO: reorder tags to the same order as the input model to work around contract test bug?
     model.Tags = get_tag_models_from_tags(event_type_tags)
 
     # attach EventVariables
@@ -104,10 +230,52 @@ def get_model_for_event_type(frauddetector_client, event_type, referenced_resour
     return model
 
 
+# Outcomes
+
+
+def _get_outcomes_model_for_given_outcome_names(frauddetector_client, outcome_names, reference_outcome_names):
+    outcome_models = []
+    for outcome_name in outcome_names:
+        get_outcomes_response = api_helpers.call_get_outcomes(frauddetector_client, outcome_name)
+        outcomes = get_outcomes_response.get('outcomes', [])
+        if len(outcomes) != 1:
+            raise RuntimeError(f"Error! Expected an existing outcome, but outcome did not exist! outcome {outcome_name}")
+        outcome = outcomes[0]
+        outcome_arn = outcome.get('arn', '')
+        LOG.debug(f"checking if {outcome_name} is in {reference_outcome_names}")
+        if outcome_name in reference_outcome_names:
+            LOG.debug(f"in reference set, {outcome_name} is not defined inline")
+            outcome_model = models.Outcome(Name=outcome_name,
+                                           Arn=outcome_arn,
+                                           Tags=None,
+                                           Description=None,
+                                           CreatedTime=None,
+                                           LastUpdatedTime=None,
+                                           Inline=False)
+        else:
+            LOG.debug(f"not in reference set, {outcome_name} is inline")
+            outcome_tags = _get_tags_for_given_arn(frauddetector_client, outcome_arn)
+            tag_models = get_tag_models_from_tags(outcome_tags)
+            outcome_model = models.Outcome(Name=outcome_name,
+                                           Tags=tag_models,
+                                           Description=outcome.get('description', ''),
+                                           Arn=outcome_arn,
+                                           CreatedTime=outcome.get('createdTime', ''),
+                                           LastUpdatedTime=outcome.get('lastUpdatedTime', ''),
+                                           Inline=True)
+        # remove empty description/tags
+        if not outcome_model.Tags:
+            del outcome_model.Tags
+        if outcome_model.Description is None or outcome_model.Description == '':
+            del outcome_model.Description
+        outcome_models.append(outcome_model)
+    return outcome_models
+
+
 # EventVariables
 
 
-def _get_variables_and_return_event_variables_model(frauddetector_client, variable_names, reference_variable_arns: set):
+def _get_variables_and_return_event_variables_model(frauddetector_client, variable_names, reference_variable_names: set):
     collected_variables = []
     for variable_name in variable_names:
         # use singular get_variables to preserve order (transient contract test bug workaround)
@@ -115,7 +283,7 @@ def _get_variables_and_return_event_variables_model(frauddetector_client, variab
         collected_variables.extend(get_variables_response.get('variables', []))
     return _get_event_variables_model_for_given_variables(frauddetector_client,
                                                           collected_variables,
-                                                          reference_variable_arns)
+                                                          reference_variable_names)
 
 
 def _get_event_variables_model_for_given_variables(frauddetector_client, variables, reference_variable_names: set):
@@ -257,12 +425,27 @@ def get_referenced_resources_for_event_type(event_type_model: models.EventType) 
         'labels': set(),
         'entity_types': set(),
     }
-    LOG.debug(f"building referenced resources for model: {event_type_model}")
+    LOG.debug(f"building referenced resources for event type model: {event_type_model}")
     if not event_type_model:
         return referenced_resources
     referenced_resources['event_variables'] = {ev.Name for ev in event_type_model.EventVariables if not ev.Inline}
     referenced_resources['labels'] = {label.Name for label in event_type_model.Labels if not label.Inline}
     referenced_resources['entity_types'] = {et.Name for et in event_type_model.EntityTypes if not et.Inline}
+    LOG.debug(f"returning referenced resources: {referenced_resources}")
+    return referenced_resources
+
+
+def get_referenced_resources_for_detector(detector_model: models.ResourceModel) -> dict:
+    referenced_resources = {
+        'rule_outcomes': set(),
+        'event_type': set(),
+    }
+    LOG.debug(f"building referenced resources for detector model: {detector_model}")
+    if not detector_model:
+        return referenced_resources
+    referenced_resources['rule_outcomes'] = {r.Name for r in detector_model.Rules if not r.Inline}
+    if not detector_model.EventType.Inline:
+        referenced_resources['event_type'].add(detector_model.EventType.Name)
     LOG.debug(f"returning referenced resources: {referenced_resources}")
     return referenced_resources
 
@@ -273,7 +456,7 @@ def get_inline_resources_for_event_type(event_type_model: models.EventType) -> d
         'labels': set(),
         'entity_types': set(),
     }
-    LOG.debug(f"building inline resources for model: {event_type_model}")
+    LOG.debug(f"building inline resources for event type model: {event_type_model}")
     if not event_type_model:
         return inline_resources
     inline_resources['event_variables'] = {ev.Name for ev in event_type_model.EventVariables if ev.Inline}

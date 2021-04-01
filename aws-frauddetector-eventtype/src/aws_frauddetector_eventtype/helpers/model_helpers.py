@@ -105,7 +105,7 @@ def get_model_for_event_type(frauddetector_client, event_type, referenced_resour
 # EventVariables
 
 
-def _get_variables_and_return_event_variables_model(frauddetector_client, variable_names, reference_variable_arns: set):
+def _get_variables_and_return_event_variables_model(frauddetector_client, variable_names, reference_variable_names: set):
     collected_variables = []
     for variable_name in variable_names:
         # use singular get_variables to preserve order (transient contract test bug workaround)
@@ -113,7 +113,7 @@ def _get_variables_and_return_event_variables_model(frauddetector_client, variab
         collected_variables.extend(get_variables_response.get('variables', []))
     return _get_event_variables_model_for_given_variables(frauddetector_client,
                                                           collected_variables,
-                                                          reference_variable_arns)
+                                                          reference_variable_names)
 
 
 def _get_event_variables_model_for_given_variables(frauddetector_client, variables, reference_variable_names: set):

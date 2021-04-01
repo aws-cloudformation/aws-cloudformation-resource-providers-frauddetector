@@ -14,6 +14,22 @@ def remove_none_arguments(args):
     return args
 
 
+def check_if_get_detectors_succeeds(frauddetector_client, detector_id):
+    """
+    This calls get_detectors and returns True if it worked, along with the API response (True, response)
+    If the call to get_detectors fails, this returns (False, None)
+    :param frauddetector_client: afd boto3 client to use to make the request
+    :param detector_id:  the id of the detector you want to get
+    :return: a tuple: (bool, apiResponse)
+    """
+    try:
+        get_detectors_response = api_helpers.call_get_detectors(frauddetector_client, detector_id)
+        return True, get_detectors_response
+    except frauddetector_client.exceptions.ResourceNotFoundException as RNF:
+        LOG.warning(f"Error getting detector {detector_id}: {RNF}")
+        return False, None
+
+
 def check_if_get_variables_succeeds(frauddetector_client, variable_name):
     """
     This calls get_variables and returns True if it worked, along with the API response (True, response)
