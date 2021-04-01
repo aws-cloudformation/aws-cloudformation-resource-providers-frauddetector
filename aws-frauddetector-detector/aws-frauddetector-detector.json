@@ -419,6 +419,10 @@
         "$ref": "#/definitions/Rule"
       }
     },
+    "EventType": {
+      "description": "The event type to associate this detector with.",
+      "$ref": "#/definitions/EventType"
+    },
     "Arn": {
       "description": "The ARN of the detector.",
       "type": "string"
