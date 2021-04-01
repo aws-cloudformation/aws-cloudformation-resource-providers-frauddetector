@@ -24,7 +24,8 @@ def test_get_event_type_and_return_event_type_model():
 
     # Act
     model_result = model_helpers.get_event_type_and_return_event_type_model(mock_afd_client,
-                                                                            unit_test_utils.create_fake_event_type())
+                                                                            unit_test_utils.create_fake_event_type(),
+                                                                            set())
 
     # Assert
     assert mock_afd_client.list_tags_for_resource.call_count == 6

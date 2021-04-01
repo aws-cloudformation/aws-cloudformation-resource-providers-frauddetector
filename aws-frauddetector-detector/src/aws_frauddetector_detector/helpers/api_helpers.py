@@ -69,6 +69,28 @@ def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_
 
 
 @api_call_with_debug_logs
+def call_put_outcome(frauddetector_client,
+                     outcome_name: str,
+                     outcome_tags: List[dict] = None,
+                     outcome_description: str = None):
+    """
+    Call put_outcome with the given frauddetector client and the given arguments.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param outcome_name: name of the outcome
+    :param outcome_tags: tags to attach to the outcome (default is None)
+    :param outcome_description: description of the outcome (default is None)
+    :return: API response from frauddetector_client
+    """
+    args = {
+        "name": outcome_name,
+        "tags": outcome_tags,
+        "description": outcome_description
+    }
+    args = validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.put_outcome(**args)
+
+
+@api_call_with_debug_logs
 def call_put_label(frauddetector_client,
                    label_name: str,
                    label_tags: List[dict] = None,
@@ -197,7 +219,94 @@ def call_update_variable(frauddetector_client,
     return frauddetector_client.update_variable(**args)
 
 
+# Describe APIs
+
+
+@paginated_api_call(item_to_collect='detectorVersionSummaries')
+@api_call_with_debug_logs
+def call_describe_detector(frauddetector_client, detector_id):
+    """
+    Call describe_detector with the given frauddetector client and the given arguments.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param detector_id: id of the detector to describe
+    :return: return detector version summaries for the given detector_id
+    """
+    args = {
+        "detectorId": detector_id
+    }
+    return frauddetector_client.describe_detector(**args)
+
+
 # Get APIs
+
+
+@api_call_with_debug_logs
+def call_get_detector_version(frauddetector_client, detector_id: str, detector_version_id: str):
+    """
+    Call get_detector_version with the given frauddetector client and the given arguments.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param detector_id: id of the detector to get the version for
+    :param detector_version_id: version id for the detector version to get
+    :return: get a single detector if detector_id is specified, otherwise get all detectors
+    """
+    args = {
+        "detectorId": detector_id,
+        "detectorVersionId": detector_version_id
+    }
+    return frauddetector_client.get_detector_version(**args)
+
+
+@paginated_api_call(item_to_collect='detectors')
+@api_call_with_debug_logs
+def call_get_detectors(frauddetector_client, detector_id: str = None):
+    """
+    Call get_detectors with the given frauddetector client and the given arguments.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param detector_id: id of the detector to get (default is None)
+    :return: get a single detector if detector_id is specified, otherwise get all detectors
+    """
+    args = {
+        "detectorId": detector_id
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.get_detectors(**args)
+
+
+@paginated_api_call(item_to_collect='ruleDetails')
+@api_call_with_debug_logs
+def call_get_rules(frauddetector_client, detector_id: str, rule_id: str = None, rule_version: str = None):
+    """
+    Call get_detectors with the given frauddetector client and the given arguments.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param detector_id: id of the detector to get rules for
+    :param rule_id: id of the specific rule to get (Default is none)
+    :param rule_version: version of the specific rule to get (Default is none)
+
+    :return: get a single detector if detector_id is specified, otherwise get all detectors
+    """
+    args = {
+        "detectorId": detector_id,
+        "ruleId": rule_id,
+        "ruleVersion": rule_version
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.get_rules(**args)
+
+
+@paginated_api_call(item_to_collect='outcomes')
+@api_call_with_debug_logs
+def call_get_outcomes(frauddetector_client, outcome_name: str = None):
+    """
+    Call get_outcomes with the given frauddetector client and the given arguments.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param outcome_name: name of the outcome to get (default is None)
+    :return: get a single outcome if outcome_name is specified, otherwise get all outcomes
+    """
+    args = {
+        "name": outcome_name
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.get_outcomes(**args)
 
 
 @paginated_api_call(item_to_collect='variables')
@@ -247,6 +356,17 @@ def call_get_event_types(frauddetector_client, event_type_name: str = None):
 
 
 # Delete APIs
+
+
+@api_call_with_debug_logs
+def call_delete_outcome(frauddetector_client, outcome_name: str):
+    """
+    Call delete_outcome for a given outcome name with the given frauddetector client.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param outcome_name: name of the outcome to delete
+    :return: success will return a 200 with no body
+    """
+    return frauddetector_client.delete_outcome(name=outcome_name)
 
 
 @api_call_with_debug_logs
