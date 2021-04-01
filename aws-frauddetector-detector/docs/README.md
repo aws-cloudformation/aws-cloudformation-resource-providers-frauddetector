@@ -18,6 +18,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
         "<a href="#tags" title="Tags">Tags</a>" : <i>[ <a href="tag.md">Tag</a>, ... ]</i>,
         "<a href="#description" title="Description">Description</a>" : <i>String</i>,
         "<a href="#rules" title="Rules">Rules</a>" : <i>[ <a href="rule.md">Rule</a>, ... ]</i>,
+        "<a href="#eventtype" title="EventType">EventType</a>" : <i><a href="eventtype.md">EventType</a></i>,
     }
 }
 </pre>
@@ -35,6 +36,7 @@ Properties:
     <a href="#description" title="Description">Description</a>: <i>String</i>
     <a href="#rules" title="Rules">Rules</a>: <i>
       - <a href="rule.md">Rule</a></i>
+    <a href="#eventtype" title="EventType">EventType</a>: <i><a href="eventtype.md">EventType</a></i>
 </pre>
 
 ## Properties
@@ -106,6 +108,14 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 _Required_: Yes
 
 _Type_: List of <a href="rule.md">Rule</a>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### EventType
+
+_Required_: Yes
+
+_Type_: <a href="eventtype.md">EventType</a>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
