@@ -38,6 +38,19 @@ def _get_tags_for_given_arn(frauddetector_client, arn):
 # Detectors
 
 
+def put_detector_for_model(frauddetector_client, model: models.ResourceModel):
+    if not model.EventType.Name:
+        model.EventType.Name = util.extract_name_from_arn(model.EventType.Arn)
+    tags = get_tags_from_tag_models(model.Tags)
+    api_helpers.call_put_detector(
+        frauddetector_client=frauddetector_client,
+        detector_id=model.DetectorId,
+        detector_event_type_name=model.EventType.Name,
+        detector_tags=tags,
+        detector_description=model.Description
+    )
+
+
 def get_model_for_detector(frauddetector_client, detector, model: models.ResourceModel):
     # build model from detector
     detector_id = detector.get('detectorId', '')
@@ -57,8 +70,7 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
 
     # get event type model
     event_type_model = get_event_type_and_return_event_type_model(frauddetector_client,
-                                                                  model.EventType,
-                                                                  referenced_resources.get('event_type'))
+                                                                  model.EventType)
     model_to_return.EventType = event_type_model
 
     # get latest detector version info to attach to model
@@ -79,7 +91,7 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
     model_to_return.RuleExecutionMode = desired_detector_version.get('ruleExecutionMode', '')
 
     # get rule models to attach
-    referenced_outcome_names = get_referenced_resources_for_detector(model).get('rule_outcomes')
+    referenced_outcome_names = referenced_resources.get('rule_outcomes')
     for rule in desired_detector_version.get('rules', []):
         rule_detector_id = rule.get('detectorId', '')
         rule_id = rule.get('ruleId', '')
@@ -102,6 +114,30 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
 # Rules
 
 
+def create_rule_for_rule_model(frauddetector_client,
+                               rule_model: models.Rule,
+                               detector_model: models.ResourceModel) -> dict:
+    rule_tags = get_tags_from_tag_models(rule_model.Tags)
+
+    def get_outcome_name(outcome: models.Outcome):
+        if outcome.Name:
+            return outcome.Name
+        return util.extract_name_from_arn(outcome.Arn)
+
+    outcome_names = [get_outcome_name(outcome_model) for outcome_model in rule_model.Outcomes]
+    create_rule_response = api_helpers.call_create_rule(
+        frauddetector_client=frauddetector_client,
+        rule_id=rule_model.RuleId,
+        detector_id=detector_model.DetectorId,
+        rule_expression=rule_model.Expression,
+        rule_language=rule_model.Language,
+        rule_outcomes=outcome_names,
+        rule_description=rule_model.Description,
+        rule_tags=rule_tags
+    )
+    return create_rule_response.get('rule')
+
+
 def get_rule_and_return_rule_model(
         frauddetector_client,
         detector_id: str,
@@ -113,9 +149,10 @@ def get_rule_and_return_rule_model(
                                                     detector_id=detector_id,
                                                     rule_id=rule_id,
                                                     rule_version=rule_version)
-    if len(get_rules_response) != 1:
+    rule_details = get_rules_response.get('ruleDetails')
+    if len(rule_details) != 1:
         raise exceptions.NotFound('ruleId:ruleVersion', f'{rule_id}:{rule_version}')
-    rule_detail = get_rules_response[0]
+    rule_detail = rule_details[0]
     rule_arn = rule_detail.get('arn', '')
     rule_outcome_names = rule_detail.get('outcomes', '')
     model_to_return = models.Rule(
@@ -147,8 +184,7 @@ def get_rule_and_return_rule_model(
 
 
 def get_event_type_and_return_event_type_model(frauddetector_client,
-                                               event_type_model: models.EventType,
-                                               referenced_event_types: set
+                                               event_type_model: models.EventType
                                                ) -> models.EventType:
     event_type_name = event_type_model.Name
     try:
@@ -159,10 +195,9 @@ def get_event_type_and_return_event_type_model(frauddetector_client,
             error_msg = f"get_event_types for {event_type_name} worked but did not return any event types!"
             LOG.error(error_msg)
             raise exceptions.NotFound('event_type', event_type_name)
-        LOG.debug(f"checking if {event_type_name} is in {referenced_event_types}")
         event_type = event_types[0]
-        if event_type_name in referenced_event_types:
-            LOG.debug(f"in reference set, {event_type_name} is not inline")
+        if not event_type_model.Inline:
+            LOG.debug(f"{event_type_name} is not inline")
             return models.EventType(Name=event_type.get('name', ''),
                                     Arn=event_type.get('arn', ''),
                                     Tags=None,
@@ -174,7 +209,7 @@ def get_event_type_and_return_event_type_model(frauddetector_client,
                                     LastUpdatedTime=None,
                                     Inline=False)
         else:
-            LOG.debug(f"not in reference set, {event_type_name} is inline")
+            LOG.debug(f"{event_type_name} is inline")
             referenced_resources = get_referenced_resources_for_event_type(event_type_model)
             return get_model_for_inline_event_type(frauddetector_client,
                                                    event_type,
@@ -443,7 +478,7 @@ def get_referenced_resources_for_detector(detector_model: models.ResourceModel) 
     LOG.debug(f"building referenced resources for detector model: {detector_model}")
     if not detector_model:
         return referenced_resources
-    referenced_resources['rule_outcomes'] = {r.Name for r in detector_model.Rules if not r.Inline}
+    referenced_resources['rule_outcomes'] = {o.Name for r in detector_model.Rules for o in r.Outcomes if not o.Inline}
     if not detector_model.EventType.Inline:
         referenced_resources['event_type'].add(detector_model.EventType.Name)
     LOG.debug(f"returning referenced resources: {referenced_resources}")

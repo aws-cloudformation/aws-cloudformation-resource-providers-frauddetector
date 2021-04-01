@@ -265,6 +265,7 @@
   "required": [
     "EntityTypes",
     "EventVariables",
+    "Labels",
     "Name"
   ],
   "createOnlyProperties": [
