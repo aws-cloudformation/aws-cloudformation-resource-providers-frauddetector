@@ -14,6 +14,7 @@ from .helpers import (
     model_helpers,
     create_worker_helpers,
     read_worker_helpers,
+    list_worker_helpers,
     update_worker_helpers,
     delete_worker_helpers,
     api_helpers
@@ -121,4 +122,12 @@ def execute_read_detector_handler_work(session: SessionProxy, model: models.Reso
 
 
 def execute_list_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):
-    pass
+    afd_client = client_helpers.get_singleton_afd_client(session)
+    try:
+        detector_models = list_worker_helpers.list_detector_models(afd_client)
+    except RuntimeError as e:
+        raise exceptions.InternalFailure(f"Error occurred: {e}")
+    progress.resourceModels = detector_models
+    progress.status = OperationStatus.SUCCESS
+    LOG.info(f"Returning Progress with status: {progress.status}")
+    return progress

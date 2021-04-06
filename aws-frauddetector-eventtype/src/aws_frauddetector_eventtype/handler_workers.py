@@ -138,6 +138,7 @@ def execute_list_event_type_handler_work(session, model, progress):
         get_event_types_response = api_helpers.call_get_event_types(afd_client)
         event_types = get_event_types_response.get('eventTypes', [])
 
+        # Assume inline for list handler (we have no way of knowing with current implementation)
         empty_references = model_helpers.get_referenced_resources(None)
         progress.resourceModels =\
             [model_helpers.get_model_for_event_type(afd_client, et, empty_references) for et in event_types]
