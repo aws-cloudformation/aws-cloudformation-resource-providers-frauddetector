@@ -101,12 +101,12 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
                                                         rule_id,
                                                         rule_version,
                                                         referenced_outcome_names)
-        model.Rules.append(rule_to_append)
+        model_to_return.Rules.append(rule_to_append)
 
     # get tags
     detector_tags = _get_tags_for_given_arn(frauddetector_client, detector_arn)
     # TODO: reorder tags to the same order as the input model to work around contract test bug?
-    model.Tags = get_tag_models_from_tags(detector_tags)
+    model_to_return.Tags = get_tag_models_from_tags(detector_tags)
 
     return model_to_return
 

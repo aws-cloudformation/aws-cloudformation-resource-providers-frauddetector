@@ -480,6 +480,26 @@ def call_delete_label(frauddetector_client, label_name: str):
     return frauddetector_client.delete_label(name=label_name)
 
 
+@api_call_with_debug_logs
+def call_delete_detector(frauddetector_client, detector_id: str):
+    return frauddetector_client.delete_detector(detectorId=detector_id)
+
+
+@api_call_with_debug_logs
+def call_delete_detector_version(frauddetector_client, detector_id: str, detector_version_id: str):
+    return frauddetector_client.delete_detector_version(detectorId=detector_id, detectorVersionId=detector_version_id)
+
+
+@api_call_with_debug_logs
+def call_delete_rule(frauddetector_client, detector_id: str, rule_id: str, rule_version: str):
+    rule = {
+        "detectorId": detector_id,
+        "ruleId": rule_id,
+        "ruleVersion": rule_version
+    }
+    return frauddetector_client.delete_rule(rule=rule)
+
+
 # Tagging
 
 
