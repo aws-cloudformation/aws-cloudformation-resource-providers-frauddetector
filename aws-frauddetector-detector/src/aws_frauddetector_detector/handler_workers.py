@@ -78,7 +78,32 @@ def execute_update_detector_handler_work(session: SessionProxy,
 
 
 def execute_delete_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):
-    pass
+    afd_client = client_helpers.get_singleton_afd_client(session)
+
+    # For contract_delete_delete, we need to fail if the resource DNE
+    get_detectors_works, _ = validation_helpers.check_if_get_detectors_succeeds(afd_client, model.DetectorId)
+    if not get_detectors_works:
+        raise exceptions.NotFound('detector', model.DetectorId)
+
+    try:
+        LOG.debug("deleting DVs")
+        delete_worker_helpers.deactivate_and_delete_detector_versions_for_detector_model(afd_client, model)
+
+        LOG.debug("deleting Rules (+ outcomes)")
+        delete_worker_helpers.delete_rules_and_inline_outcomes_for_detector_model(afd_client, model)
+
+        LOG.debug("deleting detector")
+        delete_worker_helpers.delete_detector_for_detector_model(afd_client, model)
+
+        LOG.debug("deleting inline dependencies (event type: entity types, labels, event variables)")
+        delete_worker_helpers.delete_inline_dependencies_for_detector_model(afd_client, model)
+
+        progress.resourceModel = None
+        progress.status = OperationStatus.SUCCESS
+    except RuntimeError as e:
+        raise exceptions.InternalFailure(f"Error occurred: {e}")
+    LOG.info(f"Returning Progress with status: {progress.status}")
+    return progress
 
 
 def execute_read_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):

@@ -42,6 +42,6 @@
   "EventType": {
     "Inline": false,
     "Name": "reference_event_type_for_detector",
-    "Arn": "arn:aws:frauddetector:us-west-2:123123123123:event_type/reference_event_type_for_detector"
+    "Arn": "arn:aws:frauddetector:us-west-2:123123123123:event-type/reference_event_type_for_detector"
   }
 }
