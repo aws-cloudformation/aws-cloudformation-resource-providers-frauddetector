@@ -21,7 +21,6 @@ def validate_dependencies_for_detector_create(afd_client, model: models.Resource
 def create_rules_for_detector_resource(afd_client, model: models.ResourceModel) -> List[dict]:
     rule_dicts = []
     for rule in model.Rules:
-        _validate_outcomes_for_rule(afd_client, rule)
         rule_dict = model_helpers.create_rule_for_rule_model(afd_client, rule, model)
         rule_dicts.append(rule_dict)
     return rule_dicts
@@ -97,6 +96,7 @@ def _validate_rule_for_detector_create(afd_client, model: models.ResourceModel, 
     if model.DetectorId != rule.DetectorId:
         raise exceptions.InvalidRequest(
             f'Rule {rule.RuleId} detector id {rule.DetectorId} does not match detector id {model.DetectorId}!')
+    _validate_outcomes_for_rule(afd_client, rule)
 
 
 def _validate_dependencies_for_inline_event_type_create(afd_client, event_type_model: models.EventType):

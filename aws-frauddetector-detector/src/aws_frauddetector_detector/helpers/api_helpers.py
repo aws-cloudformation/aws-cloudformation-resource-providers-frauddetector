@@ -289,6 +289,59 @@ def call_update_variable(frauddetector_client,
 
 
 @api_call_with_debug_logs
+def call_update_rule_version(frauddetector_client,
+                             detector_id: str,
+                             rule_id: str,
+                             rule_version: str,
+                             rule_expression: str,
+                             rule_language: str,
+                             rule_outcomes: List[str],
+                             rule_description: str = None,
+                             rule_tags: List[dict] = None):
+    """
+    Calls update_rule_version with the given frauddetector client
+    :param frauddetector_client: boto3 client to make the call with
+    :return: API response from update_rule_version
+    """
+    args = {
+        "description": rule_description,
+        "expression": rule_expression,
+        "language": rule_language,
+        "outcomes": rule_outcomes,
+        "rule": {
+            "detectorId": detector_id,
+            "ruleId": rule_id,
+            "ruleVersion": rule_version
+        },
+        "tags": rule_tags
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.update_rule_version(**args)
+
+
+@api_call_with_debug_logs
+def call_update_detector_version(frauddetector_client,
+                                 detector_id: str,
+                                 detector_version_id: str,
+                                 rules: List[dict],
+                                 rule_execution_mode: str = None,
+                                 model_versions: List[dict] = None,
+                                 external_model_endpoints: List[str] = None,
+                                 detector_version_description: str = None):
+    args = {
+        "detectorId": detector_id,
+        "detectorVersionId": detector_version_id,
+        "rules": rules,
+        "ruleExecutionMode": rule_execution_mode,
+        "modelVersions": model_versions,
+        "externalModelEndpoints": external_model_endpoints,
+        "description": detector_version_description
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.update_detector_version(**args)
+
+
+@api_call_with_debug_logs
 def call_update_detector_version_status(frauddetector_client,
                                         detector_id: str,
                                         detector_version_id: str,

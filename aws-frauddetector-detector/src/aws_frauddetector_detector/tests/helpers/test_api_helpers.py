@@ -74,6 +74,32 @@ def test_get_calls(monkeypatch):
             'api_helper_call_func': api_helpers.call_get_event_types,
             'api_name': 'get_event_types',
             'args': {}
+        },
+        {
+            'api_helper_call_func': api_helpers.call_get_outcomes,
+            'api_name': 'get_outcomes',
+            'args': {}
+        },
+        {
+            'api_helper_call_func': api_helpers.call_get_detectors,
+            'api_name': 'get_detectors',
+            'args': {}
+        },
+        {
+            'api_helper_call_func': api_helpers.call_get_rules,
+            'api_name': 'get_rules',
+            'args': {
+                "detector_id": unit_test_utils.FAKE_RULE_DETAIL.get('detectorId')
+            }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_get_detector_version,
+            'api_name': 'get_detector_version',
+            'args': {
+                "detector_id": unit_test_utils.FAKE_DETECTOR_VERSION.get('detectorId'),
+                "detector_version_id": unit_test_utils.FAKE_DETECTOR_VERSION.get('detectorVersionId'),
+                'should_check_validation_helper': False
+            }
         }
     ]
     for api_call_to_test in required_arguments:
@@ -109,6 +135,21 @@ def test_put_calls(monkeypatch):
                 'event_type_name': unit_test_utils.FAKE_EVENT_TYPE.get('name'),
                 'entity_type_names': unit_test_utils.FAKE_EVENT_TYPE.get('entityTypes'),
                 'event_variable_names': unit_test_utils.FAKE_EVENT_TYPE.get('eventVariables')
+            }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_put_outcome,
+            'api_name': 'put_outcome',
+            'args': {
+                'outcome_name': unit_test_utils.FAKE_OUTCOME.get('name')
+            }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_put_detector,
+            'api_name': 'put_detector',
+            'args': {
+                'detector_id': unit_test_utils.FAKE_DETECTOR.get('detectorId'),
+                'detector_event_type_name': unit_test_utils.FAKE_DETECTOR.get('eventTypeName'),
             }
         }
     ]
@@ -149,6 +190,41 @@ def test_delete_calls(monkeypatch):
                 'event_type_name': unit_test_utils.FAKE_EVENT_TYPE.get('name'),
                 'should_check_validation_helper': False
             }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_delete_outcome,
+            'api_name': 'delete_outcome',
+            'args': {
+                'outcome_name': unit_test_utils.FAKE_OUTCOME.get('name'),
+                'should_check_validation_helper': False
+            }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_delete_detector,
+            'api_name': 'delete_detector',
+            'args': {
+                'detector_id': unit_test_utils.FAKE_DETECTOR.get('detectorId'),
+                'should_check_validation_helper': False
+            }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_delete_detector_version,
+            'api_name': 'delete_detector_version',
+            'args': {
+                'detector_id': unit_test_utils.FAKE_DETECTOR_VERSION.get('detectorId'),
+                'detector_version_id': unit_test_utils.FAKE_DETECTOR_VERSION.get('detectorVersionId'),
+                'should_check_validation_helper': False
+            }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_delete_rule,
+            'api_name': 'delete_rule',
+            'args': {
+                'detector_id': unit_test_utils.FAKE_RULE_DETAIL.get('detectorId'),
+                'rule_id': unit_test_utils.FAKE_RULE_DETAIL.get('ruleId'),
+                'rule_version': unit_test_utils.FAKE_RULE_DETAIL.get('ruleVersion'),
+                'should_check_validation_helper': False
+            }
         }
     ]
     for api_call_to_test in required_arguments:
@@ -172,6 +248,26 @@ def test_create_calls(monkeypatch):
                 'variable_data_type': unit_test_utils.FAKE_IP_VARIABLE.get('dataType'),
                 'variable_default_value': unit_test_utils.FAKE_IP_VARIABLE.get('defaultValue')
             }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_create_rule,
+            'api_name': 'create_rule',
+            'args': {
+                'rule_id': unit_test_utils.FAKE_RULE_DETAIL.get('ruleId'),
+                'detector_id': unit_test_utils.FAKE_RULE_DETAIL.get('detectorId'),
+                'rule_expression': unit_test_utils.FAKE_RULE_DETAIL.get('expression'),
+                'rule_language': unit_test_utils.FAKE_RULE_DETAIL.get('language'),
+                'rule_outcomes': unit_test_utils.FAKE_RULE_DETAIL.get('outcomes')
+            }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_create_detector_version,
+            'api_name': 'create_detector_version',
+            'args': {
+                'detector_id': unit_test_utils.FAKE_DETECTOR_VERSION.get('detectorId'),
+                'rules': unit_test_utils.FAKE_DETECTOR_VERSION.get('rules'),
+                'rule_execution_mode': unit_test_utils.FAKE_DETECTOR_VERSION.get('ruleExecutionMode')
+            }
         }
     ]
     for api_call_to_test in required_arguments:
@@ -189,10 +285,69 @@ def test_update_calls(monkeypatch):
                 'variable_type': unit_test_utils.FAKE_IP_VARIABLE.get('variableType'),
                 'variable_description': unit_test_utils.FAKE_IP_VARIABLE.get('description')
             }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_update_rule_version,
+            'api_name': 'update_rule_version',
+            'args': {
+                'rule_id': unit_test_utils.FAKE_RULE_DETAIL.get('ruleId'),
+                'detector_id': unit_test_utils.FAKE_RULE_DETAIL.get('detectorId'),
+                'rule_version': unit_test_utils.FAKE_RULE_DETAIL.get('ruleVersion'),
+                'rule_expression': unit_test_utils.FAKE_RULE_DETAIL.get('expression'),
+                'rule_language': unit_test_utils.FAKE_RULE_DETAIL.get('language'),
+                'rule_outcomes': unit_test_utils.FAKE_RULE_DETAIL.get('outcomes')
+            }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_update_detector_version,
+            'api_name': 'update_detector_version',
+            'args': {
+                'detector_id': unit_test_utils.FAKE_DETECTOR_VERSION.get('detectorId'),
+                'detector_version_id': unit_test_utils.FAKE_DETECTOR_VERSION.get('detectorVersionId'),
+                'rules': unit_test_utils.FAKE_DETECTOR_VERSION.get('rules'),
+                'rule_execution_mode': unit_test_utils.FAKE_DETECTOR_VERSION.get('ruleExecutionMode')
+            }
+        },
+        {
+            'api_helper_call_func': api_helpers.call_update_detector_version_status,
+            'api_name': 'update_detector_version_status',
+            'args': {
+                'detector_id': unit_test_utils.FAKE_DETECTOR_VERSION.get('detectorId'),
+                'detector_version_id': unit_test_utils.FAKE_DETECTOR_VERSION.get('detectorVersionId'),
+                'status': unit_test_utils.FAKE_DETECTOR_VERSION.get('status'),
+                'should_check_validation_helper': False
+            }
         }
     ]
     for api_call_to_test in required_arguments:
-        _test_api_helper_call(monkeypatch=monkeypatch, **api_call_to_test)
+        current_args = api_call_to_test.get('args', {})
+        should_check_validation_helper = current_args.get('should_check_validation_helper', True)
+        if 'should_check_validation_helper' in current_args:
+            del current_args['should_check_validation_helper']
+        _test_api_helper_call(monkeypatch=monkeypatch,
+                              should_check_validation_helper=should_check_validation_helper,
+                              **api_call_to_test)
+
+
+def test_describe_calls(monkeypatch):
+    required_arguments = [
+        {
+            'api_helper_call_func': api_helpers.call_describe_detector,
+            'api_name': 'describe_detector',
+            'args': {
+                'detector_id': unit_test_utils.FAKE_DETECTOR.get('detectorId'),
+                'should_check_validation_helper': False
+            }
+        }
+    ]
+    for api_call_to_test in required_arguments:
+        current_args = api_call_to_test.get('args', {})
+        should_check_validation_helper = current_args.get('should_check_validation_helper', True)
+        if 'should_check_validation_helper' in current_args:
+            del current_args['should_check_validation_helper']
+        _test_api_helper_call(monkeypatch=monkeypatch,
+                              should_check_validation_helper=should_check_validation_helper,
+                              **api_call_to_test)
 
 
 def _test_api_helper_call(monkeypatch, api_helper_call_func, api_name, args, should_check_validation_helper=True):

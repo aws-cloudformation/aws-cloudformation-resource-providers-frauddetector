@@ -174,9 +174,9 @@ def get_rule_and_return_rule_model(
     model_to_return.Tags = get_tag_models_from_tags(rule_tags)
 
     # attach outcome models
-    model_to_return.Outcomes = _get_outcomes_model_for_given_outcome_names(frauddetector_client=frauddetector_client,
-                                                                           outcome_names=rule_outcome_names,
-                                                                           reference_outcome_names=referenced_outcomes)
+    model_to_return.Outcomes = get_outcomes_model_for_given_outcome_names(frauddetector_client=frauddetector_client,
+                                                                          outcome_names=rule_outcome_names,
+                                                                          reference_outcome_names=referenced_outcomes)
     return model_to_return
 
 
@@ -268,7 +268,7 @@ def get_model_for_inline_event_type(frauddetector_client, event_type, referenced
 # Outcomes
 
 
-def _get_outcomes_model_for_given_outcome_names(frauddetector_client, outcome_names, reference_outcome_names):
+def get_outcomes_model_for_given_outcome_names(frauddetector_client, outcome_names, reference_outcome_names):
     outcome_models = []
     for outcome_name in outcome_names:
         get_outcomes_response = api_helpers.call_get_outcomes(frauddetector_client, outcome_name)
@@ -277,9 +277,9 @@ def _get_outcomes_model_for_given_outcome_names(frauddetector_client, outcome_na
             raise RuntimeError(f"Error! Expected an existing outcome, but outcome did not exist! outcome {outcome_name}")
         outcome = outcomes[0]
         outcome_arn = outcome.get('arn', '')
-        LOG.debug(f"checking if {outcome_name} is in {reference_outcome_names}")
+        LOG.debug(f"checking if outcome {outcome_name} is in {reference_outcome_names}")
         if outcome_name in reference_outcome_names:
-            LOG.debug(f"in reference set, {outcome_name} is not defined inline")
+            LOG.debug(f"outcome in reference set, {outcome_name} is not defined inline")
             outcome_model = models.Outcome(Name=outcome_name,
                                            Arn=outcome_arn,
                                            Tags=None,
@@ -288,7 +288,7 @@ def _get_outcomes_model_for_given_outcome_names(frauddetector_client, outcome_na
                                            LastUpdatedTime=None,
                                            Inline=False)
         else:
-            LOG.debug(f"not in reference set, {outcome_name} is inline")
+            LOG.debug(f"outcome not in reference set, {outcome_name} is inline")
             outcome_tags = _get_tags_for_given_arn(frauddetector_client, outcome_arn)
             tag_models = get_tag_models_from_tags(outcome_tags)
             outcome_model = models.Outcome(Name=outcome_name,
@@ -299,6 +299,7 @@ def _get_outcomes_model_for_given_outcome_names(frauddetector_client, outcome_na
                                            LastUpdatedTime=outcome.get('lastUpdatedTime', ''),
                                            Inline=True)
         # remove empty description/tags
+        LOG.debug(f'removing empty descriptions/tags from outcome model: {outcome_model}')
         if not outcome_model.Tags:
             del outcome_model.Tags
         if outcome_model.Description is None or outcome_model.Description == '':
@@ -478,9 +479,14 @@ def get_referenced_resources_for_detector(detector_model: models.ResourceModel) 
     LOG.debug(f"building referenced resources for detector model: {detector_model}")
     if not detector_model:
         return referenced_resources
-    referenced_resources['rule_outcomes'] = {o.Name for r in detector_model.Rules for o in r.Outcomes if not o.Inline}
+    for rule_model in detector_model.Rules:
+        for outcome_model in rule_model.Outcomes:
+            if not outcome_model.Inline:
+                outcome_name =\
+                    [util.extract_name_from_arn(outcome_model.Arn), outcome_model.Name][outcome_model.Name is not None]
+                referenced_resources['rule_outcomes'].add(outcome_name)
     if not detector_model.EventType.Inline:
-        referenced_resources['event_type'].add(detector_model.EventType.Name)
+        referenced_resources['event_type'].add(util.extract_name_from_arn(detector_model.EventType.Arn))
     LOG.debug(f"returning referenced resources: {referenced_resources}")
     return referenced_resources
 

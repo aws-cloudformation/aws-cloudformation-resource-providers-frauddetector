@@ -4,12 +4,12 @@
   "RuleExecutionMode": "ALL_MATCHED",
   "Tags": [
     {
-      "Key": "cfncontracttest2",
-      "Value": "2"
-    },
-    {
       "Key": "cfncontracttest",
       "Value": "1"
+    },
+    {
+      "Key": "cfncontracttest2",
+      "Value": "2"
     }
   ],
   "Description": "detector for cfn contract tests - updated description",
@@ -29,11 +29,11 @@
       "Description": "Rule for cfn contract tests - updated description",
       "Tags": [
         {
-          "Key": "cfncontracttest2",
+          "Key": "cfncontracttestrule2",
           "Value": "2"
         },
         {
-          "Key": "cfncontracttest",
+          "Key": "cfncontracttestrule",
           "Value": "1"
         }
       ]
