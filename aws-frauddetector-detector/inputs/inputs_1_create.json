@@ -25,7 +25,7 @@
       "Description": "Rule for cfn contract tests",
       "Tags": [
         {
-          "Key": "cfncontracttest",
+          "Key": "cfncontracttestrule",
           "Value": "1"
         }
       ]

@@ -44,7 +44,7 @@ def delete_rules_and_inline_outcomes_for_detector_model(afd_client, detector_mod
         rule_version = rule_detail.get('ruleVersion', '-1')
 
         # Check if rule is defined in CFN, and collect inline outcomes if so
-        rule_id_version_tuple = tuple([rule_id, rule_version])
+        rule_id_version_tuple = (rule_id, rule_version)
         if rule_id_version_tuple in rule_models_by_rule_id_version:
             rule_model = rule_models_by_rule_id_version[rule_id_version_tuple]
             inline_outcome_names.update([outcome.Name for outcome in rule_model.Outcomes if outcome.Inline])
@@ -87,7 +87,7 @@ def _create_rule_models_by_rule_id_rule_version_tuple(detector_model: models.Res
     if not detector_model.Rules:
         return dict_to_return
     for rule in detector_model.Rules:
-        dict_to_return[tuple([rule.RuleId, rule.RuleVersion])] = rule
+        dict_to_return[(rule.RuleId, rule.RuleVersion)] = rule
     return dict_to_return
 
 

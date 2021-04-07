@@ -70,7 +70,7 @@ def execute_update_event_type_handler_work(session, model, progress, request):
         common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
 
     # Validate existence of referenced resources, validate and update inline resources
-    # also check for when teardown is required, compare against AllowTeardown parameter, etc.
+    # TODO: also check for when teardown is required, compare against AllowTeardown parameter, etc.
     LOG.debug(f"validating dependencies for update ...")
     update_worker_helpers.validate_dependencies_for_update(afd_client, model, previous_resource_state)
 

@@ -3,7 +3,7 @@ from cloudformation_cli_python_lib import (
     exceptions,
     ProgressEvent)
 from functools import partial
-from typing import List, Callable
+from typing import List, Callable, Sequence
 from .. import models
 from . import model_helpers, api_helpers, util
 
@@ -120,7 +120,7 @@ def put_inline_entity_type(frauddetector_client, entity_type):
 # Tags
 
 
-def update_tags(frauddetector_client, afd_resource_arn: str, new_tags: List[models.Tag] = None):
+def update_tags(frauddetector_client, afd_resource_arn: str, new_tags: Sequence[models.Tag] = None):
     try:
         list_tags_response = api_helpers.call_list_tags_for_resource(frauddetector_client, afd_resource_arn)
         attached_tags = list_tags_response.get("tags", [])

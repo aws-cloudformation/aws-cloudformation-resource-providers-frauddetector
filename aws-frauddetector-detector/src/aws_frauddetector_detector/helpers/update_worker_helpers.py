@@ -1,31 +1,367 @@
 import logging
+from typing import Tuple, Set
+
 from cloudformation_cli_python_lib import (
     exceptions,
 )
 
-from . import validation_helpers, api_helpers, common_helpers, util
-from ..models import ResourceModel
+from . import validation_helpers, api_helpers, common_helpers, model_helpers, util
+from .. import models
 
 # Use this logger to forward log messages to CloudWatch Logs.
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
 
-def validate_dependencies_for_update(afd_client, model: ResourceModel, previous_model: ResourceModel):
+DRAFT_STATUS = 'DRAFT'
+
+
+def validate_dependencies_for_detector_update(afd_client,
+                                              model: models.ResourceModel,
+                                              previous_model: models.ResourceModel):
+    # TODO: revisit  this validation when/if we support in-place teardown
+    #   For now, throw bad request for unsupported event type update
+    #   (Other updates that would require teardown will throw exception and trigger rollback)
+    if model.EventType.Name != previous_model.EventType.Name:
+        raise exceptions.InvalidRequest(f'Error: EventType.Name update is not allowed')
+    if model.EventType.Inline != previous_model.EventType.Inline:
+        raise exceptions.InvalidRequest(f'Error: EventType.Inline update is not allowed')
+    if not model.EventType.Inline:
+        event_type_name = util.extract_name_from_arn(model.EventType.Arn)
+        get_event_types_succeeded, _ = validation_helpers.check_if_get_event_types_succeeds(afd_client, event_type_name)
+        if not get_event_types_succeeded:
+            raise exceptions.NotFound('detector.EventType', event_type_name)
+
+
+def update_rules_and_inline_outcomes_for_detector_update(afd_client,
+                                                         model: models.ResourceModel,
+                                                         previous_model: models.ResourceModel
+                                                         ) -> (Set[Tuple[str, str]], Set[str]):
+    # build list of kept rules, unused rules & new rules
+    previous_rules_by_rule_id = {r.RuleId: r for r in previous_model.Rules}
+    current_rules_by_rule_id = {r.RuleId: r for r in model.Rules}
+
+    # get list of outcomes and rule versions to delete
+    unused_rule_versions, unused_inline_outcomes = \
+        _get_unused_rule_versions_and_inline_outcomes(afd_client=afd_client,
+                                                      detector_id=model.DetectorId,
+                                                      previous_rules_by_rule_id=previous_rules_by_rule_id,
+                                                      current_rules_by_rule_id=current_rules_by_rule_id)
+
+    # create new inline outcomes and rules
+    new_rule_versions_by_rule_id = _create_new_inline_outcomes_and_rules(
+        afd_client=afd_client,
+        detector_id=model.DetectorId,
+        previous_rules_by_rule_id=previous_rules_by_rule_id,
+        current_rules_by_rule_id=current_rules_by_rule_id
+    )
+
+    # update persisting rules and rule artifacts (inline outcomes, rule versions)
+    rule_versions_to_delete, inline_outcomes_to_delete, persisting_rule_versions_by_rule_id = _update_persisting_rules(
+        afd_client=afd_client,
+        detector_id=model.DetectorId,
+        previous_rules_by_rule_id=previous_rules_by_rule_id,
+        current_rules_by_rule_id=current_rules_by_rule_id)
+
+    # update model to include rule version for rules
+    LOG.debug(f"updating rule models: {model.Rules} with rule versions by rule id {new_rule_versions_by_rule_id}")
+    new_rule_versions_by_rule_id.update(persisting_rule_versions_by_rule_id)
+    for rule_model in model.Rules:
+        if rule_model.RuleId in new_rule_versions_by_rule_id:
+            rule_model.RuleVersion = new_rule_versions_by_rule_id.get(rule_model.RuleId)
+    LOG.debug(f"updated rule models: {model.Rules}")
+
+    # update unused rule versions and inline outcomes from persisting rules
+    unused_rule_versions.update(rule_versions_to_delete)
+    unused_inline_outcomes.update(inline_outcomes_to_delete)
+
+    # return rules and outcomes to delete (need to delete after updating detector version)
+    return unused_rule_versions, unused_inline_outcomes
+
+
+def update_detector_version_for_detector_update(afd_client,
+                                                model: models.ResourceModel,
+                                                previous_model: models.ResourceModel
+                                                ) -> Set[Tuple[str, str]]:
+    # update detector version - create if previous is not draft
+    # update tags
+    # return set of unused detector versions (tuple: detector_id, detector_version_id)
+    # TODO: update this for models + external models when we support them in CFN
+    desired_rules = []
+    for rule_model in model.Rules:
+        rule_dict = {
+            "detectorId": model.DetectorId,
+            "ruleId": rule_model.RuleId,
+            "ruleVersion": rule_model.RuleVersion  # rule version needs to be set before this
+        }
+        desired_rules.append(rule_dict)
+    if previous_model.DetectorVersionStatus != DRAFT_STATUS:
+        api_helpers.call_create_detector_version(
+            frauddetector_client=afd_client,
+            detector_id=model.DetectorId,
+            rules=desired_rules,
+            rule_execution_mode=model.RuleExecutionMode,
+            model_versions=None,
+            external_model_endpoints=None,
+            detector_version_description=model.Description,
+            detector_version_tags=model_helpers.get_tags_from_tag_models(model.Tags))
+    else:
+        api_helpers.call_update_detector_version(
+            frauddetector_client=afd_client,
+            detector_id=model.DetectorId,
+            rules=desired_rules,
+            rule_execution_mode=model.RuleExecutionMode,
+            model_versions=None,
+            external_model_endpoints=None,
+            detector_version_description=model.Description
+        )
+    # get arn of max version detector version in order to update tags
+    describe_detector_response = api_helpers.call_describe_detector(afd_client, model.DetectorId)
+    dv_summaries = describe_detector_response.get('detectorVersionSummaries', [])
+    dv_ids = [summary.get('detectorVersionId', '-1') for summary in dv_summaries]
+    max_dv_id = str(max([int(dv_id) for dv_id in dv_ids]))
+    if previous_model.DetectorVersionStatus == DRAFT_STATUS:
+        # update dv does not update tags, so update tags in this case
+        get_dv_response = api_helpers.call_get_detector_version(
+            frauddetector_client=afd_client,
+            detector_id=model.DetectorId,
+            detector_version_id=max_dv_id
+        )
+        latest_dv_arn = get_dv_response.get('arn', None)
+        common_helpers.update_tags(
+            frauddetector_client=afd_client,
+            afd_resource_arn=latest_dv_arn,
+            new_tags=model_helpers.get_tags_from_tag_models(model.Tags)
+        )
+
+    if model.DetectorVersionStatus != DRAFT_STATUS:
+        api_helpers.call_update_detector_version_status(
+            frauddetector_client=afd_client,
+            detector_id=model.DetectorId,
+            detector_version_id=max_dv_id,
+            status=model.DetectorVersionStatus
+        )
+
+    return {(model.DetectorId, dv_id) for dv_id in dv_ids if dv_id != max_dv_id}
+
+
+def delete_unused_detector_versions_for_detector_update(afd_client,
+                                                        unused_detector_versions: Set[Tuple[str, str]]):
+    for detector_id, detector_version_id in unused_detector_versions:
+        api_helpers.call_delete_detector_version(
+            frauddetector_client=afd_client,
+            detector_id=detector_id,
+            detector_version_id=detector_version_id
+        )
+
+
+def delete_unused_rules_for_detector_update(afd_client,
+                                            detector_id: str,
+                                            unused_rule_versions: Set[Tuple[str, str]]):
+    for unused_rule_id, unused_rule_version in unused_rule_versions:
+        api_helpers.call_delete_rule(
+            frauddetector_client=afd_client,
+            detector_id=detector_id,
+            rule_id=unused_rule_id,
+            rule_version=unused_rule_version
+        )
+
+
+def delete_unused_inline_outcomes_for_detector_update(afd_client,
+                                                      unused_inline_outcome_names: Set[str]):
+    for unused_outcome_name in unused_inline_outcome_names:
+        api_helpers.call_delete_outcome(
+            frauddetector_client=afd_client,
+            outcome_name=unused_outcome_name
+        )
+
+
+def validate_dependencies_for_inline_event_type_update(afd_client,
+                                                       event_type_model: models.EventType,
+                                                       previous_event_type_model: models.EventType):
     # TODO: revisit  this validation when/if we support in-place teardown
     # is_teardown_required = _determine_if_teardown_is_required(afd_client, model, previous_model)
     # if is_teardown_required and not model.AllowTeardown:
     #     raise RuntimeError(TEARDOWN_CONFLICT_MESSAGE)
-    _validate_event_variables_for_update(afd_client, model, previous_model)
-    _validate_entity_types_for_update(afd_client, model, previous_model)
-    _validate_labels_for_update(afd_client, model, previous_model)
+    _validate_event_variables_for_event_type_update(afd_client, event_type_model, previous_event_type_model)
+    _validate_entity_types_for_event_type_update(afd_client, event_type_model, previous_event_type_model)
+    _validate_labels_for_event_type_update(afd_client, event_type_model, previous_event_type_model)
 
 
-def _validate_event_variables_for_update(afd_client, model: ResourceModel, previous_model: ResourceModel):
-    previous_variables = {variable.Name: variable for variable in previous_model.EventVariables}
+def _get_unused_rule_versions_and_inline_outcomes(afd_client,
+                                                  detector_id: str,
+                                                  previous_rules_by_rule_id: dict,
+                                                  current_rules_by_rule_id: dict) -> (Set[str], Set[str]):
+    unused_rule_versions = set()
+    unused_inline_outcomes = set()
+    unused_rule_ids = \
+        [rule_id for rule_id in previous_rules_by_rule_id.keys() if rule_id not in current_rules_by_rule_id]
+
+    # build list of outcomes and rule versions to delete
+    for unused_rule_id in unused_rule_ids:
+        unused_rule_model: models.Rule = previous_rules_by_rule_id[unused_rule_id]
+
+        # outcomes to delete
+        outcomes_to_delete = {outcome.Name for outcome in unused_rule_model.Outcomes if outcome.Inline}
+        unused_inline_outcomes.update(outcomes_to_delete)
+
+        # rule versions to delete
+        get_rules_response = api_helpers.call_get_rules(
+            frauddetector_client=afd_client,
+            detector_id=detector_id,
+            rule_id=unused_rule_id
+        )
+        rule_details = get_rules_response.get('ruleDetails', [])
+        rule_versions_to_delete = {(rd.get('ruleId', None), rd.get('ruleVersion', None)) for rd in rule_details}
+        unused_rule_versions.update(rule_versions_to_delete)
+    return unused_rule_versions, unused_inline_outcomes
+
+
+def _create_new_inline_outcomes_and_rules(afd_client,
+                                          detector_id: str,
+                                          previous_rules_by_rule_id: dict,
+                                          current_rules_by_rule_id: dict):
+    # build list of new rules (and new inline outcomes) to create
+    outcomes_to_create = {}
+    rules_to_create = {}
+    new_rule_ids = \
+        [rule_id for rule_id in current_rules_by_rule_id.keys() if rule_id not in previous_rules_by_rule_id]
+    for new_rule_id in new_rule_ids:
+        new_rule_model: models.Rule = current_rules_by_rule_id[new_rule_id]
+        outcomes_to_create.update({outcome.Name: outcome for outcome in new_rule_model.Outcomes if outcome.Inline})
+        rules_to_create.update({new_rule_model.RuleId: new_rule_model})
+
+    # create new inline outcomes and new rules
+    _create_new_inline_outcomes(afd_client, outcomes_to_create)
+    return _create_new_rules(afd_client, detector_id, rules_to_create)
+
+
+def _create_new_inline_outcomes(afd_client, outcomes_to_create: dict):
+    for outcome_name, outcome_model in outcomes_to_create.items():
+        tags = model_helpers.get_tags_from_tag_models(outcome_model.Tags)
+        api_helpers.call_put_outcome(frauddetector_client=afd_client,
+                                     outcome_name=outcome_name,
+                                     outcome_tags=tags,
+                                     outcome_description=outcome_model.Description)
+
+
+def _create_new_rules(afd_client, detector_id: str, rules_to_create: dict) -> dict:
+    new_rule_versions_by_rule_id = {}
+    for rule_id, rule_model in rules_to_create.items():
+        tags = model_helpers.get_tags_from_tag_models(rule_model.Tags)
+        rule_outcomes = [outcome.Name for outcome in rule_model.Outcomes]
+        create_rule_response = api_helpers.call_create_rule(
+            frauddetector_client=afd_client,
+            rule_id=rule_id,
+            detector_id=detector_id,
+            rule_expression=rule_model.Expression,
+            rule_language=rule_model.Language,
+            rule_outcomes=rule_outcomes,
+            rule_description=rule_model.Description,
+            rule_tags=tags
+        )
+        new_rule_versions_by_rule_id[rule_id] = create_rule_response.get('rule', {}).get('ruleVersion', None)
+    return new_rule_versions_by_rule_id
+
+
+def _update_persisting_rules(afd_client,
+                             detector_id: str,
+                             previous_rules_by_rule_id: dict,
+                             current_rules_by_rule_id: dict) -> (Set[Tuple[str, str]], Set[str], dict):
+    unused_rule_versions = set()
+    unused_inline_outcomes = set()
+    persisting_rule_versions_by_rule_id = dict()
+    persisting_rule_ids = previous_rules_by_rule_id.keys() & current_rules_by_rule_id.keys()
+    for persisting_rule_id in persisting_rule_ids:
+        current_rule_model: models.Rule = current_rules_by_rule_id[persisting_rule_id]
+        previous_rule_model: models.Rule = previous_rules_by_rule_id[persisting_rule_id]
+        rule_versions_to_delete, inline_outcomes_to_delete, persisting_rule_version_by_rule_id = \
+            _update_persisting_rule(afd_client, detector_id, current_rule_model, previous_rule_model)
+        unused_rule_versions.update(rule_versions_to_delete)
+        unused_inline_outcomes.update(inline_outcomes_to_delete)
+        persisting_rule_versions_by_rule_id.update(persisting_rule_version_by_rule_id)
+
+    return unused_rule_versions, unused_inline_outcomes, persisting_rule_versions_by_rule_id
+
+
+def _update_persisting_rule(afd_client,
+                            detector_id: str,
+                            current_rule_model: models.Rule,
+                            previous_rule_model: models.Rule) -> (Set[Tuple[str, str]], Set[str], dict):
+    # check new outcomes vs old outcomes
+    previous_outcomes_by_name = {outcome.Name: outcome for outcome in previous_rule_model.Outcomes}
+    current_outcomes_by_name = {outcome.Name: outcome for outcome in current_rule_model.Outcomes}
+    unused_inline_outcome_names = {outcome_name
+                                   for outcome_name, outcome in previous_outcomes_by_name.items()
+                                   if outcome_name not in current_outcomes_by_name and outcome.Inline}
+    outcomes_to_update = {outcome_name: outcome
+                          for outcome_name, outcome in current_outcomes_by_name.items()
+                          if outcome_name not in unused_inline_outcome_names and outcome.Inline}
+
+    # new outcome model will not have Arn, as Arn is readonly for inline outcomes
+    existing_outcome_models = model_helpers.get_outcomes_model_for_given_outcome_names(
+        frauddetector_client=afd_client,
+        outcome_names=outcomes_to_update.keys(),
+        reference_outcome_names=set()
+    )
+
+    for existing_outcome in existing_outcome_models:
+        desired_outcome_model = outcomes_to_update[existing_outcome.Name]
+        new_tags = model_helpers.get_tags_from_tag_models(desired_outcome_model.Tags)
+        api_helpers.call_put_outcome(
+            frauddetector_client=afd_client,
+            outcome_name=desired_outcome_model.Name,
+            outcome_description=desired_outcome_model.Description)
+        # use arn from existing outcome model to update tags
+        common_helpers.update_tags(frauddetector_client=afd_client,
+                                   afd_resource_arn=existing_outcome.Arn,
+                                   new_tags=new_tags)
+
+    # rather than check all the differences, we can just update rule version and call it a day
+    # TODO: first, we need to get rules and grab latest version, since it's not anywhere
+    get_rules_response = api_helpers.call_get_rules(
+        frauddetector_client=afd_client,
+        detector_id=detector_id,
+        rule_id=current_rule_model.RuleId,
+    )
+    rule_details = get_rules_response.get('ruleDetails', [])
+    rule_versions = [int(rd.get('ruleVersion', '-1')) for rd in rule_details]
+    max_rule_version_string = str(max(rule_versions))
+
+    update_rule_version_response = api_helpers.call_update_rule_version(
+        frauddetector_client=afd_client,
+        detector_id=detector_id,
+        rule_id=current_rule_model.RuleId,
+        rule_version=max_rule_version_string,
+        rule_expression=current_rule_model.Expression,
+        rule_language=current_rule_model.Language,
+        rule_outcomes=list(current_outcomes_by_name.keys()),
+        rule_description=current_rule_model.Description,
+        rule_tags=model_helpers.get_tags_from_tag_models(current_rule_model.Tags)
+    )
+
+    # gather old rule versions to delete
+    rule_version_to_keep = update_rule_version_response.get('rule', {}).get('ruleVersion', None)
+    get_rules_response = api_helpers.call_get_rules(
+        frauddetector_client=afd_client,
+        detector_id=detector_id,
+        rule_id=current_rule_model.RuleId
+    )
+    rule_details = get_rules_response.get('ruleDetails', [])
+    rule_versions_to_delete = {(rd.get('ruleId', None), rd.get('ruleVersion', None))
+                               for rd in rule_details
+                               if rd.get('ruleVersion', None) != rule_version_to_keep}
+
+    return rule_versions_to_delete, unused_inline_outcome_names, {current_rule_model.RuleId: rule_version_to_keep}
+
+
+def _validate_event_variables_for_event_type_update(afd_client,
+                                                    event_type_model: models.EventType,
+                                                    previous_event_type_model: models.EventType):
+    previous_variables = {variable.Name: variable for variable in previous_event_type_model.EventVariables}
     new_event_variable_names = set()
-    for event_variable in model.EventVariables:
-        _validate_event_variable_for_update(afd_client, event_variable, previous_variables)
+    for event_variable in event_type_model.EventVariables:
+        _validate_event_variable_for_event_type_update(afd_client, event_variable, previous_variables)
         new_event_variable_names.add(event_variable.Name)
 
     # remove previous inline variables that are no longer in the event type
@@ -34,14 +370,14 @@ def _validate_event_variables_for_update(afd_client, model: ResourceModel, previ
             api_helpers.call_delete_variable(frauddetector_client=afd_client, variable_name=previous_variable_name)
 
 
-def _validate_event_variable_for_update(afd_client, event_variable, previous_variables):
+def _validate_event_variable_for_event_type_update(afd_client, event_variable, previous_variables):
     if event_variable.Inline:
-        _validate_inline_event_variable_for_update(afd_client, event_variable, previous_variables)
+        _validate_inline_event_variable_for_event_type_update(afd_client, event_variable, previous_variables)
     else:
-        _validate_referenced_event_variable_for_update(afd_client, event_variable)
+        _validate_referenced_event_variable_for_event_type_update(afd_client, event_variable)
 
 
-def _validate_referenced_event_variable_for_update(afd_client, event_variable):
+def _validate_referenced_event_variable_for_event_type_update(afd_client, event_variable):
     event_variable_name = util.extract_name_from_arn(event_variable.Arn)
     get_variables_worked, _ = \
         validation_helpers.check_if_get_variables_succeeds(afd_client, event_variable_name)
@@ -49,7 +385,7 @@ def _validate_referenced_event_variable_for_update(afd_client, event_variable):
         raise exceptions.NotFound('event_variable', event_variable.Arn)
 
 
-def _validate_inline_event_variable_for_update(afd_client, event_variable, previous_variables):
+def _validate_inline_event_variable_for_event_type_update(afd_client, event_variable, previous_variables):
     if not event_variable.Name:
         raise exceptions.InvalidRequest('Error occurred: inline event variables must include Name!')
 
@@ -87,11 +423,13 @@ def _validate_inline_event_variable_for_update(afd_client, event_variable, previ
                                          variable_type=var_type)
 
 
-def _validate_entity_types_for_update(afd_client, model: ResourceModel, previous_model: ResourceModel):
-    previous_entity_types = {entity_type.Name: entity_type for entity_type in previous_model.EntityTypes}
+def _validate_entity_types_for_event_type_update(afd_client,
+                                                 event_type_model: models.EventType,
+                                                 previous_event_type_model: models.EventType):
+    previous_entity_types = {entity_type.Name: entity_type for entity_type in previous_event_type_model.EntityTypes}
     new_entity_type_names = set()
-    for entity_type in model.EntityTypes:
-        _validate_entity_type_for_update(afd_client, entity_type, previous_entity_types)
+    for entity_type in event_type_model.EntityTypes:
+        _validate_entity_type_for_event_type_update(afd_client, entity_type, previous_entity_types)
         new_entity_type_names.add(entity_type.Name)
 
     # remove previous inline entity types that are no longer in the event type
@@ -101,21 +439,21 @@ def _validate_entity_types_for_update(afd_client, model: ResourceModel, previous
                                                 entity_type_name=previous_entity_type_name)
 
 
-def _validate_entity_type_for_update(afd_client, entity_type, previous_entity_types):
+def _validate_entity_type_for_event_type_update(afd_client, entity_type, previous_entity_types):
     if entity_type.Inline:
-        _validate_inline_entity_type_for_update(afd_client, entity_type, previous_entity_types)
+        _validate_inline_entity_type_for_event_type_update(afd_client, entity_type, previous_entity_types)
     else:
-        _validate_referenced_entity_type_for_update(afd_client, entity_type)
+        _validate_referenced_entity_type_for_event_type_update(afd_client, entity_type)
 
 
-def _validate_referenced_entity_type_for_update(afd_client, entity_type):
+def _validate_referenced_entity_type_for_event_type_update(afd_client, entity_type):
     entity_type_name = util.extract_name_from_arn(entity_type.Arn)
     get_entity_types_worked, _ = validation_helpers.check_if_get_entity_types_succeeds(afd_client, entity_type_name)
     if not get_entity_types_worked:
         raise exceptions.NotFound('entity_type', entity_type.Arn)
 
 
-def _validate_inline_entity_type_for_update(afd_client, entity_type, previous_entity_types):
+def _validate_inline_entity_type_for_event_type_update(afd_client, entity_type, previous_entity_types):
     if entity_type.Name is None:
         raise exceptions.InvalidRequest('Error occurred: inline entity types must include Name!')
 
@@ -138,11 +476,13 @@ def _validate_inline_entity_type_for_update(afd_client, entity_type, previous_en
                                        new_tags=entity_type.Tags)
 
 
-def _validate_labels_for_update(afd_client, model: ResourceModel, previous_model: ResourceModel):
-    previous_labels = {label.Name: label for label in previous_model.Labels}
+def _validate_labels_for_event_type_update(afd_client,
+                                           event_type_model: models.EventType,
+                                           previous_event_type_model: models.EventType):
+    previous_labels = {label.Name: label for label in previous_event_type_model.Labels}
     new_label_names = set()
-    for label in model.Labels:
-        _validate_label_for_update(afd_client, label, previous_labels)
+    for label in event_type_model.Labels:
+        _validate_label_for_event_type_update(afd_client, label, previous_labels)
         new_label_names.add(label.Name)
 
     # remove previous inline labels that are no longer in the event type
@@ -152,21 +492,21 @@ def _validate_labels_for_update(afd_client, model: ResourceModel, previous_model
                                           label_name=previous_label_name)
 
 
-def _validate_label_for_update(afd_client, label, previous_labels):
+def _validate_label_for_event_type_update(afd_client, label, previous_labels):
     if label.Inline:
-        _validate_inline_label_for_update(afd_client, label, previous_labels)
+        _validate_inline_label_for_event_type_update(afd_client, label, previous_labels)
     else:
-        _validate_referenced_label_for_update(afd_client, label)
+        _validate_referenced_label_for_event_type_update(afd_client, label)
 
 
-def _validate_referenced_label_for_update(afd_client, label):
+def _validate_referenced_label_for_event_type_update(afd_client, label):
     label_name = util.extract_name_from_arn(label.Arn)
     get_labels_worked, _ = validation_helpers.check_if_get_labels_succeeds(afd_client, label_name)
     if not get_labels_worked:
         raise exceptions.NotFound('label', label.Arn)
 
 
-def _validate_inline_label_for_update(afd_client, label, previous_labels):
+def _validate_inline_label_for_event_type_update(afd_client, label, previous_labels):
     if label.Name is None:
         raise exceptions.InvalidRequest('Error occurred: inline labels must include Name!')
 
