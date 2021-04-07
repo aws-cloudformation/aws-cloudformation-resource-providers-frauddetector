@@ -6,6 +6,7 @@ import logging
 
 # Use this logger to forward log messages to CloudWatch Logs.
 LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 # Maximum number of pages to get for paginated calls
 # for page size of 100, 100 pages is 10,000 resources, which is twice the largest default service limit
