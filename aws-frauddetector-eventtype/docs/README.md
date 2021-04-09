@@ -91,7 +91,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### Labels
 
-_Required_: No
+_Required_: Yes
 
 _Type_: List of <a href="label.md">Label</a>
 
