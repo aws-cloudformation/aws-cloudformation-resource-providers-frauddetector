@@ -183,6 +183,29 @@ def get_rule_and_return_rule_model(
 # EventTypes
 
 
+def put_event_type_for_event_type_model(frauddetector_client,
+                                        event_type_model: models.EventType):
+    # use dependency names directly if defined Inline, otherwise extract name from arn for each
+    entity_type_names = [[util.extract_name_from_arn(entity_type.Arn), entity_type.Name][entity_type.Inline]
+                         for entity_type in event_type_model.EntityTypes]
+    event_variable_names = [[util.extract_name_from_arn(event_variable.Arn), event_variable.Name][event_variable.Inline]
+                            for event_variable in event_type_model.EventVariables]
+    label_names = [[util.extract_name_from_arn(label.Arn), label.Name][label.Inline]
+                   for label in event_type_model.Labels]
+    event_type_tags = get_tags_from_tag_models(event_type_model.Tags)
+
+    # call put event type
+    api_helpers.call_put_event_type(
+        frauddetector_client=frauddetector_client,
+        event_type_name=event_type_model.Name,
+        entity_type_names=entity_type_names,
+        event_variable_names=event_variable_names,
+        label_names=label_names,
+        event_type_description=event_type_model.Description,
+        event_type_tags=event_type_tags
+    )
+
+
 def get_event_type_and_return_event_type_model(frauddetector_client,
                                                event_type_model: models.EventType
                                                ) -> models.EventType:
