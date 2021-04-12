@@ -98,6 +98,11 @@ def execute_update_detector_handler_work(session: SessionProxy,
             event_type_model=model.EventType,
             previous_event_type_model=previous_resource_state.EventType
         )
+        update_worker_helpers.update_inline_event_type(
+            afd_client=afd_client,
+            event_type_model=model.EventType,
+            previous_event_type_model=previous_resource_state.EventType
+        )
 
     # Create/Update rules and inline outcomes
     rule_versions_to_delete, outcomes_to_delete =\

@@ -188,6 +188,41 @@ def validate_dependencies_for_inline_event_type_update(afd_client,
     _validate_labels_for_event_type_update(afd_client, event_type_model, previous_event_type_model)
 
 
+def update_inline_event_type(afd_client,
+                             event_type_model: models.EventType,
+                             previous_event_type_model: models.EventType):
+    # NOTE: we've already done validation in `validate_dependencies_for_detector_update`
+    #       In the future, we might want to move some event type specific validation here instead.
+    model_helpers.put_event_type_for_event_type_model(
+        frauddetector_client=afd_client,
+        event_type_model=event_type_model
+    )
+
+    # if there is no difference in tags, we're done
+    if event_type_model.Tags == previous_event_type_model.Tags:
+        return
+
+    # update tags separately, for which we need Arn. get the eventtype we just updated to get arn
+    get_event_types_worked, get_event_types_response = validation_helpers.check_if_get_event_types_succeeds(
+        frauddetector_client=afd_client,
+        event_type_to_check=event_type_model.Name
+    )
+
+    # this should never happen, but throw internal failure if it does
+    if not get_event_types_worked:
+        error_message = f'Updating inline event type {event_type_model.Name}, but no event type exists!!!'
+        LOG.error(error_message)
+        raise exceptions.InternalFailure(error_message)
+
+    # get arn and update tags
+    event_type_arn = get_event_types_response.get('eventTypes')[0].get('arn', None)
+    common_helpers.update_tags(
+        frauddetector_client=afd_client,
+        afd_resource_arn=event_type_arn,
+        new_tags=event_type_model.Tags
+    )
+
+
 def _get_unused_rule_versions_and_inline_outcomes(afd_client,
                                                   detector_id: str,
                                                   previous_rules_by_rule_id: dict,
