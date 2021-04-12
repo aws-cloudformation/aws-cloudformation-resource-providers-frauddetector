@@ -74,12 +74,11 @@ def delete_detector_for_detector_model(afd_client, detector_model: models.Resour
 
 def delete_inline_dependencies_for_detector_model(afd_client, detector_model: models.ResourceModel):
     if detector_model.EventType.Inline:
-        _delete_inline_dependencies_for_inline_event_type(afd_client, detector_model.EventType)
-        # delete event type
         api_helpers.call_delete_event_type(
             frauddetector_client=afd_client,
             event_type_name=detector_model.EventType.Name
         )
+        _delete_inline_dependencies_for_inline_event_type(afd_client, detector_model.EventType)
 
 
 def _create_rule_models_by_rule_id_rule_version_tuple(detector_model: models.ResourceModel):

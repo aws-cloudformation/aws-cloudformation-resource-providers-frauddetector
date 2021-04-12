@@ -461,9 +461,9 @@ def get_referenced_resources_for_event_type(event_type_model: models.EventType) 
         'labels': set(),
         'entity_types': set(),
     }
-    LOG.debug(f"building referenced resources for event type model: {event_type_model}")
     if not event_type_model:
         return referenced_resources
+    LOG.debug(f"building referenced resources for event type model: {event_type_model.Name}")
     referenced_resources['event_variables'] = {ev.Name for ev in event_type_model.EventVariables if not ev.Inline}
     referenced_resources['labels'] = {label.Name for label in event_type_model.Labels if not label.Inline}
     referenced_resources['entity_types'] = {et.Name for et in event_type_model.EntityTypes if not et.Inline}
@@ -476,9 +476,9 @@ def get_referenced_resources_for_detector(detector_model: models.ResourceModel) 
         'rule_outcomes': set(),
         'event_type': set(),
     }
-    LOG.debug(f"building referenced resources for detector model: {detector_model}")
     if not detector_model:
         return referenced_resources
+    LOG.debug(f"building referenced resources for detector model: {detector_model.DetectorId}")
     for rule_model in detector_model.Rules:
         for outcome_model in rule_model.Outcomes:
             if not outcome_model.Inline:
@@ -497,9 +497,9 @@ def get_inline_resources_for_event_type(event_type_model: models.EventType) -> d
         'labels': set(),
         'entity_types': set(),
     }
-    LOG.debug(f"building inline resources for event type model: {event_type_model}")
     if not event_type_model:
         return inline_resources
+    LOG.debug(f"building inline resources for event type model: {event_type_model.Name}")
     inline_resources['event_variables'] = {ev.Name for ev in event_type_model.EventVariables if ev.Inline}
     inline_resources['labels'] = {label.Name for label in event_type_model.Labels if label.Inline}
     inline_resources['entity_types'] = {et.Name for et in event_type_model.EntityTypes if et.Inline}

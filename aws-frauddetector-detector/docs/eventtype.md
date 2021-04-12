@@ -15,9 +15,6 @@ To declare this entity in your AWS CloudFormation template, use the following sy
     "<a href="#eventvariables" title="EventVariables">EventVariables</a>" : <i>[ <a href="eventvariable.md">EventVariable</a>, ... ]</i>,
     "<a href="#labels" title="Labels">Labels</a>" : <i>[ <a href="label.md">Label</a>, ... ]</i>,
     "<a href="#entitytypes" title="EntityTypes">EntityTypes</a>" : <i>[ <a href="entitytype.md">EntityType</a>, ... ]</i>,
-    "<a href="#arn" title="Arn">Arn</a>" : <i>String</i>,
-    "<a href="#createdtime" title="CreatedTime">CreatedTime</a>" : <i>String</i>,
-    "<a href="#lastupdatedtime" title="LastUpdatedTime">LastUpdatedTime</a>" : <i>String</i>
 }
 </pre>
 
@@ -35,9 +32,6 @@ To declare this entity in your AWS CloudFormation template, use the following sy
       - <a href="label.md">Label</a></i>
 <a href="#entitytypes" title="EntityTypes">EntityTypes</a>: <i>
       - <a href="entitytype.md">EntityType</a></i>
-<a href="#arn" title="Arn">Arn</a>: <i>String</i>
-<a href="#createdtime" title="CreatedTime">CreatedTime</a>: <i>String</i>
-<a href="#lastupdatedtime" title="LastUpdatedTime">LastUpdatedTime</a>: <i>String</i>
 </pre>
 
 ## Properties
@@ -109,35 +103,5 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 _Required_: No
 
 _Type_: List of <a href="entitytype.md">EntityType</a>
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### Arn
-
-The ARN of the event type.
-
-_Required_: No
-
-_Type_: String
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### CreatedTime
-
-The time when the event type was created.
-
-_Required_: No
-
-_Type_: String
-
-_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
-
-#### LastUpdatedTime
-
-The time when the event type was last updated.
-
-_Required_: No
-
-_Type_: String
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
