@@ -18,9 +18,8 @@
       "Language": "DETECTORPL",
       "Outcomes": [
         {
-          "Inline": false,
-          "Name": "reference_outcome_for_detector",
-          "Arn": "arn:aws:frauddetector:us-west-2:123123123123:outcome/reference_outcome_for_detector"
+          "Inline": true,
+          "Name": "inline_outcome_for_detector"
         }
       ],
       "Description": "Rule for cfn contract tests",
@@ -33,8 +32,48 @@
     }
   ],
   "EventType": {
-    "Inline": false,
-    "Name": "reference_event_type_for_detector",
-    "Arn": "arn:aws:frauddetector:us-west-2:123123123123:event-type/reference_event_type_for_detector"
+    "Inline": true,
+    "Name": "inline_event_type_for_detector",
+    "Description": "eventtype for cfn contract tests",
+    "Tags": [
+      {
+        "Key": "cfncontracttest",
+        "Value": "1"
+      }
+    ],
+    "EventVariables": [
+      {
+        "Name": "email_var_inline_detector_contract_test",
+        "DataSource": "EVENT",
+        "DataType": "STRING",
+        "DefaultValue": "DEFAULT",
+        "Inline": true,
+        "VariableType": "EMAIL_ADDRESS"
+      },
+      {
+        "Name": "ip_var_inline_detector_contract_test",
+        "DataSource": "EVENT",
+        "DataType": "STRING",
+        "DefaultValue": "DEFAULT",
+        "Inline": true,
+        "VariableType": "IP_ADDRESS"
+      }
+    ],
+    "Labels": [
+      {
+        "Inline": true,
+        "Name": "legit_label_inline_detector_contract_test"
+      },
+      {
+        "Inline": true,
+        "Name": "fraud_label_inline_detector_contract_test"
+      }
+    ],
+    "EntityTypes": [
+      {
+        "Inline": true,
+        "Name": "new_entity_type_inline_detector_contract_test"
+      }
+    ]
   }
 }

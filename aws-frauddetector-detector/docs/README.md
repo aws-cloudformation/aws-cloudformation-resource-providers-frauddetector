@@ -210,3 +210,15 @@ Returns the <code>CreatedTime</code> value.
 #### LastUpdatedTime
 
 Returns the <code>LastUpdatedTime</code> value.
+
+#### Arn
+
+Returns the <code>Arn</code> value.
+
+#### CreatedTime
+
+Returns the <code>CreatedTime</code> value.
+
+#### LastUpdatedTime
+
+Returns the <code>LastUpdatedTime</code> value.

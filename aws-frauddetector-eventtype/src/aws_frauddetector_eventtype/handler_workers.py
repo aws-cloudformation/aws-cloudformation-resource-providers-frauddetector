@@ -33,10 +33,6 @@ def execute_create_event_type_handler_work(session, model, progress):
     if model.Arn is not None or model.CreatedTime is not None or model.LastUpdatedTime is not None:
         raise exceptions.InvalidRequest("Error occurred: cannot create read-only properties.")
 
-    # API does not handle 'None' property gracefully
-    if model.Tags is None:
-        del model.Tags
-
     # Validate existence of referenced resources, validate and create inline resources
     create_worker_helpers.validate_dependencies_for_create(afd_client, model)
 
@@ -61,13 +57,8 @@ def execute_update_event_type_handler_work(session, model, progress, request):
         raise exceptions.NotUpdatable(f"Error occurred: cannot update create-only property 'Name'")
 
     LOG.debug(f"updating tags for model ...")
-    if model.Tags is None:
-        # API does not handle 'None' property gracefully
-        del model.Tags
-        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn)
-    else:
-        # since put_event_type does not update tags, update tags separately
-        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
+    # since put_event_type does not update tags, update tags separately
+    common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
 
     # Validate existence of referenced resources, validate and update inline resources
     # TODO: also check for when teardown is required, compare against AllowTeardown parameter, etc.

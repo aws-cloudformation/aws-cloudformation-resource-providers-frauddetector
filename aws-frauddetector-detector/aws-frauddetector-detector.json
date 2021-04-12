@@ -457,6 +457,9 @@
     "/properties/Rules/*/Outcomes/*/Arn",
     "/properties/Rules/*/Outcomes/*/CreatedTime",
     "/properties/Rules/*/Outcomes/*/LastUpdatedTime",
+    "/properties/EventType/Arn",
+    "/properties/EventType/CreatedTime",
+    "/properties/EventType/LastUpdatedTime",
     "/properties/EventType/EventVariables/*/Arn",
     "/properties/EventType/EventVariables/*/CreatedTime",
     "/properties/EventType/EventVariables/*/LastUpdatedTime",
@@ -479,6 +482,7 @@
         "frauddetector:CreateRule",
         "frauddetector:CreateVariable",
         "frauddetector:PutLabel",
+        "frauddetector:PutOutcome",
         "frauddetector:PutEntityType",
         "frauddetector:PutEventType",
         "frauddetector:DescribeDetector",
@@ -488,6 +492,7 @@
         "frauddetector:GetVariables",
         "frauddetector:GetEventTypes",
         "frauddetector:GetLabels",
+        "frauddetector:GetOutcomes",
         "frauddetector:GetEntityTypes",
         "frauddetector:ListTagsForResource"
       ]
@@ -507,11 +512,13 @@
         "frauddetector:UpdateVariable",
         "frauddetector:GetVariables",
         "frauddetector:PutLabel",
+        "frauddetector:PutOutcome",
         "frauddetector:PutEntityType",
         "frauddetector:PutEventType",
         "frauddetector:GetRules",
         "frauddetector:GetEventTypes",
         "frauddetector:GetLabels",
+        "frauddetector:GetOutcomes",
         "frauddetector:GetEntityTypes",
         "frauddetector:DeleteEventType",
         "frauddetector:DeleteVariable",
@@ -531,12 +538,14 @@
         "frauddetector:GetVariables",
         "frauddetector:GetEventTypes",
         "frauddetector:GetLabels",
+        "frauddetector:GetOutcomes",
         "frauddetector:GetEntityTypes",
         "frauddetector:DeleteDetector",
         "frauddetector:DeleteRule",
         "frauddetector:DeleteEventType",
         "frauddetector:DeleteVariable",
         "frauddetector:DeleteLabel",
+        "frauddetector:DeleteOutcome",
         "frauddetector:DeleteEntityType",
         "frauddetector:ListTagsForResource"
       ]
@@ -550,6 +559,7 @@
         "frauddetector:GetVariables",
         "frauddetector:GetEventTypes",
         "frauddetector:GetLabels",
+        "frauddetector:GetOutcomes",
         "frauddetector:GetEntityTypes",
         "frauddetector:ListTagsForResource"
       ]
@@ -563,6 +573,7 @@
         "frauddetector:GetVariables",
         "frauddetector:GetEventTypes",
         "frauddetector:GetLabels",
+        "frauddetector:GetOutcomes",
         "frauddetector:GetEntityTypes",
         "frauddetector:ListTagsForResource"
       ]

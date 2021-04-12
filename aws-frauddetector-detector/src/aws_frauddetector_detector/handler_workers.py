@@ -41,10 +41,6 @@ def execute_create_detector_handler_work(session: SessionProxy, model: models.Re
     if model.Arn is not None or model.CreatedTime is not None or model.LastUpdatedTime is not None:
         raise exceptions.InvalidRequest("Error occurred: cannot create read-only properties.")
 
-    # API does not handle 'None' property gracefully
-    if model.Tags is None:
-        del model.Tags
-
     # Validate existence of referenced resources, validate and create inline resources (except for Rules, Detector, DV)
     # TODO: split out creation from validation
     create_worker_helpers.validate_dependencies_for_detector_create(afd_client, model)
@@ -150,13 +146,8 @@ def execute_update_detector_handler_work(session: SessionProxy,
     )
 
     LOG.debug(f"updating tags for model ...")
-    if model.Tags is None:
-        # API does not handle 'None' property gracefully
-        del model.Tags
-        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn)
-    else:
-        # since put_event_type does not update tags, update tags separately
-        common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
+    # since put on update does not update tags, update tags separately
+    common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
 
     # after satisfying all contract tests and AFD requirements, get the resulting model
     model = read_worker_helpers.validate_detector_exists_and_return_detector_resource_model(afd_client, model)
