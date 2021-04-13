@@ -27,6 +27,7 @@ Resources:
                 - "frauddetector:CreateRule"
                 - "frauddetector:CreateVariable"
                 - "frauddetector:DeleteDetector"
+                - "frauddetector:DeleteDetectorVersion"
                 - "frauddetector:DeleteEntityType"
                 - "frauddetector:DeleteEventType"
                 - "frauddetector:DeleteLabel"
