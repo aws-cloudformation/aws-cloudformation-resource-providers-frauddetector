@@ -22,7 +22,7 @@ LOG.setLevel(logging.DEBUG)
 
 
 def execute_create_event_type_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     # For contract_create_duplicate, we need to fail if the resource already exists
     get_event_type_works, _ = validation_helpers.check_if_get_event_types_succeeds(afd_client, model.Name)
@@ -41,7 +41,7 @@ def execute_create_event_type_handler_work(session, model, progress):
 
 
 def execute_update_event_type_handler_work(session, model, progress, request):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     previous_resource_state: ResourceModel = request.previousResourceState
 
@@ -70,7 +70,7 @@ def execute_update_event_type_handler_work(session, model, progress, request):
 
 
 def execute_delete_event_type_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     # For contract_delete_delete, we need to fail if the resource DNE
     # get_event_types will throw RNF Exception if event_type DNE
@@ -95,7 +95,7 @@ def execute_delete_event_type_handler_work(session, model, progress):
 
 
 def execute_read_event_type_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
     # read requests only include primary identifier (Arn). Extract Name from Arn
     if not model.Name:
         model.Name = model.Arn.split('/')[-1]
@@ -123,7 +123,7 @@ def execute_read_event_type_handler_work(session, model, progress):
 
 
 def execute_list_event_type_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     try:
         get_event_types_response = api_helpers.call_get_event_types(afd_client)

@@ -1,20 +1,23 @@
 from aws_frauddetector_outcome.helpers import client_helpers
 from .. import unit_test_utils
+import pytest
+from cloudformation_cli_python_lib.exceptions import InternalFailure
 
 
-def test_get_singleton_afd_client_always_same_client():
+def test_get_afd_client_returns_unique_client():
     # Arrange
-    mock_afd_client = unit_test_utils.create_mock_afd_client()
-    mock_session = unit_test_utils.create_mock_session(mock_afd_client)
-    mock_session_2 = unit_test_utils.create_mock_session(mock_afd_client)
+    mock_session_1 = unit_test_utils.create_mock_session()
+    mock_session_2 = unit_test_utils.create_mock_session()
 
     # Act
-    returned_afd_client = client_helpers.get_singleton_afd_client(mock_session)
-    returned_afd_client_2 = client_helpers.get_singleton_afd_client(mock_session_2)
-    returned_afd_client_3 = client_helpers.get_singleton_afd_client(mock_session)
+    afd_client_1 = client_helpers.get_afd_client(mock_session_1)
+    afd_client_2 = client_helpers.get_afd_client(mock_session_2)
 
     # Assert
-    assert mock_session is not mock_session_2
-    assert mock_afd_client is returned_afd_client
-    assert returned_afd_client is returned_afd_client_2
-    assert returned_afd_client_2 is returned_afd_client_3
+    assert mock_session_1 is not mock_session_2
+    assert afd_client_1 is not afd_client_2
+
+
+def test_get_afd_client_throws_internal_failure_exception():
+    with pytest.raises(InternalFailure):
+        client_helpers.get_afd_client("")

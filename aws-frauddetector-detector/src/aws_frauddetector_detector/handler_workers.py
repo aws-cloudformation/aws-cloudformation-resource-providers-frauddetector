@@ -30,7 +30,7 @@ DRAFT_STATUS = 'DRAFT'
 
 
 def execute_create_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     # For contract_create_duplicate, we need to fail if the resource already exists
     get_detectors_works, _ = validation_helpers.check_if_get_detectors_succeeds(afd_client, model.DetectorId)
@@ -74,7 +74,7 @@ def execute_update_detector_handler_work(session: SessionProxy,
                                          model: models.ResourceModel,
                                          progress: ProgressEvent,
                                          request):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     previous_resource_state: models.ResourceModel = request.previousResourceState
 
@@ -164,7 +164,7 @@ def execute_update_detector_handler_work(session: SessionProxy,
 
 
 def execute_delete_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     # For contract_delete_delete, we need to fail if the resource DNE
     get_detectors_works, _ = validation_helpers.check_if_get_detectors_succeeds(afd_client, model.DetectorId)
@@ -193,7 +193,7 @@ def execute_delete_detector_handler_work(session: SessionProxy, model: models.Re
 
 
 def execute_read_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
     # read requests only include primary identifier (Arn). Extract DetectorId from Arn
     if not model.DetectorId:
         model.DetectorId = model.Arn.split('/')[-1]
@@ -207,7 +207,7 @@ def execute_read_detector_handler_work(session: SessionProxy, model: models.Reso
 
 
 def execute_list_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
     try:
         detector_models = list_worker_helpers.list_detector_models(afd_client)
     except RuntimeError as e:

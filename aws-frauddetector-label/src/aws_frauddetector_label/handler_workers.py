@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 
 def execute_create_label_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     # For contract_create_duplicate, we need to fail if resource already exists
     get_labels_works, _ = validation_helpers.check_if_get_labels_succeeds(afd_client, model.Name)
@@ -32,7 +32,7 @@ def execute_create_label_handler_work(session, model, progress):
 
 
 def execute_update_label_handler_work(session, model, progress, request):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     previous_resource_state: ResourceModel = request.previousResourceState
 
@@ -60,7 +60,7 @@ def execute_update_label_handler_work(session, model, progress, request):
 
 
 def execute_delete_label_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     # For contract_delete_delete, we need to fail if the resource DNE
     # get labels will throw RNF Exception if label DNE
@@ -78,7 +78,7 @@ def execute_delete_label_handler_work(session, model, progress):
 
 
 def execute_read_label_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
     # read requests only include primary identifier (Arn). Extract Name from Arn
     model.Name = model.Arn.split('/')[-1]
 
@@ -100,7 +100,7 @@ def execute_read_label_handler_work(session, model, progress):
 
 
 def execute_list_label_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     try:
         get_labels_response = api_helpers.call_get_labels(afd_client)
