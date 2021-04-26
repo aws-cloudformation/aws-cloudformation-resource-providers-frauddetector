@@ -13,7 +13,7 @@ def test_execute_update_outcome_handler_work_happy_case(monkeypatch):
     handler_workers.execute_update_outcome_handler_work({}, model, progress, request)
 
     # Assert
-    client_helpers.get_singleton_afd_client.assert_called_once()
+    client_helpers.get_afd_client.assert_called_once()
     validation_helpers.check_if_get_outcomes_succeeds.assert_called_once()
     common_helpers.put_outcome_and_return_progress.assert_called_once()
     common_helpers.update_tags.assert_called_once()
@@ -58,7 +58,7 @@ def _setup_execute_update_outcome_handler_work_test(monkeypatch):
         resourceModel=model
     )
 
-    mock_get_singleton_afd_client = MagicMock(return_value={})
+    mock_get_afd_client = MagicMock(return_value={})
     get_outcomes_response = {'outcomes': [unit_test_utils.FAKE_OUTCOME]}
     mock_check_if_get_outcomes_succeeds = MagicMock(return_value=(True, get_outcomes_response))
     mock_put_outcome_and_return_progress = MagicMock()
@@ -67,7 +67,7 @@ def _setup_execute_update_outcome_handler_work_test(monkeypatch):
     request = MagicMock()
     request.previousResourceState = unit_test_utils.create_fake_model(is_output_model=True)
 
-    monkeypatch.setattr(client_helpers, 'get_singleton_afd_client', mock_get_singleton_afd_client)
+    monkeypatch.setattr(client_helpers, 'get_afd_client', mock_get_afd_client)
     monkeypatch.setattr(validation_helpers, 'check_if_get_outcomes_succeeds', mock_check_if_get_outcomes_succeeds)
     monkeypatch.setattr(common_helpers, 'put_outcome_and_return_progress', mock_put_outcome_and_return_progress)
     monkeypatch.setattr(common_helpers, 'update_tags', mock_update_tags)

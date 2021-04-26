@@ -13,7 +13,7 @@ def test_execute_delete_outcome_handler_work_happy_case(monkeypatch):
     handler_workers.execute_delete_outcome_handler_work({}, model, progress)
 
     # Assert
-    client_helpers.get_singleton_afd_client.assert_called_once()
+    client_helpers.get_afd_client.assert_called_once()
     validation_helpers.check_if_get_outcomes_succeeds.assert_called_once()
     mock_afd_client.delete_outcome.assert_called_once()
 
@@ -40,9 +40,9 @@ def _setup_execute_delete_outcome_handler_work_test(monkeypatch):
 
     mock_afd_client = MagicMock()
     mock_afd_client.delete_outcome = MagicMock()
-    mock_get_singleton_afd_client = MagicMock(return_value=mock_afd_client)
+    mock_get_afd_client = MagicMock(return_value=mock_afd_client)
 
-    monkeypatch.setattr(client_helpers, 'get_singleton_afd_client', mock_get_singleton_afd_client)
+    monkeypatch.setattr(client_helpers, 'get_afd_client', mock_get_afd_client)
     monkeypatch.setattr(validation_helpers, 'check_if_get_outcomes_succeeds', mock_check_if_get_outcomes_succeeds)
 
     return mock_afd_client, model, progress

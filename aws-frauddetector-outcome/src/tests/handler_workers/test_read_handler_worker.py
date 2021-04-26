@@ -18,7 +18,7 @@ def test_execute_read_outcome_handler_work_happy_case(monkeypatch):
     handler_workers.execute_read_outcome_handler_work({}, model, progress)
 
     # Assert
-    client_helpers.get_singleton_afd_client.assert_called_once()
+    client_helpers.get_afd_client.assert_called_once()
     validation_helpers.check_if_get_outcomes_succeeds.assert_called_once()
     model_helpers.get_model_for_outcome.assert_called_once()
 
@@ -42,10 +42,10 @@ def _setup_execute_read_outcome_handler_work_test(monkeypatch):
 
     get_outcomes_response = {'outcomes': [unit_test_utils.FAKE_OUTCOME]}
     mock_check_if_get_outcomes_succeeds = MagicMock(return_value=(True, get_outcomes_response))
-    mock_get_singleton_afd_client = MagicMock(return_value={})
+    mock_get_afd_client = MagicMock(return_value={})
     mock_get_model_for_outcome = MagicMock(return_value=unit_test_utils.create_fake_model(is_output_model=True))
 
-    monkeypatch.setattr(client_helpers, 'get_singleton_afd_client', mock_get_singleton_afd_client)
+    monkeypatch.setattr(client_helpers, 'get_afd_client', mock_get_afd_client)
     monkeypatch.setattr(validation_helpers, 'check_if_get_outcomes_succeeds', mock_check_if_get_outcomes_succeeds)
     monkeypatch.setattr(model_helpers, 'get_model_for_outcome', mock_get_model_for_outcome)
 

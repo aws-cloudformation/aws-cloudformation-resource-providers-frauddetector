@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 
 def execute_create_entity_type_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     # For contract_create_duplicate, we need to fail if resource already exists
     get_entity_types_works, _ = validation_helpers.check_if_get_entity_types_succeeds(afd_client, model.Name)
@@ -32,7 +32,7 @@ def execute_create_entity_type_handler_work(session, model, progress):
 
 
 def execute_update_entity_type_handler_work(session, model, progress, request):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     previous_resource_state: ResourceModel = request.previousResourceState
 
@@ -61,7 +61,7 @@ def execute_update_entity_type_handler_work(session, model, progress, request):
 
 
 def execute_delete_entity_type_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     # For contract_delete_delete, we need to fail if the resource DNE
     # get entity_types will throw RNF Exception if entity_type DNE
@@ -79,7 +79,7 @@ def execute_delete_entity_type_handler_work(session, model, progress):
 
 
 def execute_read_entity_type_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
     # read requests only include primary identifier (Arn). Extract Name from Arn
     model.Name = model.Arn.split('/')[-1]
 
@@ -101,7 +101,7 @@ def execute_read_entity_type_handler_work(session, model, progress):
 
 
 def execute_list_entity_type_handler_work(session, model, progress):
-    afd_client = client_helpers.get_singleton_afd_client(session)
+    afd_client = client_helpers.get_afd_client(session)
 
     try:
         get_entity_types_response = api_helpers.call_get_entity_types(afd_client)
