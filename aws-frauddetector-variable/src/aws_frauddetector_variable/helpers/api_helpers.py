@@ -3,6 +3,7 @@ from . import validation_helpers
 
 import functools
 import logging
+import time
 
 # Use this logger to forward log messages to CloudWatch Logs.
 LOG = logging.getLogger(__name__)
@@ -11,6 +12,9 @@ LOG.setLevel(logging.DEBUG)
 # Maximum number of pages to get for paginated calls
 # for page size of 100, 100 pages is 10,000 resources, which is twice the largest default service limit
 MAXIMUM_NUMBER_OF_PAGES = 100
+
+# Number of seconds to wait for eventually consistency for `retry_not_found_exceptions` decorator
+CONSISTENCY_SLEEP_TIME = 1.0
 
 
 # Wrapper/decorator
@@ -27,6 +31,32 @@ def api_call_with_debug_logs(func):
         LOG.debug(f'Finished function {func.__name__!r}, returning {value}')
         return value
     return log_wrapper
+
+
+def retry_not_found_exceptions(func):
+    """
+    Retries boto3 not found exception for the decorated function.
+    """
+    @functools.wraps(func)
+    def retry_not_found_exceptions_wrapper(*args, **kwargs):
+        afd_client = kwargs.get('frauddetector_client', None)
+        if not afd_client:
+            if len(args) > 0:
+                afd_client = args[0]
+            else:
+                # We can't grab afd_client, so we can't compare to AFD's RNF Exception.
+                # Just run the function, rather than throwing an error
+                LOG.error('retry_not_found_exceptions_wrapper could not find the afd client! '
+                          'Perhaps the decorator was added to a method that is not supported?')
+                return func(*args, **kwargs)
+        try:
+            return func(*args, **kwargs)
+        except afd_client.exceptions.ResourceNotFoundException:
+            LOG.warning(f'caught a resource not found exception.'
+                        f' sleeping {CONSISTENCY_SLEEP_TIME} seconds and retrying api call for consistency...')
+            time.sleep(CONSISTENCY_SLEEP_TIME)
+            return func(*args, **kwargs)
+    return retry_not_found_exceptions_wrapper
 
 
 def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_pages=MAXIMUM_NUMBER_OF_PAGES):
@@ -218,6 +248,7 @@ def call_create_variable(frauddetector_client,
 # Update APIs
 
 
+@retry_not_found_exceptions
 @api_call_with_debug_logs
 def call_update_variable(frauddetector_client,
                          variable_name: str,
@@ -244,6 +275,7 @@ def call_update_variable(frauddetector_client,
 # Get APIs
 
 
+@retry_not_found_exceptions
 @paginated_api_call(item_to_collect='outcomes')
 @api_call_with_debug_logs
 def call_get_outcomes(frauddetector_client, outcome_name: str = None):
@@ -260,6 +292,7 @@ def call_get_outcomes(frauddetector_client, outcome_name: str = None):
     return frauddetector_client.get_outcomes(**args)
 
 
+@retry_not_found_exceptions
 @paginated_api_call(item_to_collect='variables')
 @api_call_with_debug_logs
 def call_get_variables(frauddetector_client, variable_name: str = None):
@@ -276,6 +309,7 @@ def call_get_variables(frauddetector_client, variable_name: str = None):
     return frauddetector_client.get_variables(**args)
 
 
+@retry_not_found_exceptions
 @paginated_api_call(item_to_collect='detectors')
 @api_call_with_debug_logs
 def call_get_detectors(frauddetector_client, detector_id: str = None):
@@ -286,6 +320,7 @@ def call_get_detectors(frauddetector_client, detector_id: str = None):
     return frauddetector_client.get_detectors(**args)
 
 
+@retry_not_found_exceptions
 @paginated_api_call(item_to_collect='labels')
 @api_call_with_debug_logs
 def call_get_labels(frauddetector_client, label_name: str = None):
@@ -296,6 +331,7 @@ def call_get_labels(frauddetector_client, label_name: str = None):
     return frauddetector_client.get_labels(**args)
 
 
+@retry_not_found_exceptions
 @paginated_api_call(item_to_collect='entityTypes')
 @api_call_with_debug_logs
 def call_get_entity_types(frauddetector_client, entity_type_name: str = None):
@@ -306,6 +342,7 @@ def call_get_entity_types(frauddetector_client, entity_type_name: str = None):
     return frauddetector_client.get_entity_types(**args)
 
 
+@retry_not_found_exceptions
 @paginated_api_call(item_to_collect='eventTypes')
 @api_call_with_debug_logs
 def call_get_event_types(frauddetector_client, event_type_name: str = None):
@@ -363,6 +400,7 @@ def call_delete_label(frauddetector_client, label_name: str):
 # Tagging
 
 
+@retry_not_found_exceptions
 @paginated_api_call(item_to_collect='tags')
 @api_call_with_debug_logs
 def call_list_tags_for_resource(frauddetector_client, resource_arn: str):
@@ -375,6 +413,7 @@ def call_list_tags_for_resource(frauddetector_client, resource_arn: str):
     return frauddetector_client.list_tags_for_resource(resourceARN=resource_arn)
 
 
+@retry_not_found_exceptions
 @api_call_with_debug_logs
 def call_tag_resource(frauddetector_client, resource_arn: str, tags: List[dict]):
     """
@@ -387,6 +426,7 @@ def call_tag_resource(frauddetector_client, resource_arn: str, tags: List[dict])
     return frauddetector_client.tag_resource(resourceARN=resource_arn, tags=tags)
 
 
+@retry_not_found_exceptions
 @api_call_with_debug_logs
 def call_untag_resource(frauddetector_client, resource_arn: str, tag_keys: List[str]):
     """
