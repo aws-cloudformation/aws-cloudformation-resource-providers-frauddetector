@@ -9,7 +9,9 @@ def test_check_if_get_labels_succeeds_client_error_returns_false():
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.get_labels = MagicMock()
     mock_afd_client.exceptions.ResourceNotFoundException = ClientError
-    mock_afd_client.get_labels.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_labels')]
+    # We retry NotFound (for consistency), so return not found twice
+    mock_afd_client.get_labels.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_labels'),
+                                              ClientError({'Code': '', 'Message': ''}, 'get_labels')]
 
     # Act
     result = validation_helpers.check_if_get_labels_succeeds(mock_afd_client, unit_test_utils.FAKE_NAME)
@@ -41,7 +43,9 @@ def test_check_if_get_entity_types_succeeds_client_error_returns_false():
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.get_entity_types = MagicMock()
     mock_afd_client.exceptions.ResourceNotFoundException = ClientError
-    mock_afd_client.get_entity_types.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_entity_types')]
+    # We retry NotFound (for consistency), so return not found twice
+    mock_afd_client.get_entity_types.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_entity_types'),
+                                                    ClientError({'Code': '', 'Message': ''}, 'get_entity_types')]
 
     # Act
     result = validation_helpers.check_if_get_entity_types_succeeds(mock_afd_client, unit_test_utils.FAKE_NAME)
@@ -73,7 +77,9 @@ def test_check_if_get_variables_succeeds_client_error_returns_false():
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.get_variables = MagicMock()
     mock_afd_client.exceptions.ResourceNotFoundException = ClientError
-    mock_afd_client.get_variables.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_variables')]
+    # We retry NotFound (for consistency), so return not found twice
+    mock_afd_client.get_variables.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_variables'),
+                                                 ClientError({'Code': '', 'Message': ''}, 'get_variables')]
 
     # Act
     result = validation_helpers.check_if_get_variables_succeeds(mock_afd_client, unit_test_utils.FAKE_NAME)
@@ -105,7 +111,9 @@ def test_check_if_get_event_types_succeeds_client_error_returns_false():
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.get_event_types = MagicMock()
     mock_afd_client.exceptions.ResourceNotFoundException = ClientError
-    mock_afd_client.get_event_types.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_event_types')]
+    # We retry NotFound (for consistency), so return not found twice
+    mock_afd_client.get_event_types.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_event_types'),
+                                                   ClientError({'Code': '', 'Message': ''}, 'get_event_types')]
 
     # Act
     result = validation_helpers.check_if_get_event_types_succeeds(mock_afd_client, unit_test_utils.FAKE_NAME)
