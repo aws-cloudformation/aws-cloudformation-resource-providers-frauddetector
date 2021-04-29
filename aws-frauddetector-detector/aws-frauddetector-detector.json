@@ -541,6 +541,7 @@
         "frauddetector:GetOutcomes",
         "frauddetector:GetEntityTypes",
         "frauddetector:DeleteDetector",
+        "frauddetector:DeleteDetectorVersion",
         "frauddetector:DeleteRule",
         "frauddetector:DeleteEventType",
         "frauddetector:DeleteVariable",
