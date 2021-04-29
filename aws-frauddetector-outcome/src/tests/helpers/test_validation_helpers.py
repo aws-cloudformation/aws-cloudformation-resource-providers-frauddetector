@@ -9,7 +9,9 @@ def test_check_if_get_outcomes_succeeds_client_error_returns_false():
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.get_outcomes = MagicMock()
     mock_afd_client.exceptions.ResourceNotFoundException = ClientError
-    mock_afd_client.get_outcomes.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_outcomes')]
+    # We retry NotFound (for consistency), so return not found twice
+    mock_afd_client.get_outcomes.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_outcomes'),
+                                                ClientError({'Code': '', 'Message': ''}, 'get_outcomes')]
 
     # Act
     result = validation_helpers.check_if_get_outcomes_succeeds(mock_afd_client, unit_test_utils.FAKE_NAME)
