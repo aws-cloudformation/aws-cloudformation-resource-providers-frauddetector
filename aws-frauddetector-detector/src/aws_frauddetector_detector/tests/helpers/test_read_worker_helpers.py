@@ -10,14 +10,20 @@ from .. import unit_test_utils
 from unittest.mock import MagicMock
 
 
-def test_validate_detector_exists_and_return_detector_resource_model_success(monkeypatch):
+def test_validate_detector_exists_and_return_detector_resource_model_success(
+    monkeypatch,
+):
     # Arrange
     mock_afd_client = unit_test_utils.create_mock_afd_client()
-    get_detectors_response = {'detectors': [unit_test_utils.FAKE_DETECTOR]}
+    get_detectors_response = {"detectors": [unit_test_utils.FAKE_DETECTOR]}
     mock_check_if_get_detectors_succeeds = MagicMock(return_value=(True, get_detectors_response))
     mock_get_model_for_detector = MagicMock()
-    monkeypatch.setattr(validation_helpers, 'check_if_get_detectors_succeeds', mock_check_if_get_detectors_succeeds)
-    monkeypatch.setattr(model_helpers, 'get_model_for_detector', mock_get_model_for_detector)
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_if_get_detectors_succeeds",
+        mock_check_if_get_detectors_succeeds,
+    )
+    monkeypatch.setattr(model_helpers, "get_model_for_detector", mock_get_model_for_detector)
     fake_model = unit_test_utils.create_fake_model()
 
     # Act
@@ -33,8 +39,12 @@ def test_validate_detector_exists_and_return_detector_resource_model_fail(monkey
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_check_if_get_detectors_succeeds = MagicMock(return_value=(False, None))
     mock_get_model_for_detector = MagicMock()
-    monkeypatch.setattr(validation_helpers, 'check_if_get_detectors_succeeds', mock_check_if_get_detectors_succeeds)
-    monkeypatch.setattr(model_helpers, 'get_model_for_detector', mock_get_model_for_detector)
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_if_get_detectors_succeeds",
+        mock_check_if_get_detectors_succeeds,
+    )
+    monkeypatch.setattr(model_helpers, "get_model_for_detector", mock_get_model_for_detector)
     fake_model = unit_test_utils.create_fake_model()
 
     # Act
@@ -53,10 +63,14 @@ def test_validate_detector_exists_and_return_detector_resource_model_fail(monkey
 def test_validate_detector_exists_and_return_detector_resource_model_empty(monkeypatch):
     # Arrange
     mock_afd_client = unit_test_utils.create_mock_afd_client()
-    mock_check_if_get_detectors_succeeds = MagicMock(return_value=(True, {'detectors': []}))
+    mock_check_if_get_detectors_succeeds = MagicMock(return_value=(True, {"detectors": []}))
     mock_get_model_for_detector = MagicMock()
-    monkeypatch.setattr(validation_helpers, 'check_if_get_detectors_succeeds', mock_check_if_get_detectors_succeeds)
-    monkeypatch.setattr(model_helpers, 'get_model_for_detector', mock_get_model_for_detector)
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_if_get_detectors_succeeds",
+        mock_check_if_get_detectors_succeeds,
+    )
+    monkeypatch.setattr(model_helpers, "get_model_for_detector", mock_get_model_for_detector)
     fake_model = unit_test_utils.create_fake_model()
 
     # Act

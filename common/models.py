@@ -51,8 +51,8 @@ class ResourceModelForVariable(BaseModel):
 
     @classmethod
     def _deserialize(
-            cls: Type["_ResourceModelForVariable"],
-            json_data: Optional[Mapping[str, Any]],
+        cls: Type["_ResourceModelForVariable"],
+        json_data: Optional[Mapping[str, Any]],
     ) -> Optional["_ResourceModelForVariable"]:
         if not json_data:
             return None
@@ -87,8 +87,8 @@ class ResourceModel(BaseModel):
 
     @classmethod
     def _deserialize(
-            cls: Type["_ResourceModel"],
-            json_data: Optional[Mapping[str, Any]],
+        cls: Type["_ResourceModel"],
+        json_data: Optional[Mapping[str, Any]],
     ) -> Optional["_ResourceModel"]:
         if not json_data:
             return None
@@ -141,8 +141,8 @@ class EventVariable(BaseModel):
 
     @classmethod
     def _deserialize(
-            cls: Type["_EventVariable"],
-            json_data: Optional[Mapping[str, Any]],
+        cls: Type["_EventVariable"],
+        json_data: Optional[Mapping[str, Any]],
     ) -> Optional["_EventVariable"]:
         if not json_data:
             return None

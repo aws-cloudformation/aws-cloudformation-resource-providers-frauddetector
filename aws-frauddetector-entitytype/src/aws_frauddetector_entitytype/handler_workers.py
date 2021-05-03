@@ -4,7 +4,13 @@ from cloudformation_cli_python_lib import (
     exceptions,
 )
 
-from .helpers import common_helpers, client_helpers, validation_helpers, model_helpers, api_helpers
+from .helpers import (
+    common_helpers,
+    client_helpers,
+    validation_helpers,
+    model_helpers,
+    api_helpers,
+)
 from .models import ResourceModel
 
 # Use this logger to forward log messages to CloudWatch Logs.
@@ -17,7 +23,7 @@ def execute_create_entity_type_handler_work(session, model, progress):
     # For contract_create_duplicate, we need to fail if resource already exists
     get_entity_types_works, _ = validation_helpers.check_if_get_entity_types_succeeds(afd_client, model.Name)
     if get_entity_types_works:
-        raise exceptions.AlreadyExists('entity_type', model.Name)
+        raise exceptions.AlreadyExists("entity_type", model.Name)
 
     # For contract_invalid_create, fail if any read-only properties are present
     if model.Arn is not None or model.CreatedTime is not None or model.LastUpdatedTime is not None:
@@ -38,10 +44,12 @@ def execute_update_entity_type_handler_work(session, model, progress, request):
 
     # For contract_update_non_existent_resource, we need to fail if the resource DNE
     # get entity_types will throw RNF Exception if entity_type DNE
-    get_entity_types_works, get_entity_types_response =\
-        validation_helpers.check_if_get_entity_types_succeeds(afd_client, model.Name)
+    (
+        get_entity_types_works,
+        get_entity_types_response,
+    ) = validation_helpers.check_if_get_entity_types_succeeds(afd_client, model.Name)
     if not get_entity_types_works:
-        raise exceptions.NotFound('entity_type', model.Name)
+        raise exceptions.NotFound("entity_type", model.Name)
 
     # # For contract_update_create_only_property, we need to fail if trying to set Name to something different
     previous_name = previous_resource_state.Name
@@ -67,7 +75,7 @@ def execute_delete_entity_type_handler_work(session, model, progress):
     # get entity_types will throw RNF Exception if entity_type DNE
     get_entity_types_works, _ = validation_helpers.check_if_get_entity_types_succeeds(afd_client, model.Name)
     if not get_entity_types_works:
-        raise exceptions.NotFound('entity_type', model.Name)
+        raise exceptions.NotFound("entity_type", model.Name)
 
     try:
         api_helpers.call_delete_entity_type(afd_client, model.Name)
@@ -81,16 +89,19 @@ def execute_delete_entity_type_handler_work(session, model, progress):
 def execute_read_entity_type_handler_work(session, model, progress):
     afd_client = client_helpers.get_afd_client(session)
     # read requests only include primary identifier (Arn). Extract Name from Arn
-    model.Name = model.Arn.split('/')[-1]
+    model.Name = model.Arn.split("/")[-1]
 
     # For contract_delete_read, we need to fail if the resource DNE
     # get entity_types will throw RNF Exception if entity_type DNE
-    get_entity_types_works, get_entity_types_response = validation_helpers.check_if_get_entity_types_succeeds(afd_client, model.Name)
+    (
+        get_entity_types_works,
+        get_entity_types_response,
+    ) = validation_helpers.check_if_get_entity_types_succeeds(afd_client, model.Name)
     if not get_entity_types_works:
-        raise exceptions.NotFound('entity_type', model.Name)
+        raise exceptions.NotFound("entity_type", model.Name)
 
     try:
-        entity_types = get_entity_types_response.get('entityTypes', [])
+        entity_types = get_entity_types_response.get("entityTypes", [])
         if entity_types:
             model = model_helpers.get_model_for_entity_type(afd_client, entity_types[0])
         progress.resourceModel = model
@@ -105,8 +116,10 @@ def execute_list_entity_type_handler_work(session, model, progress):
 
     try:
         get_entity_types_response = api_helpers.call_get_entity_types(afd_client)
-        entity_types = get_entity_types_response.get('entityTypes', [])
-        progress.resourceModels = [model_helpers.get_model_for_entity_type(afd_client, entity_type) for entity_type in entity_types]
+        entity_types = get_entity_types_response.get("entityTypes", [])
+        progress.resourceModels = [
+            model_helpers.get_model_for_entity_type(afd_client, entity_type) for entity_type in entity_types
+        ]
         progress.status = OperationStatus.SUCCESS
     except RuntimeError as e:
         raise exceptions.InternalFailure(f"Error occurred: {e}")

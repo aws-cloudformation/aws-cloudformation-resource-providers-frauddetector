@@ -4,7 +4,13 @@ from cloudformation_cli_python_lib import (
     exceptions,
 )
 
-from .helpers import common_helpers, client_helpers, validation_helpers, model_helpers, api_helpers
+from .helpers import (
+    common_helpers,
+    client_helpers,
+    validation_helpers,
+    model_helpers,
+    api_helpers,
+)
 from .models import ResourceModel
 
 # Use this logger to forward log messages to CloudWatch Logs.
@@ -17,7 +23,7 @@ def execute_create_variable_handler_work(session, model, progress):
     # For contract_create_duplicate, we need to fail if resource already exists
     get_variables_works, _ = validation_helpers.check_if_get_variables_succeeds(afd_client, model.Name)
     if get_variables_works:
-        raise exceptions.AlreadyExists('variable', model.Name)
+        raise exceptions.AlreadyExists("variable", model.Name)
 
     # For contract_invalid_create, fail if any read-only properties are present
     if model.Arn is not None or model.CreatedTime is not None or model.LastUpdatedTime is not None:
@@ -38,9 +44,12 @@ def execute_update_variable_handler_work(session, model, progress, request):
 
     # For contract_update_non_existent_resource, we need to fail if the resource DNE
     # get variables will throw RNF Exception if variable DNE
-    get_variables_works, get_variables_response = validation_helpers.check_if_get_variables_succeeds(afd_client, model.Name)
+    (
+        get_variables_works,
+        get_variables_response,
+    ) = validation_helpers.check_if_get_variables_succeeds(afd_client, model.Name)
     if not get_variables_works:
-        raise exceptions.NotFound('variable', model.Name)
+        raise exceptions.NotFound("variable", model.Name)
 
     # # For contract_update_create_only_property, we need to fail if trying to set Name to something different
     previous_name = previous_resource_state.Name
@@ -65,7 +74,7 @@ def execute_delete_variable_handler_work(session, model, progress):
     # get variables will throw RNF Exception if variable DNE
     get_variables_works, _ = validation_helpers.check_if_get_variables_succeeds(afd_client, model.Name)
     if not get_variables_works:
-        raise exceptions.NotFound('variable', model.Name)
+        raise exceptions.NotFound("variable", model.Name)
 
     try:
         api_helpers.call_delete_variable(afd_client, model.Name)
@@ -79,16 +88,19 @@ def execute_delete_variable_handler_work(session, model, progress):
 def execute_read_variable_handler_work(session, model, progress):
     afd_client = client_helpers.get_afd_client(session)
     # read requests only include primary identifier (Arn). Extract Name from Arn
-    model.Name = model.Arn.split('/')[-1]
+    model.Name = model.Arn.split("/")[-1]
 
     # For contract_delete_read, we need to fail if the resource DNE
     # get variables will throw RNF Exception if variable DNE
-    get_variables_works, get_variables_response = validation_helpers.check_if_get_variables_succeeds(afd_client, model.Name)
+    (
+        get_variables_works,
+        get_variables_response,
+    ) = validation_helpers.check_if_get_variables_succeeds(afd_client, model.Name)
     if not get_variables_works:
-        raise exceptions.NotFound('variable', model.Name)
+        raise exceptions.NotFound("variable", model.Name)
 
     try:
-        variables = get_variables_response.get('variables', [])
+        variables = get_variables_response.get("variables", [])
         if variables:
             model = model_helpers.get_model_for_variable(afd_client, variables[0])
         progress.resourceModel = model
@@ -103,7 +115,7 @@ def execute_list_variable_handler_work(session, model, progress):
 
     try:
         get_variables_response = api_helpers.call_get_variables(afd_client)
-        variables = get_variables_response.get('variables', [])
+        variables = get_variables_response.get("variables", [])
         progress.resourceModels = [model_helpers.get_model_for_variable(afd_client, variable) for variable in variables]
         progress.status = OperationStatus.SUCCESS
     except RuntimeError as e:

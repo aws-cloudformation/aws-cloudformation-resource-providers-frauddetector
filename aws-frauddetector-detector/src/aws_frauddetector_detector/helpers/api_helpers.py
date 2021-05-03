@@ -24,12 +24,14 @@ def api_call_with_debug_logs(func):
     """
     Add some logs to the decorated function
     """
+
     @functools.wraps(func)
     def log_wrapper(*args, **kwargs):
-        LOG.debug(f'Starting function {func.__name__!r} with args {args} and kwargs {kwargs}')
+        LOG.debug(f"Starting function {func.__name__!r} with args {args} and kwargs {kwargs}")
         value = func(*args, **kwargs)
-        LOG.debug(f'Finished function {func.__name__!r}, returning {value}')
+        LOG.debug(f"Finished function {func.__name__!r}, returning {value}")
         return value
+
     return log_wrapper
 
 
@@ -37,29 +39,39 @@ def retry_not_found_exceptions(func):
     """
     Retries boto3 not found exception for the decorated function.
     """
+
     @functools.wraps(func)
     def retry_not_found_exceptions_wrapper(*args, **kwargs):
-        afd_client = kwargs.get('frauddetector_client', None)
+        afd_client = kwargs.get("frauddetector_client", None)
         if not afd_client:
             if len(args) > 0:
                 afd_client = args[0]
             else:
                 # We can't grab afd_client, so we can't compare to AFD's RNF Exception.
                 # Just run the function, rather than throwing an error
-                LOG.error('retry_not_found_exceptions_wrapper could not find the afd client! '
-                          'Perhaps the decorator was added to a method that is not supported?')
+                LOG.error(
+                    "retry_not_found_exceptions_wrapper could not find the afd client! "
+                    "Perhaps the decorator was added to a method that is not supported?"
+                )
                 return func(*args, **kwargs)
         try:
             return func(*args, **kwargs)
         except afd_client.exceptions.ResourceNotFoundException:
-            LOG.warning(f'caught a resource not found exception.'
-                        f' sleeping {CONSISTENCY_SLEEP_TIME} seconds and retrying api call for consistency...')
+            LOG.warning(
+                f"caught a resource not found exception."
+                f" sleeping {CONSISTENCY_SLEEP_TIME} seconds and retrying api call for consistency..."
+            )
             time.sleep(CONSISTENCY_SLEEP_TIME)
             return func(*args, **kwargs)
+
     return retry_not_found_exceptions_wrapper
 
 
-def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_pages=MAXIMUM_NUMBER_OF_PAGES):
+def paginated_api_call(
+    item_to_collect,
+    criteria_to_keep=lambda x, y: True,
+    max_pages=MAXIMUM_NUMBER_OF_PAGES,
+):
     """
     For a method that calls a paginated API (returns an object w/ 'nextToken' key),
     decorate with @paginated_api_call to get an exhaustive list returned,
@@ -69,6 +81,7 @@ def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_
     :param max_pages: maximum number of pages allowed
     :return: an exhaustive list, containing the accumulated items from all pages from the API call
     """
+
     def paginated_api_call_decorator(func):
         @functools.wraps(func)
         def api_call_wrapper(*args, **kwargs):
@@ -83,15 +96,17 @@ def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_
             collect_items_of_interest_from_current_response()
             count = 1
 
-            while 'nextToken' in response and count < max_pages:
-                next_token = response['nextToken']
+            while "nextToken" in response and count < max_pages:
+                next_token = response["nextToken"]
                 response = func(*args, nextToken=next_token, **kwargs)
                 collect_items_of_interest_from_current_response()
                 count += 1
 
             response[item_to_collect] = collected_items
             return response
+
         return api_call_wrapper
+
     return paginated_api_call_decorator
 
 
@@ -99,11 +114,13 @@ def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_
 
 
 @api_call_with_debug_logs
-def call_put_detector(frauddetector_client,
-                      detector_id: str,
-                      detector_event_type_name: str,
-                      detector_tags: List[dict] = None,
-                      detector_description: str = None):
+def call_put_detector(
+    frauddetector_client,
+    detector_id: str,
+    detector_event_type_name: str,
+    detector_tags: List[dict] = None,
+    detector_description: str = None,
+):
     """
     Call put_detector with the given frauddetector client and the given arguments.
     :param frauddetector_client: boto3 frauddetector client to use to make the call
@@ -117,17 +134,19 @@ def call_put_detector(frauddetector_client,
         "detectorId": detector_id,
         "eventTypeName": detector_event_type_name,
         "tags": detector_tags,
-        "description": detector_description
+        "description": detector_description,
     }
     args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.put_detector(**args)
 
 
 @api_call_with_debug_logs
-def call_put_outcome(frauddetector_client,
-                     outcome_name: str,
-                     outcome_tags: List[dict] = None,
-                     outcome_description: str = None):
+def call_put_outcome(
+    frauddetector_client,
+    outcome_name: str,
+    outcome_tags: List[dict] = None,
+    outcome_description: str = None,
+):
     """
     Call put_outcome with the given frauddetector client and the given arguments.
     :param frauddetector_client: boto3 frauddetector client to use to make the call
@@ -139,17 +158,19 @@ def call_put_outcome(frauddetector_client,
     args = {
         "name": outcome_name,
         "tags": outcome_tags,
-        "description": outcome_description
+        "description": outcome_description,
     }
     args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.put_outcome(**args)
 
 
 @api_call_with_debug_logs
-def call_put_label(frauddetector_client,
-                   label_name: str,
-                   label_tags: List[dict] = None,
-                   label_description: str = None):
+def call_put_label(
+    frauddetector_client,
+    label_name: str,
+    label_tags: List[dict] = None,
+    label_description: str = None,
+):
     """
     This method calls put_label with the given client and the given arguments.
     :param frauddetector_client: afd client to use to make the call
@@ -158,20 +179,18 @@ def call_put_label(frauddetector_client,
     :param label_description: description of the label (default is None)
     :return: API response from frauddetector_client
     """
-    args = {
-        "name": label_name,
-        "tags": label_tags,
-        "description": label_description
-    }
+    args = {"name": label_name, "tags": label_tags, "description": label_description}
     args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.put_label(**args)
 
 
 @api_call_with_debug_logs
-def call_put_entity_type(frauddetector_client,
-                         entity_type_name: str,
-                         entity_type_tags: List[dict] = None,
-                         entity_type_description: str = None):
+def call_put_entity_type(
+    frauddetector_client,
+    entity_type_name: str,
+    entity_type_tags: List[dict] = None,
+    entity_type_description: str = None,
+):
     """
     This method calls put_entity_type with the given client and the given arguments.
     :param frauddetector_client: afd client to use to make the call
@@ -183,20 +202,22 @@ def call_put_entity_type(frauddetector_client,
     args = {
         "name": entity_type_name,
         "tags": entity_type_tags,
-        "description": entity_type_description
+        "description": entity_type_description,
     }
     args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.put_entity_type(**args)
 
 
 @api_call_with_debug_logs
-def call_put_event_type(frauddetector_client,
-                        event_type_name: str,
-                        entity_type_names: List[str],
-                        event_variable_names: List[str],
-                        label_names: List[str] = None,
-                        event_type_tags: List[dict] = None,
-                        event_type_description: str = None):
+def call_put_event_type(
+    frauddetector_client,
+    event_type_name: str,
+    entity_type_names: List[str],
+    event_variable_names: List[str],
+    label_names: List[str] = None,
+    event_type_tags: List[dict] = None,
+    event_type_description: str = None,
+):
     """
     This method calls put_event_type with the given client and the given arguments.
     :param frauddetector_client: afd client to use to make the call
@@ -214,7 +235,7 @@ def call_put_event_type(frauddetector_client,
         "entityTypes": entity_type_names,
         "eventVariables": event_variable_names,
         "labels": label_names,
-        "description": event_type_description
+        "description": event_type_description,
     }
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.put_event_type(**args)
@@ -224,14 +245,16 @@ def call_put_event_type(frauddetector_client,
 
 
 @api_call_with_debug_logs
-def call_create_variable(frauddetector_client,
-                         variable_name: str,
-                         variable_data_source: str,
-                         variable_data_type: str,
-                         variable_default_value: str,
-                         variable_description: str = None,
-                         variable_type: str = None,
-                         variable_tags: List[dict] = None):
+def call_create_variable(
+    frauddetector_client,
+    variable_name: str,
+    variable_data_source: str,
+    variable_data_type: str,
+    variable_default_value: str,
+    variable_description: str = None,
+    variable_type: str = None,
+    variable_tags: List[dict] = None,
+):
     args = {
         "name": variable_name,
         "dataSource": variable_data_source,
@@ -239,21 +262,23 @@ def call_create_variable(frauddetector_client,
         "defaultValue": variable_default_value,
         "description": variable_description,
         "variableType": variable_type,
-        "tags": variable_tags
+        "tags": variable_tags,
     }
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.create_variable(**args)
 
 
 @api_call_with_debug_logs
-def call_create_rule(frauddetector_client,
-                     rule_id: str,
-                     detector_id: str,
-                     rule_expression: str,
-                     rule_language: str,
-                     rule_outcomes: List[str],
-                     rule_description: str = None,
-                     rule_tags: List[dict] = None):
+def call_create_rule(
+    frauddetector_client,
+    rule_id: str,
+    detector_id: str,
+    rule_expression: str,
+    rule_language: str,
+    rule_outcomes: List[str],
+    rule_description: str = None,
+    rule_tags: List[dict] = None,
+):
     args = {
         "ruleId": rule_id,
         "detectorId": detector_id,
@@ -261,7 +286,7 @@ def call_create_rule(frauddetector_client,
         "language": rule_language,
         "outcomes": rule_outcomes,
         "description": rule_description,
-        "tags": rule_tags
+        "tags": rule_tags,
     }
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.create_rule(**args)
@@ -269,14 +294,16 @@ def call_create_rule(frauddetector_client,
 
 @retry_not_found_exceptions
 @api_call_with_debug_logs
-def call_create_detector_version(frauddetector_client,
-                                 detector_id: str,
-                                 rules: List[dict],
-                                 rule_execution_mode: str = None,
-                                 model_versions: List[dict] = None,
-                                 external_model_endpoints: List[str] = None,
-                                 detector_version_description: str = None,
-                                 detector_version_tags: List[dict] = None):
+def call_create_detector_version(
+    frauddetector_client,
+    detector_id: str,
+    rules: List[dict],
+    rule_execution_mode: str = None,
+    model_versions: List[dict] = None,
+    external_model_endpoints: List[str] = None,
+    detector_version_description: str = None,
+    detector_version_tags: List[dict] = None,
+):
     args = {
         "detectorId": detector_id,
         "rules": rules,
@@ -284,7 +311,7 @@ def call_create_detector_version(frauddetector_client,
         "modelVersions": model_versions,
         "externalModelEndpoints": external_model_endpoints,
         "description": detector_version_description,
-        "tags": detector_version_tags
+        "tags": detector_version_tags,
     }
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.create_detector_version(**args)
@@ -295,11 +322,13 @@ def call_create_detector_version(frauddetector_client,
 
 @retry_not_found_exceptions
 @api_call_with_debug_logs
-def call_update_variable(frauddetector_client,
-                         variable_name: str,
-                         variable_default_value: str,
-                         variable_type: str,
-                         variable_description: str):
+def call_update_variable(
+    frauddetector_client,
+    variable_name: str,
+    variable_default_value: str,
+    variable_type: str,
+    variable_description: str,
+):
     """
     Calls update_variable with the given frauddetector client
     :param variable_description: new description for the variable
@@ -314,7 +343,7 @@ def call_update_variable(frauddetector_client,
         "defaultValue": variable_default_value,
         "description": variable_description,
         "variableType": variable_type,
-        "name": variable_name
+        "name": variable_name,
     }
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.update_variable(**args)
@@ -322,15 +351,17 @@ def call_update_variable(frauddetector_client,
 
 @retry_not_found_exceptions
 @api_call_with_debug_logs
-def call_update_rule_version(frauddetector_client,
-                             detector_id: str,
-                             rule_id: str,
-                             rule_version: str,
-                             rule_expression: str,
-                             rule_language: str,
-                             rule_outcomes: List[str],
-                             rule_description: str = None,
-                             rule_tags: List[dict] = None):
+def call_update_rule_version(
+    frauddetector_client,
+    detector_id: str,
+    rule_id: str,
+    rule_version: str,
+    rule_expression: str,
+    rule_language: str,
+    rule_outcomes: List[str],
+    rule_description: str = None,
+    rule_tags: List[dict] = None,
+):
     """
     Calls update_rule_version with the given frauddetector client
     :param frauddetector_client: boto3 client to make the call with
@@ -344,9 +375,9 @@ def call_update_rule_version(frauddetector_client,
         "rule": {
             "detectorId": detector_id,
             "ruleId": rule_id,
-            "ruleVersion": rule_version
+            "ruleVersion": rule_version,
         },
-        "tags": rule_tags
+        "tags": rule_tags,
     }
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.update_rule_version(**args)
@@ -354,14 +385,16 @@ def call_update_rule_version(frauddetector_client,
 
 @retry_not_found_exceptions
 @api_call_with_debug_logs
-def call_update_detector_version(frauddetector_client,
-                                 detector_id: str,
-                                 detector_version_id: str,
-                                 rules: List[dict],
-                                 rule_execution_mode: str = None,
-                                 model_versions: List[dict] = None,
-                                 external_model_endpoints: List[str] = None,
-                                 detector_version_description: str = None):
+def call_update_detector_version(
+    frauddetector_client,
+    detector_id: str,
+    detector_version_id: str,
+    rules: List[dict],
+    rule_execution_mode: str = None,
+    model_versions: List[dict] = None,
+    external_model_endpoints: List[str] = None,
+    detector_version_description: str = None,
+):
     args = {
         "detectorId": detector_id,
         "detectorVersionId": detector_version_id,
@@ -369,7 +402,7 @@ def call_update_detector_version(frauddetector_client,
         "ruleExecutionMode": rule_execution_mode,
         "modelVersions": model_versions,
         "externalModelEndpoints": external_model_endpoints,
-        "description": detector_version_description
+        "description": detector_version_description,
     }
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.update_detector_version(**args)
@@ -377,10 +410,7 @@ def call_update_detector_version(frauddetector_client,
 
 @retry_not_found_exceptions
 @api_call_with_debug_logs
-def call_update_detector_version_status(frauddetector_client,
-                                        detector_id: str,
-                                        detector_version_id: str,
-                                        status: str):
+def call_update_detector_version_status(frauddetector_client, detector_id: str, detector_version_id: str, status: str):
     """
     Calls update_variable with the given frauddetector client
     :param detector_id: detector id to update a detector version status for
@@ -393,7 +423,7 @@ def call_update_detector_version_status(frauddetector_client,
     args = {
         "detectorId": detector_id,
         "detectorVersionId": detector_version_id,
-        "status": status
+        "status": status,
     }
     return frauddetector_client.update_detector_version_status(**args)
 
@@ -402,7 +432,7 @@ def call_update_detector_version_status(frauddetector_client,
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='detectorVersionSummaries')
+@paginated_api_call(item_to_collect="detectorVersionSummaries")
 @api_call_with_debug_logs
 def call_describe_detector(frauddetector_client, detector_id):
     """
@@ -411,13 +441,12 @@ def call_describe_detector(frauddetector_client, detector_id):
     :param detector_id: id of the detector to describe
     :return: return detector version summaries for the given detector_id
     """
-    args = {
-        "detectorId": detector_id
-    }
+    args = {"detectorId": detector_id}
     return frauddetector_client.describe_detector(**args)
 
 
 # Get APIs
+
 
 @retry_not_found_exceptions
 @api_call_with_debug_logs
@@ -429,15 +458,12 @@ def call_get_detector_version(frauddetector_client, detector_id: str, detector_v
     :param detector_version_id: version id for the detector version to get
     :return: get a single detector if detector_id is specified, otherwise get all detectors
     """
-    args = {
-        "detectorId": detector_id,
-        "detectorVersionId": detector_version_id
-    }
+    args = {"detectorId": detector_id, "detectorVersionId": detector_version_id}
     return frauddetector_client.get_detector_version(**args)
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='detectors')
+@paginated_api_call(item_to_collect="detectors")
 @api_call_with_debug_logs
 def call_get_detectors(frauddetector_client, detector_id: str = None):
     """
@@ -446,17 +472,20 @@ def call_get_detectors(frauddetector_client, detector_id: str = None):
     :param detector_id: id of the detector to get (default is None)
     :return: get a single detector if detector_id is specified, otherwise get all detectors
     """
-    args = {
-        "detectorId": detector_id
-    }
+    args = {"detectorId": detector_id}
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_detectors(**args)
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='ruleDetails')
+@paginated_api_call(item_to_collect="ruleDetails")
 @api_call_with_debug_logs
-def call_get_rules(frauddetector_client, detector_id: str, rule_id: str = None, rule_version: str = None):
+def call_get_rules(
+    frauddetector_client,
+    detector_id: str,
+    rule_id: str = None,
+    rule_version: str = None,
+):
     """
     Call get_detectors with the given frauddetector client and the given arguments.
     :param frauddetector_client: boto3 frauddetector client to use to make the call
@@ -466,17 +495,13 @@ def call_get_rules(frauddetector_client, detector_id: str, rule_id: str = None, 
 
     :return: get a single detector if detector_id is specified, otherwise get all detectors
     """
-    args = {
-        "detectorId": detector_id,
-        "ruleId": rule_id,
-        "ruleVersion": rule_version
-    }
+    args = {"detectorId": detector_id, "ruleId": rule_id, "ruleVersion": rule_version}
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_rules(**args)
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='outcomes')
+@paginated_api_call(item_to_collect="outcomes")
 @api_call_with_debug_logs
 def call_get_outcomes(frauddetector_client, outcome_name: str = None):
     """
@@ -485,15 +510,13 @@ def call_get_outcomes(frauddetector_client, outcome_name: str = None):
     :param outcome_name: name of the outcome to get (default is None)
     :return: get a single outcome if outcome_name is specified, otherwise get all outcomes
     """
-    args = {
-        "name": outcome_name
-    }
+    args = {"name": outcome_name}
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_outcomes(**args)
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='variables')
+@paginated_api_call(item_to_collect="variables")
 @api_call_with_debug_logs
 def call_get_variables(frauddetector_client, variable_name: str = None):
     """
@@ -502,42 +525,34 @@ def call_get_variables(frauddetector_client, variable_name: str = None):
     :param variable_name: name of the variable to get (default is None)
     :return: get a single variable if variable_name is specified, otherwise get all variables
     """
-    args = {
-        "name": variable_name
-    }
+    args = {"name": variable_name}
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_variables(**args)
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='labels')
+@paginated_api_call(item_to_collect="labels")
 @api_call_with_debug_logs
 def call_get_labels(frauddetector_client, label_name: str = None):
-    args = {
-        "name": label_name
-    }
+    args = {"name": label_name}
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_labels(**args)
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='entityTypes')
+@paginated_api_call(item_to_collect="entityTypes")
 @api_call_with_debug_logs
 def call_get_entity_types(frauddetector_client, entity_type_name: str = None):
-    args = {
-        "name": entity_type_name
-    }
+    args = {"name": entity_type_name}
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_entity_types(**args)
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='eventTypes')
+@paginated_api_call(item_to_collect="eventTypes")
 @api_call_with_debug_logs
 def call_get_event_types(frauddetector_client, event_type_name: str = None):
-    args = {
-        "name": event_type_name
-    }
+    args = {"name": event_type_name}
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_event_types(**args)
 
@@ -588,11 +603,7 @@ def call_delete_detector_version(frauddetector_client, detector_id: str, detecto
 
 @api_call_with_debug_logs
 def call_delete_rule(frauddetector_client, detector_id: str, rule_id: str, rule_version: str):
-    rule = {
-        "detectorId": detector_id,
-        "ruleId": rule_id,
-        "ruleVersion": rule_version
-    }
+    rule = {"detectorId": detector_id, "ruleId": rule_id, "ruleVersion": rule_version}
     return frauddetector_client.delete_rule(rule=rule)
 
 
@@ -600,7 +611,7 @@ def call_delete_rule(frauddetector_client, detector_id: str, rule_id: str, rule_
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='tags')
+@paginated_api_call(item_to_collect="tags")
 @api_call_with_debug_logs
 def call_list_tags_for_resource(frauddetector_client, resource_arn: str):
     """

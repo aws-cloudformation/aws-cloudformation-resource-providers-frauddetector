@@ -1,7 +1,5 @@
 from typing import List, Optional
-from cloudformation_cli_python_lib import (
-    exceptions
-)
+from cloudformation_cli_python_lib import exceptions
 
 from ..models import ResourceModel, Tag
 from . import api_helpers
@@ -26,7 +24,7 @@ def get_tag_models_from_tags(tags: Optional[List[dict]]) -> Optional[List[Tag]]:
     # we need to translate our afd tags back to a list of cfn Tag
     if tags is None:
         return None
-    return [Tag(Key=tag.get('key', ''), Value=tag.get('value', '')) for tag in tags]
+    return [Tag(Key=tag.get("key", ""), Value=tag.get("value", "")) for tag in tags]
 
 
 def _get_tags_for_given_arn(frauddetector_client, arn):
@@ -38,25 +36,26 @@ def _get_tags_for_given_arn(frauddetector_client, arn):
 
 
 def get_model_for_entity_type(frauddetector_client, entity_type):
-    entity_type_arn = entity_type.get('arn', '')
+    entity_type_arn = entity_type.get("arn", "")
     list_tags_response = api_helpers.call_list_tags_for_resource(frauddetector_client, resource_arn=entity_type_arn)
     attached_tags = list_tags_response.get("tags", [])
     tag_models = get_tag_models_from_tags(attached_tags)
     return ResourceModel(
-        Name=entity_type.get('name', ''),
+        Name=entity_type.get("name", ""),
         Arn=entity_type_arn,
         Tags=tag_models,
-        Description=entity_type.get('description', None),
-        CreatedTime=entity_type.get('createdTime', ''),
-        LastUpdatedTime=entity_type.get('lastUpdatedTime', '')
+        Description=entity_type.get("description", None),
+        CreatedTime=entity_type.get("createdTime", ""),
+        LastUpdatedTime=entity_type.get("lastUpdatedTime", ""),
     )
 
 
 def get_entity_types_and_return_model_for_entity_type(frauddetector_client, entity_type_name):
     try:
-        get_entity_types_response = api_helpers.call_get_entity_types(frauddetector_client,
-                                                                      entity_type_name=entity_type_name)
-        entity_types = get_entity_types_response.get('entityTypes', [])
+        get_entity_types_response = api_helpers.call_get_entity_types(
+            frauddetector_client, entity_type_name=entity_type_name
+        )
+        entity_types = get_entity_types_response.get("entityTypes", [])
         if entity_types:
             return get_model_for_entity_type(frauddetector_client, entity_types[0])
         # if get entity_types worked but did not return any entity_types, we have major problems

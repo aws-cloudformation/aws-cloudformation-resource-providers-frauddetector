@@ -1,4 +1,10 @@
+import logging
+
 from . import api_helpers
+
+# Use this logger to forward log messages to CloudWatch Logs.
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
 
 
 def remove_none_arguments(args):
@@ -20,4 +26,5 @@ def check_if_get_outcomes_succeeds(frauddetector_client, outcome_name):
         get_outcomes_response = api_helpers.call_get_outcomes(frauddetector_client, outcome_name)
         return True, get_outcomes_response
     except frauddetector_client.exceptions.ResourceNotFoundException as RNF:
+        LOG.warning(f"Error getting outcome {outcome_name}: {RNF}")
         return False, None

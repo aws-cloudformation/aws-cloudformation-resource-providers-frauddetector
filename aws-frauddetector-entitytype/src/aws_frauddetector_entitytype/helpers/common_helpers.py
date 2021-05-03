@@ -17,20 +17,25 @@ LOG = logging.getLogger(__name__)
 
 def put_entity_type_and_return_progress(frauddetector_client, model, progress):
     try:
-        if hasattr(model, 'Tags'):
+        if hasattr(model, "Tags"):
             tags = model_helpers.get_tags_from_tag_models(model.Tags)
-            api_helpers.call_put_entity_type(frauddetector_client,
-                                             entity_type_name=model.Name,
-                                             entity_type_tags=tags,
-                                             entity_type_description=model.Description)
+            api_helpers.call_put_entity_type(
+                frauddetector_client,
+                entity_type_name=model.Name,
+                entity_type_tags=tags,
+                entity_type_description=model.Description,
+            )
         else:
-            api_helpers.call_put_entity_type(frauddetector_client,
-                                             entity_type_name=model.Name,
-                                             entity_type_description=model.Description)
-        progress.resourceModel = model_helpers.get_entity_types_and_return_model_for_entity_type(frauddetector_client,
-                                                                                                 model.Name)
+            api_helpers.call_put_entity_type(
+                frauddetector_client,
+                entity_type_name=model.Name,
+                entity_type_description=model.Description,
+            )
+        progress.resourceModel = model_helpers.get_entity_types_and_return_model_for_entity_type(
+            frauddetector_client, model.Name
+        )
         progress.status = OperationStatus.SUCCESS
-        LOG.info(f'just finished a put entity_type call: {progress.resourceModel}')
+        LOG.info(f"just finished a put entity_type call: {progress.resourceModel}")
     except RuntimeError as e:
         raise exceptions.InternalFailure(f"Error occurred: {e}")
     return progress
@@ -43,10 +48,10 @@ def update_tags(frauddetector_client, afd_resource_arn: str, new_tags: List[Tag]
     try:
         list_tags_response = api_helpers.call_list_tags_for_resource(frauddetector_client, afd_resource_arn)
         attached_tags = list_tags_response.get("tags", [])
-        attached_tags_dict = {tag.get('key', ''): tag.get('value', None) for tag in attached_tags}
+        attached_tags_dict = {tag.get("key", ""): tag.get("value", None) for tag in attached_tags}
 
         tags_to_add = [model_helpers.get_tags_from_tag_models(new_tags), {}][new_tags is None]
-        tags_to_add_dict = {tag.get('key', ''): tag.get('value', None) for tag in tags_to_add}
+        tags_to_add_dict = {tag.get("key", ""): tag.get("value", None) for tag in tags_to_add}
 
         if attached_tags_dict == tags_to_add_dict:
             return

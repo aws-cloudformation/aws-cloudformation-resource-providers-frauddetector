@@ -4,7 +4,13 @@ from cloudformation_cli_python_lib import (
     exceptions,
 )
 
-from .helpers import common_helpers, client_helpers, validation_helpers, model_helpers, api_helpers
+from .helpers import (
+    common_helpers,
+    client_helpers,
+    validation_helpers,
+    model_helpers,
+    api_helpers,
+)
 from .models import ResourceModel
 
 # Use this logger to forward log messages to CloudWatch Logs.
@@ -17,7 +23,7 @@ def execute_create_outcome_handler_work(session, model, progress):
     # For contract_create_duplicate, we need to fail if resource already exists
     get_outcomes_works, _ = validation_helpers.check_if_get_outcomes_succeeds(afd_client, model.Name)
     if get_outcomes_works:
-        raise exceptions.AlreadyExists('outcome', model.Name)
+        raise exceptions.AlreadyExists("outcome", model.Name)
 
     # For contract_invalid_create, fail if any read-only properties are present
     if model.Arn is not None or model.CreatedTime is not None or model.LastUpdatedTime is not None:
@@ -38,9 +44,12 @@ def execute_update_outcome_handler_work(session, model, progress, request):
 
     # For contract_update_non_existent_resource, we need to fail if the resource DNE
     # get outcomes will throw RNF Exception if outcome DNE
-    get_outcomes_works, get_outcomes_response = validation_helpers.check_if_get_outcomes_succeeds(afd_client, model.Name)
+    (
+        get_outcomes_works,
+        get_outcomes_response,
+    ) = validation_helpers.check_if_get_outcomes_succeeds(afd_client, model.Name)
     if not get_outcomes_works:
-        raise exceptions.NotFound('outcome', model.Name)
+        raise exceptions.NotFound("outcome", model.Name)
 
     # # For contract_update_create_only_property, we need to fail if trying to set Name to something different
     previous_name = previous_resource_state.Name
@@ -66,7 +75,7 @@ def execute_delete_outcome_handler_work(session, model, progress):
     # get outcomes will throw RNF Exception if outcome DNE
     get_outcomes_works, _ = validation_helpers.check_if_get_outcomes_succeeds(afd_client, model.Name)
     if not get_outcomes_works:
-        raise exceptions.NotFound('outcome', model.Name)
+        raise exceptions.NotFound("outcome", model.Name)
 
     try:
         api_helpers.call_delete_outcome(afd_client, model.Name)
@@ -80,16 +89,19 @@ def execute_delete_outcome_handler_work(session, model, progress):
 def execute_read_outcome_handler_work(session, model, progress):
     afd_client = client_helpers.get_afd_client(session)
     # read requests only include primary identifier (Arn). Extract Name from Arn
-    model.Name = model.Arn.split('/')[-1]
+    model.Name = model.Arn.split("/")[-1]
 
     # For contract_delete_read, we need to fail if the resource DNE
     # get outcomes will throw RNF Exception if outcome DNE
-    get_outcomes_works, get_outcomes_response = validation_helpers.check_if_get_outcomes_succeeds(afd_client, model.Name)
+    (
+        get_outcomes_works,
+        get_outcomes_response,
+    ) = validation_helpers.check_if_get_outcomes_succeeds(afd_client, model.Name)
     if not get_outcomes_works:
-        raise exceptions.NotFound('outcome', model.Name)
+        raise exceptions.NotFound("outcome", model.Name)
 
     try:
-        outcomes = get_outcomes_response.get('outcomes', [])
+        outcomes = get_outcomes_response.get("outcomes", [])
         if outcomes:
             model = model_helpers.get_model_for_outcome(afd_client, outcomes[0])
         progress.resourceModel = model
@@ -104,7 +116,7 @@ def execute_list_outcome_handler_work(session, model, progress):
 
     try:
         get_outcomes_response = api_helpers.call_get_outcomes(afd_client)
-        outcomes = get_outcomes_response.get('outcomes', [])
+        outcomes = get_outcomes_response.get("outcomes", [])
         progress.resourceModels = [model_helpers.get_model_for_outcome(afd_client, outcome) for outcome in outcomes]
         progress.status = OperationStatus.SUCCESS
     except RuntimeError as e:

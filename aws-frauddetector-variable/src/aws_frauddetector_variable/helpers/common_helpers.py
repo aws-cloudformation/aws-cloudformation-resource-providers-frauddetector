@@ -19,10 +19,10 @@ def update_tags(frauddetector_client, afd_resource_arn: str, new_tags: List[Tag]
     try:
         list_tags_response = api_helpers.call_list_tags_for_resource(frauddetector_client, afd_resource_arn)
         attached_tags = list_tags_response.get("tags", [])
-        attached_tags_dict = {tag.get('key', ''): tag.get('value', None) for tag in attached_tags}
+        attached_tags_dict = {tag.get("key", ""): tag.get("value", None) for tag in attached_tags}
 
         tags_to_add = [model_helpers.get_tags_from_tag_models(new_tags), {}][new_tags is None]
-        tags_to_add_dict = {tag.get('key', ''): tag.get('value', None) for tag in tags_to_add}
+        tags_to_add_dict = {tag.get("key", ""): tag.get("value", None) for tag in tags_to_add}
 
         if attached_tags_dict == tags_to_add_dict:
             return
@@ -41,22 +41,25 @@ def update_tags(frauddetector_client, afd_resource_arn: str, new_tags: List[Tag]
 
 def create_variable_and_return_progress(frauddetector_client, model, progress):
     try:
-        if hasattr(model, 'Tags'):
+        if hasattr(model, "Tags"):
             tags = model_helpers.get_tags_from_tag_models(model.Tags)
         else:
             tags = None
-        api_helpers.call_create_variable(frauddetector_client,
-                                         variable_name=model.Name,
-                                         variable_tags=tags,
-                                         variable_data_type=model.DataType,
-                                         variable_data_source=model.DataSource,
-                                         variable_default_value=model.DefaultValue,
-                                         variable_type=model.VariableType,
-                                         variable_description=model.Description)
-        progress.resourceModel = model_helpers.get_variables_and_return_model_for_variable(frauddetector_client,
-                                                                                           model.Name)
+        api_helpers.call_create_variable(
+            frauddetector_client,
+            variable_name=model.Name,
+            variable_tags=tags,
+            variable_data_type=model.DataType,
+            variable_data_source=model.DataSource,
+            variable_default_value=model.DefaultValue,
+            variable_type=model.VariableType,
+            variable_description=model.Description,
+        )
+        progress.resourceModel = model_helpers.get_variables_and_return_model_for_variable(
+            frauddetector_client, model.Name
+        )
         progress.status = OperationStatus.SUCCESS
-        LOG.info(f'just finished a create variable call: {progress.resourceModel}')
+        LOG.info(f"just finished a create variable call: {progress.resourceModel}")
     except RuntimeError as e:
         raise exceptions.InternalFailure(f"Error occurred: {e}")
     return progress
@@ -64,14 +67,17 @@ def create_variable_and_return_progress(frauddetector_client, model, progress):
 
 def update_variable_and_return_progress(frauddetector_client, model, progress):
     try:
-        api_helpers.call_update_variable(frauddetector_client,
-                                         variable_name=model.Name,
-                                         variable_default_value=model.DefaultValue,
-                                         variable_description=model.Description)
-        progress.resourceModel = model_helpers.get_variables_and_return_model_for_variable(frauddetector_client,
-                                                                                           model.Name)
+        api_helpers.call_update_variable(
+            frauddetector_client,
+            variable_name=model.Name,
+            variable_default_value=model.DefaultValue,
+            variable_description=model.Description,
+        )
+        progress.resourceModel = model_helpers.get_variables_and_return_model_for_variable(
+            frauddetector_client, model.Name
+        )
         progress.status = OperationStatus.SUCCESS
-        LOG.info(f'just finished an update variable call: {progress.resourceModel}')
+        LOG.info(f"just finished an update variable call: {progress.resourceModel}")
     except RuntimeError as e:
         raise exceptions.InternalFailure(f"Error occurred: {e}")
     return progress

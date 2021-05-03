@@ -26,6 +26,7 @@ def check_if_get_variables_succeeds(frauddetector_client, variable_name):
         get_variables_response = api_helpers.call_get_variables(frauddetector_client, variable_name)
         return True, get_variables_response
     except frauddetector_client.exceptions.ResourceNotFoundException as RNF:
+        LOG.warning(f"Error getting variable {variable_name}: {RNF}")
         return False, None
 
 
@@ -35,5 +36,5 @@ def check_variable_differences(existing_event_variable, desired_event_variable):
         "description": existing_event_variable.Description != desired_event_variable.Description,
         "variableType": existing_event_variable.VariableType != desired_event_variable.VariableType,
         "dataType": existing_event_variable.DataType != desired_event_variable.DataType,
-        "tags": existing_event_variable.Tags != desired_event_variable.Tags
+        "tags": existing_event_variable.Tags != desired_event_variable.Tags,
     }

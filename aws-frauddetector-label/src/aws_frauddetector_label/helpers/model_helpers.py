@@ -23,7 +23,7 @@ def get_tag_models_from_tags(tags: Optional[List[dict]]) -> Optional[List[Tag]]:
     # we need to translate our afd tags back to a list of cfn Tag
     if tags is None:
         return None
-    return [Tag(Key=tag.get('key', ''), Value=tag.get('value', '')) for tag in tags]
+    return [Tag(Key=tag.get("key", ""), Value=tag.get("value", "")) for tag in tags]
 
 
 def _get_tags_for_given_arn(frauddetector_client, arn):
@@ -35,24 +35,24 @@ def _get_tags_for_given_arn(frauddetector_client, arn):
 
 
 def get_model_for_label(frauddetector_client, label):
-    label_arn = label.get('arn', '')
+    label_arn = label.get("arn", "")
     list_tags_response = api_helpers.call_list_tags_for_resource(frauddetector_client, resource_arn=label_arn)
     attached_tags = list_tags_response.get("tags", [])
     tag_models = get_tag_models_from_tags(attached_tags)
     return ResourceModel(
-        Name=label.get('name', ''),
+        Name=label.get("name", ""),
         Arn=label_arn,
         Tags=tag_models,
-        Description=label.get('description', ''),
-        CreatedTime=label.get('createdTime', ''),
-        LastUpdatedTime=label.get('lastUpdatedTime', '')
+        Description=label.get("description", ""),
+        CreatedTime=label.get("createdTime", ""),
+        LastUpdatedTime=label.get("lastUpdatedTime", ""),
     )
 
 
 def get_labels_and_return_model_for_label(frauddetector_client, label_name):
     try:
         get_labels_response = api_helpers.call_get_labels(frauddetector_client, label_name=label_name)
-        labels = get_labels_response.get('labels', [])
+        labels = get_labels_response.get("labels", [])
         if labels:
             return get_model_for_label(frauddetector_client, labels[0])
         # if get labels worked but did not return any labels, we have major problems

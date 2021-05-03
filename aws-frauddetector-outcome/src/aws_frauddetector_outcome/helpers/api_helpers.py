@@ -24,12 +24,14 @@ def api_call_with_debug_logs(func):
     """
     Add some logs to the decorated function
     """
+
     @functools.wraps(func)
     def log_wrapper(*args, **kwargs):
-        LOG.debug(f'Starting function {func.__name__!r} with args {args} and kwargs {kwargs}')
+        LOG.debug(f"Starting function {func.__name__!r} with args {args} and kwargs {kwargs}")
         value = func(*args, **kwargs)
-        LOG.debug(f'Finished function {func.__name__!r}, returning {value}')
+        LOG.debug(f"Finished function {func.__name__!r}, returning {value}")
         return value
+
     return log_wrapper
 
 
@@ -37,29 +39,39 @@ def retry_not_found_exceptions(func):
     """
     Retries boto3 not found exception for the decorated function.
     """
+
     @functools.wraps(func)
     def retry_not_found_exceptions_wrapper(*args, **kwargs):
-        afd_client = kwargs.get('frauddetector_client', None)
+        afd_client = kwargs.get("frauddetector_client", None)
         if not afd_client:
             if len(args) > 0:
                 afd_client = args[0]
             else:
                 # We can't grab afd_client, so we can't compare to AFD's RNF Exception.
                 # Just run the function, rather than throwing an error
-                LOG.error('retry_not_found_exceptions_wrapper could not find the afd client! '
-                          'Perhaps the decorator was added to a method that is not supported?')
+                LOG.error(
+                    "retry_not_found_exceptions_wrapper could not find the afd client! "
+                    "Perhaps the decorator was added to a method that is not supported?"
+                )
                 return func(*args, **kwargs)
         try:
             return func(*args, **kwargs)
         except afd_client.exceptions.ResourceNotFoundException:
-            LOG.warning(f'caught a resource not found exception.'
-                        f' sleeping {CONSISTENCY_SLEEP_TIME} seconds and retrying api call for consistency...')
+            LOG.warning(
+                f"caught a resource not found exception."
+                f" sleeping {CONSISTENCY_SLEEP_TIME} seconds and retrying api call for consistency..."
+            )
             time.sleep(CONSISTENCY_SLEEP_TIME)
             return func(*args, **kwargs)
+
     return retry_not_found_exceptions_wrapper
 
 
-def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_pages=MAXIMUM_NUMBER_OF_PAGES):
+def paginated_api_call(
+    item_to_collect,
+    criteria_to_keep=lambda x, y: True,
+    max_pages=MAXIMUM_NUMBER_OF_PAGES,
+):
     """
     For a method that calls a paginated API (returns an object w/ 'nextToken' key),
     decorate with @paginated_api_call to get an exhaustive list returned,
@@ -69,6 +81,7 @@ def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_
     :param max_pages: maximum number of pages allowed
     :return: an exhaustive list, containing the accumulated items from all pages from the API call
     """
+
     def paginated_api_call_decorator(func):
         @functools.wraps(func)
         def api_call_wrapper(*args, **kwargs):
@@ -83,15 +96,17 @@ def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_
             collect_items_of_interest_from_current_response()
             count = 1
 
-            while 'nextToken' in response and count < max_pages:
-                next_token = response['nextToken']
+            while "nextToken" in response and count < max_pages:
+                next_token = response["nextToken"]
                 response = func(*args, nextToken=next_token, **kwargs)
                 collect_items_of_interest_from_current_response()
                 count += 1
 
             response[item_to_collect] = collected_items
             return response
+
         return api_call_wrapper
+
     return paginated_api_call_decorator
 
 
@@ -99,10 +114,12 @@ def paginated_api_call(item_to_collect, criteria_to_keep=lambda x, y: True, max_
 
 
 @api_call_with_debug_logs
-def call_put_outcome(frauddetector_client,
-                     outcome_name: str,
-                     outcome_tags: List[dict] = None,
-                     outcome_description: str = None):
+def call_put_outcome(
+    frauddetector_client,
+    outcome_name: str,
+    outcome_tags: List[dict] = None,
+    outcome_description: str = None,
+):
     """
     Call put_outcome with the given frauddetector client and the given arguments.
     :param frauddetector_client: boto3 frauddetector client to use to make the call
@@ -114,7 +131,7 @@ def call_put_outcome(frauddetector_client,
     args = {
         "name": outcome_name,
         "tags": outcome_tags,
-        "description": outcome_description
+        "description": outcome_description,
     }
     args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.put_outcome(**args)
@@ -124,7 +141,7 @@ def call_put_outcome(frauddetector_client,
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='outcomes')
+@paginated_api_call(item_to_collect="outcomes")
 @api_call_with_debug_logs
 def call_get_outcomes(frauddetector_client, outcome_name: str = None):
     """
@@ -133,9 +150,7 @@ def call_get_outcomes(frauddetector_client, outcome_name: str = None):
     :param outcome_name: name of the outcome to get (default is None)
     :return: get a single outcome if outcome_name is specified, otherwise get all outcomes
     """
-    args = {
-        "name": outcome_name
-    }
+    args = {"name": outcome_name}
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_outcomes(**args)
 
@@ -158,7 +173,7 @@ def call_delete_outcome(frauddetector_client, outcome_name: str):
 
 
 @retry_not_found_exceptions
-@paginated_api_call(item_to_collect='tags')
+@paginated_api_call(item_to_collect="tags")
 @api_call_with_debug_logs
 def call_list_tags_for_resource(frauddetector_client, resource_arn: str):
     """

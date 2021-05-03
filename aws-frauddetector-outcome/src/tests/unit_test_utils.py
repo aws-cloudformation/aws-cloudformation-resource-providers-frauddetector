@@ -2,38 +2,31 @@ from aws_frauddetector_outcome.models import ResourceModel, Tag
 from cloudformation_cli_python_lib import SessionProxy, ProgressEvent, OperationStatus
 from unittest.mock import MagicMock
 
-FAKE_ARN = 'arn:aws:frauddetector:outcome:123456789012:cfnunittestoutcome'
-FAKE_NAME = 'cfnunittestoutcome'
-FAKE_TIME = 'fake'
-FAKE_TAG_MODELS = [
-    Tag(Key='cfnunittest', Value='1')
-]
-FAKE_TAGS = [
-    {'key': 'cfnunittest', 'value': '1'}
-]
+FAKE_ARN = "arn:aws:frauddetector:outcome:123456789012:cfnunittestoutcome"
+FAKE_NAME = "cfnunittestoutcome"
+FAKE_TIME = "fake"
+FAKE_TAG_MODELS = [Tag(Key="cfnunittest", Value="1")]
+FAKE_TAGS = [{"key": "cfnunittest", "value": "1"}]
 FAKE_TAG_MODELS_DIFFERENT = [
-    Tag(Key='cfnunittest', Value='different_value'),
-    Tag(Key='new_key', Value='value'),
+    Tag(Key="cfnunittest", Value="different_value"),
+    Tag(Key="new_key", Value="value"),
 ]
 FAKE_TAGS_DIFFERENT = [
-    {'key': 'cfnunittest', 'value': 'different_value'},
-    {'key': 'new_key', 'value': 'value'}
+    {"key": "cfnunittest", "value": "different_value"},
+    {"key": "new_key", "value": "value"},
 ]
-FAKE_DESCRIPTION = 'a cfnunittest description'
+FAKE_DESCRIPTION = "a cfnunittest description"
 FAKE_OUTCOME = {
-    'arn': FAKE_ARN,
-    'createdTime': FAKE_TIME,
-    'description': FAKE_DESCRIPTION,
-    'lastUpdatedTime': FAKE_TIME,
-    'name': FAKE_NAME
+    "arn": FAKE_ARN,
+    "createdTime": FAKE_TIME,
+    "description": FAKE_DESCRIPTION,
+    "lastUpdatedTime": FAKE_TIME,
+    "name": FAKE_NAME,
 }
 
 
 def create_in_progress_progress(model):
-    return ProgressEvent(
-        status=OperationStatus.IN_PROGRESS,
-        resourceModel=model
-    )
+    return ProgressEvent(status=OperationStatus.IN_PROGRESS, resourceModel=model)
 
 
 def create_fake_model(is_output_model: bool = False):
@@ -43,7 +36,7 @@ def create_fake_model(is_output_model: bool = False):
         Description=FAKE_DESCRIPTION,
         Tags=FAKE_TAG_MODELS,
         CreatedTime=[None, FAKE_TIME][is_output_model],
-        LastUpdatedTime=[None, FAKE_TIME][is_output_model]
+        LastUpdatedTime=[None, FAKE_TIME][is_output_model],
     )
 
 
@@ -53,7 +46,7 @@ def create_mock_afd_client():
 
 
 def create_mock_session():
-    mock_session_impl = MagicMock(name='mock_session_impl')
+    mock_session_impl = MagicMock(name="mock_session_impl")
     mock_session_impl.client = MagicMock(return_value=MagicMock(name="mock_afd_client"))
     mock_session = SessionProxy(session=mock_session_impl)
     return mock_session
