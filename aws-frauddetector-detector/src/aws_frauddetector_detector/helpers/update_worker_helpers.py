@@ -96,31 +96,40 @@ def update_detector_version_for_detector_update(afd_client,
         }
         desired_rules.append(rule_dict)
     if previous_model.DetectorVersionStatus != DRAFT_STATUS:
+        LOG.info(
+            "previous detector version status was not DRAFT. creating a new detector version"
+        )
         api_helpers.call_create_detector_version(
             frauddetector_client=afd_client,
             detector_id=model.DetectorId,
             rules=desired_rules,
             rule_execution_mode=model.RuleExecutionMode,
-            model_versions=None,
-            external_model_endpoints=None,
+            model_versions=[],
+            external_model_endpoints=[],
             detector_version_description=model.Description,
             detector_version_tags=model_helpers.get_tags_from_tag_models(model.Tags))
     else:
+        LOG.info(
+            "previous detector version status was DRAFT. updating detector version in place"
+        )
         api_helpers.call_update_detector_version(
             frauddetector_client=afd_client,
             detector_id=model.DetectorId,
+            detector_version_id=model.DetectorVersionId,
             rules=desired_rules,
             rule_execution_mode=model.RuleExecutionMode,
-            model_versions=None,
-            external_model_endpoints=None,
+            model_versions=[],
+            external_model_endpoints=[],
             detector_version_description=model.Description
         )
-    # get arn of max version detector version in order to update tags
+    # get arn of max version detector version in order to update tags and model
     describe_detector_response = api_helpers.call_describe_detector(afd_client, model.DetectorId)
     dv_summaries = describe_detector_response.get('detectorVersionSummaries', [])
     dv_ids = [summary.get('detectorVersionId', '-1') for summary in dv_summaries]
     max_dv_id = str(max([int(dv_id) for dv_id in dv_ids]))
+    model.DetectorVersionId = max_dv_id
     if previous_model.DetectorVersionStatus == DRAFT_STATUS:
+        LOG.info("previous detector version status was DRAFT. updating tags separately")
         # update dv does not update tags, so update tags in this case
         get_dv_response = api_helpers.call_get_detector_version(
             frauddetector_client=afd_client,
@@ -131,10 +140,13 @@ def update_detector_version_for_detector_update(afd_client,
         common_helpers.update_tags(
             frauddetector_client=afd_client,
             afd_resource_arn=latest_dv_arn,
-            new_tags=model_helpers.get_tags_from_tag_models(model.Tags)
+            new_tags=model.Tags,
         )
 
     if model.DetectorVersionStatus != DRAFT_STATUS:
+        LOG.info(
+            f"desired status is not DRAFT. updating detector version status: {model.DetectorVersionStatus}"
+        )
         api_helpers.call_update_detector_version_status(
             frauddetector_client=afd_client,
             detector_id=model.DetectorId,
@@ -142,7 +154,23 @@ def update_detector_version_for_detector_update(afd_client,
             status=model.DetectorVersionStatus
         )
 
-    return {(model.DetectorId, dv_id) for dv_id in dv_ids if dv_id != max_dv_id}
+    dvs_to_delete = set()
+    new_describe_detector_response = api_helpers.call_describe_detector(
+        afd_client, model.DetectorId
+    )
+    updated_dv_summaries = new_describe_detector_response.get(
+        "detectorVersionSummaries", []
+    )
+    LOG.info(f"updated detector version summaries: {updated_dv_summaries}")
+    for summary in updated_dv_summaries:
+        dv_id = summary.get("detectorVersionId", "-1")
+        dv_status = summary.get("status", "ACTIVE")
+        if dv_id == max_dv_id or dv_status == "ACTIVE":
+            continue
+        dvs_to_delete.add((model.DetectorId, dv_id))
+
+    LOG.info(f"detector versions to delete: {dvs_to_delete}")
+    return dvs_to_delete
 
 
 def delete_unused_detector_versions_for_detector_update(afd_client,
@@ -155,16 +183,26 @@ def delete_unused_detector_versions_for_detector_update(afd_client,
         )
 
 
-def delete_unused_rules_for_detector_update(afd_client,
-                                            detector_id: str,
-                                            unused_rule_versions: Set[Tuple[str, str]]):
+def delete_unused_rules_for_detector_update(
+    afd_client, detector_id: str, unused_rule_versions: Set[Tuple[str, str]]
+):
+    # For now, just catch conditional check failed exception, which means the rule is still used.
+    # We will follow up with a more optimal approach (and avoid the try/catch)
     for unused_rule_id, unused_rule_version in unused_rule_versions:
-        api_helpers.call_delete_rule(
-            frauddetector_client=afd_client,
-            detector_id=detector_id,
-            rule_id=unused_rule_id,
-            rule_version=unused_rule_version
-        )
+        try:
+            api_helpers.call_delete_rule(
+                frauddetector_client=afd_client,
+                detector_id=detector_id,
+                rule_id=unused_rule_id,
+                rule_version=unused_rule_version,
+            )
+        except afd_client.exceptions.ConflictException as conflictException:
+            LOG.warning(
+                f"Conflict exception when deleting rule! Continuing without failure. "
+                f"This is likely from a rule being present in an active detector version. "
+                f"This can happen when transitioning from ACTIVE -> DRAFT, and keeping the ACTIVE version. "
+                f"Exception: {conflictException}"
+            )
 
 
 def delete_unused_inline_outcomes_for_detector_update(afd_client,
@@ -353,7 +391,7 @@ def _update_persisting_rule(afd_client,
                                    new_tags=new_tags)
 
     # rather than check all the differences, we can just update rule version and call it a day
-    # TODO: first, we need to get rules and grab latest version, since it's not anywhere
+    #   first, we need to get rules and grab latest version, since it's not anywhere
     get_rules_response = api_helpers.call_get_rules(
         frauddetector_client=afd_client,
         detector_id=detector_id,

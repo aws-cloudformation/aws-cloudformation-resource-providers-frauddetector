@@ -1,0 +1,86 @@
+{
+  "DetectorId": "cfntestdetector3",
+  "DetectorVersionStatus": "ACTIVE",
+  "RuleExecutionMode": "ALL_MATCHED",
+  "Tags": [
+    {
+      "Key": "cfncontracttest",
+      "Value": "1"
+    },
+    {
+      "Key": "cfncontracttest2",
+      "Value": "2"
+    }
+  ],
+  "Description": "detector for cfn contract tests - updated description",
+  "Rules": [
+    {
+      "RuleId": "cfntestrule",
+      "DetectorId": "cfntestdetector3",
+      "Expression": "1 == 5",
+      "Language": "DETECTORPL",
+      "Outcomes": [
+        {
+          "Inline": true,
+          "Name": "inline_outcome_for_detector"
+        }
+      ],
+      "Description": "Rule for cfn contract tests - updated description",
+      "Tags": [
+        {
+          "Key": "cfncontracttestrule2",
+          "Value": "2"
+        },
+        {
+          "Key": "cfncontracttestrule",
+          "Value": "1"
+        }
+      ]
+    }
+  ],
+  "EventType": {
+    "Inline": true,
+    "Name": "inline_event_type_for_detector",
+    "Description": "eventtype for cfn contract tests - updated description",
+    "Tags": [
+      {
+        "Key": "cfncontracttest",
+        "Value": "1"
+      }
+    ],
+    "EventVariables": [
+      {
+        "Name": "email_var_inline_detector_contract_test",
+        "DataSource": "EVENT",
+        "DataType": "STRING",
+        "DefaultValue": "DEFAULT",
+        "Inline": true,
+        "VariableType": "EMAIL_ADDRESS"
+      },
+      {
+        "Name": "ip_var_inline_detector_contract_test",
+        "DataSource": "EVENT",
+        "DataType": "STRING",
+        "DefaultValue": "DEFAULT",
+        "Inline": true,
+        "VariableType": "IP_ADDRESS"
+      }
+    ],
+    "Labels": [
+      {
+        "Inline": true,
+        "Name": "legit_label_inline_detector_contract_test"
+      },
+      {
+        "Inline": true,
+        "Name": "fraud_label_inline_detector_contract_test"
+      }
+    ],
+    "EntityTypes": [
+      {
+        "Inline": true,
+        "Name": "new_entity_type_inline_detector_contract_test"
+      }
+    ]
+  }
+}

@@ -194,15 +194,20 @@ def test_update_detector_version_for_detector_update(monkeypatch):
     global mock_call_describe_detector
     global mock_call_get_detector_version
 
+    fake_dv_summary_with_draft_status = {
+        'description': unit_test_utils.FAKE_DESCRIPTION,
+        'detectorVersionId': unit_test_utils.FAKE_VERSION_ID,
+        'lastUpdatedTime': unit_test_utils.FAKE_TIME,
+        'status': unit_test_utils.FAKE_DRAFT_DV_STATUS
+    }
+
     describe_detector_response = {
         'detectorVersionSummaries': [
-            unit_test_utils.FAKE_DETECTOR_VERSION,
+            fake_dv_summary_with_draft_status,
             unit_test_utils.FAKE_NEW_DETECTOR_VERSION
         ]
     }
-    get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION
     mock_call_describe_detector = MagicMock(return_value=describe_detector_response)
-    mock_call_get_detector_version = MagicMock(return_value=get_detector_version_response)
 
     _setup_monkeypatch_for_update_workers(monkeypatch)
 
@@ -213,6 +218,7 @@ def test_update_detector_version_for_detector_update(monkeypatch):
                                                                           fake_previous_model)
 
     # Assert
+    assert mock_call_describe_detector.call_count == 2
     assert len(detector_versions_to_delete) == 1  # we create a new DV when existing DV is not DRAFT
 
 
