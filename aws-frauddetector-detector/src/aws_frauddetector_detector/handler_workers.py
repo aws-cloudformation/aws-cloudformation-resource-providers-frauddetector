@@ -93,6 +93,7 @@ def execute_update_detector_handler_work(session: SessionProxy,
 
     # Update inline event type and inline event type dependencies
     if model.EventType.Inline:
+        LOG.info(f"Event type is inline, validating and updating inline event type.")
         update_worker_helpers.validate_dependencies_for_inline_event_type_update(
             afd_client=afd_client,
             event_type_model=model.EventType,
@@ -105,27 +106,31 @@ def execute_update_detector_handler_work(session: SessionProxy,
         )
 
     # Create/Update rules and inline outcomes
-    rule_versions_to_delete, outcomes_to_delete =\
-        update_worker_helpers.update_rules_and_inline_outcomes_for_detector_update(
-            afd_client=afd_client,
-            model=model,
-            previous_model=previous_resource_state
-        )
+    LOG.info(f"Creating / Updating rules and inline outcomes")
+    (
+        rule_versions_to_delete,
+        outcomes_to_delete,
+    ) = update_worker_helpers.update_rules_and_inline_outcomes_for_detector_update(
+        afd_client=afd_client, model=model, previous_model=previous_resource_state
+    )
 
     # Create/Update DV, set active if desired status is active
-    detector_versions_to_delete = update_worker_helpers.update_detector_version_for_detector_update(
-        afd_client=afd_client,
-        model=model,
-        previous_model=previous_resource_state
+    LOG.info(f"Creating / Updating detector versions")
+    detector_versions_to_delete = (
+        update_worker_helpers.update_detector_version_for_detector_update(
+            afd_client=afd_client, model=model, previous_model=previous_resource_state
+        )
     )
 
     # Delete old DVs
+    LOG.info(f"Deleting old detector versions: {detector_versions_to_delete}")
     update_worker_helpers.delete_unused_detector_versions_for_detector_update(
         afd_client=afd_client,
         unused_detector_versions=detector_versions_to_delete
     )
 
     # Delete old rules that are no longer used
+    LOG.info(f"Deleting old rules: {rule_versions_to_delete}")
     update_worker_helpers.delete_unused_rules_for_detector_update(
         afd_client=afd_client,
         detector_id=model.DetectorId,
@@ -133,6 +138,7 @@ def execute_update_detector_handler_work(session: SessionProxy,
     )
 
     # Delete old inline outcomes that are no longer present in the rules
+    LOG.info(f"Deleting no-longer-used inline outcomes: {outcomes_to_delete}")
     update_worker_helpers.delete_unused_inline_outcomes_for_detector_update(
         afd_client=afd_client,
         unused_inline_outcome_names=outcomes_to_delete
@@ -143,6 +149,7 @@ def execute_update_detector_handler_work(session: SessionProxy,
         event_type_name = model.EventType.Name
     else:
         event_type_name = util.extract_name_from_arn(model.EventType.Arn)
+    LOG.info(f"Calling put detector for description update")
     api_helpers.call_put_detector(
         frauddetector_client=afd_client,
         detector_id=model.DetectorId,
@@ -155,7 +162,12 @@ def execute_update_detector_handler_work(session: SessionProxy,
     common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
 
     # after satisfying all contract tests and AFD requirements, get the resulting model
-    model = read_worker_helpers.validate_detector_exists_and_return_detector_resource_model(afd_client, model)
+    LOG.info(f"Done updating, validating and generating result model")
+    model = (
+        read_worker_helpers.validate_detector_exists_and_return_detector_resource_model(
+            afd_client, model
+        )
+    )
     progress.resourceModel = model
     progress.status = OperationStatus.SUCCESS
 
