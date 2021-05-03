@@ -7,41 +7,41 @@ from .. import models
 LOG = logging.getLogger(__name__)
 
 
-ACTIVE_STATUS = 'ACTIVE'
-INACTIVE_STATUS = 'INACTIVE'
+ACTIVE_STATUS = "ACTIVE"
+INACTIVE_STATUS = "INACTIVE"
 
 
 def deactivate_and_delete_detector_versions_for_detector_model(afd_client, detector_model: models.ResourceModel):
-    describe_detector_response = api_helpers.call_describe_detector(frauddetector_client=afd_client,
-                                                                    detector_id=detector_model.DetectorId)
-    dv_summaries = describe_detector_response.get('detectorVersionSummaries', [])
+    describe_detector_response = api_helpers.call_describe_detector(
+        frauddetector_client=afd_client, detector_id=detector_model.DetectorId
+    )
+    dv_summaries = describe_detector_response.get("detectorVersionSummaries", [])
     for dv in dv_summaries:
-        if dv.get('status', '') == ACTIVE_STATUS:
+        if dv.get("status", "") == ACTIVE_STATUS:
             api_helpers.call_update_detector_version_status(
                 frauddetector_client=afd_client,
                 detector_id=detector_model.DetectorId,
-                detector_version_id=dv.get('detectorVersionId', '-1'),
-                status=INACTIVE_STATUS
+                detector_version_id=dv.get("detectorVersionId", "-1"),
+                status=INACTIVE_STATUS,
             )
         api_helpers.call_delete_detector_version(
             frauddetector_client=afd_client,
             detector_id=detector_model.DetectorId,
-            detector_version_id=dv.get('detectorVersionId', '-1')
+            detector_version_id=dv.get("detectorVersionId", "-1"),
         )
 
 
 def delete_rules_and_inline_outcomes_for_detector_model(afd_client, detector_model: models.ResourceModel):
     # get rules: id -> rules
     get_rules_response = api_helpers.call_get_rules(
-        frauddetector_client=afd_client,
-        detector_id=detector_model.DetectorId
+        frauddetector_client=afd_client, detector_id=detector_model.DetectorId
     )
-    rule_details = get_rules_response.get('ruleDetails', [])
+    rule_details = get_rules_response.get("ruleDetails", [])
     rule_models_by_rule_id_version = _create_rule_models_by_rule_id_rule_version_tuple(detector_model)
     inline_outcome_names = set()
     for rule_detail in rule_details:
-        rule_id = rule_detail.get('ruleId', '')
-        rule_version = rule_detail.get('ruleVersion', '-1')
+        rule_id = rule_detail.get("ruleId", "")
+        rule_version = rule_detail.get("ruleVersion", "-1")
 
         # Check if rule is defined in CFN, and collect inline outcomes if so
         rule_id_version_tuple = (rule_id, rule_version)
@@ -54,34 +54,30 @@ def delete_rules_and_inline_outcomes_for_detector_model(afd_client, detector_mod
             frauddetector_client=afd_client,
             detector_id=detector_model.DetectorId,
             rule_id=rule_id,
-            rule_version=rule_version
+            rule_version=rule_version,
         )
 
     for outcome_name in inline_outcome_names:
-        api_helpers.call_delete_outcome(
-            frauddetector_client=afd_client,
-            outcome_name=outcome_name
-        )
+        api_helpers.call_delete_outcome(frauddetector_client=afd_client, outcome_name=outcome_name)
     return
 
 
 def delete_detector_for_detector_model(afd_client, detector_model: models.ResourceModel):
-    api_helpers.call_delete_detector(
-        frauddetector_client=afd_client,
-        detector_id=detector_model.DetectorId
-    )
+    api_helpers.call_delete_detector(frauddetector_client=afd_client, detector_id=detector_model.DetectorId)
 
 
 def delete_inline_dependencies_for_detector_model(afd_client, detector_model: models.ResourceModel):
     if detector_model.EventType.Inline:
         api_helpers.call_delete_event_type(
             frauddetector_client=afd_client,
-            event_type_name=detector_model.EventType.Name
+            event_type_name=detector_model.EventType.Name,
         )
         _delete_inline_dependencies_for_inline_event_type(afd_client, detector_model.EventType)
 
 
-def _create_rule_models_by_rule_id_rule_version_tuple(detector_model: models.ResourceModel):
+def _create_rule_models_by_rule_id_rule_version_tuple(
+    detector_model: models.ResourceModel,
+):
     dict_to_return = {}
     if not detector_model.Rules:
         return dict_to_return
@@ -92,9 +88,9 @@ def _create_rule_models_by_rule_id_rule_version_tuple(detector_model: models.Res
 
 def _delete_inline_dependencies_for_inline_event_type(afd_client, event_type_model: models.EventType):
     inline_resources = model_helpers.get_inline_resources_for_event_type(event_type_model=event_type_model)
-    _delete_inline_event_variables(afd_client, inline_resources['event_variables'])
-    _delete_inline_entity_types(afd_client, inline_resources['entity_types'])
-    _delete_inline_labels(afd_client, inline_resources['labels'])
+    _delete_inline_event_variables(afd_client, inline_resources["event_variables"])
+    _delete_inline_entity_types(afd_client, inline_resources["entity_types"])
+    _delete_inline_labels(afd_client, inline_resources["labels"])
 
 
 def _delete_inline_event_variables(afd_client, inline_variable_names: set):

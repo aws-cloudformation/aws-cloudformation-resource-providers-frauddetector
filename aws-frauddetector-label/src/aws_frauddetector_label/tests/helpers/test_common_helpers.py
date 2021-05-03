@@ -21,7 +21,7 @@ def test_put_label_and_return_progress_no_tags_attribute_success():
     # Arrange
     mock_afd_client, input_model, output_model, progress = _setup_put_label_test()
     del input_model.Tags
-    mock_afd_client.list_tags_for_resource = MagicMock(return_value={'tags': []})
+    mock_afd_client.list_tags_for_resource = MagicMock(return_value={"tags": []})
     output_model.Tags = []
     progress = unit_test_utils.create_in_progress_progress(input_model)
 
@@ -31,8 +31,8 @@ def test_put_label_and_return_progress_no_tags_attribute_success():
 
 def test_update_tags():
     # Arrange
-    list_tags_response = {'tags': unit_test_utils.FAKE_TAGS}
-    fake_tag_keys = [tag.get('key', '') for tag in unit_test_utils.FAKE_TAGS]
+    list_tags_response = {"tags": unit_test_utils.FAKE_TAGS}
+    fake_tag_keys = [tag.get("key", "") for tag in unit_test_utils.FAKE_TAGS]
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.list_tags_for_resource = MagicMock(return_value=list_tags_response)
@@ -40,17 +40,22 @@ def test_update_tags():
     mock_afd_client.untag_resource = MagicMock()
 
     # Act
-    common_helpers.update_tags(mock_afd_client, unit_test_utils.FAKE_ARN, unit_test_utils.FAKE_TAG_MODELS_DIFFERENT)
+    common_helpers.update_tags(
+        mock_afd_client,
+        unit_test_utils.FAKE_ARN,
+        unit_test_utils.FAKE_TAG_MODELS_DIFFERENT,
+    )
 
     # Assert
     mock_afd_client.untag_resource.assert_called_once_with(resourceARN=unit_test_utils.FAKE_ARN, tagKeys=fake_tag_keys)
-    mock_afd_client.tag_resource.assert_called_once_with(resourceARN=unit_test_utils.FAKE_ARN,
-                                                         tags=unit_test_utils.FAKE_TAGS_DIFFERENT)
+    mock_afd_client.tag_resource.assert_called_once_with(
+        resourceARN=unit_test_utils.FAKE_ARN, tags=unit_test_utils.FAKE_TAGS_DIFFERENT
+    )
 
 
 def test_update_tags_no_tag_difference_dont_call_apis():
     # Arrange
-    list_tags_response = {'tags': unit_test_utils.FAKE_TAGS}
+    list_tags_response = {"tags": unit_test_utils.FAKE_TAGS}
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.list_tags_for_resource = MagicMock(return_value=list_tags_response)
@@ -66,8 +71,8 @@ def test_update_tags_no_tag_difference_dont_call_apis():
 
 
 def _setup_put_label_test():
-    get_labels_response = {'labels': [unit_test_utils.FAKE_FRAUD_LABEL]}
-    list_tags_response = {'tags': unit_test_utils.FAKE_TAGS}
+    get_labels_response = {"labels": [unit_test_utils.FAKE_FRAUD_LABEL]}
+    list_tags_response = {"tags": unit_test_utils.FAKE_TAGS}
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.put_label = MagicMock()

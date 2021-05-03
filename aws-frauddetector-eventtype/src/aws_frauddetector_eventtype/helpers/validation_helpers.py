@@ -85,5 +85,5 @@ def check_variable_differences(existing_event_variable, desired_event_variable):
         "variableType": existing_event_variable.VariableType != desired_event_variable.VariableType,
         "dataType": existing_event_variable.DataType != desired_event_variable.DataType,
         "dataSource": existing_event_variable.DataSource != desired_event_variable.DataSource,
-        "tags": existing_event_variable.Tags != desired_event_variable.Tags
+        "tags": existing_event_variable.Tags != desired_event_variable.Tags,
     }

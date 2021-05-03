@@ -22,7 +22,7 @@ def test_create_rule_for_rule_model():
     # Arrange
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     # create rule actually only returns a rule with rule id, rule version, and detector id, but this works as a test
-    create_rule_response = {'rule': unit_test_utils.FAKE_RULE_DETAIL}
+    create_rule_response = {"rule": unit_test_utils.FAKE_RULE_DETAIL}
     mock_afd_client.create_rule = MagicMock(return_value=create_rule_response)
     fake_detector_model = unit_test_utils.create_fake_model()
     fake_rule_model = unit_test_utils.create_fake_rule()
@@ -37,25 +37,36 @@ def test_create_rule_for_rule_model():
 
 def test_get_model_for_detector():
     # Arrange
-    list_tags_response = {'tags': unit_test_utils.FAKE_TAGS}
-    get_event_types_response = {'eventTypes': [unit_test_utils.FAKE_EVENT_TYPE]}
-    get_variables_response_1 = {'variables': [unit_test_utils.FAKE_IP_VARIABLE]}
-    get_variables_response_2 = {'variables': [unit_test_utils.FAKE_EMAIL_VARIABLE]}
-    get_labels_response_1 = {'labels': [unit_test_utils.FAKE_FRAUD_LABEL]}
-    get_labels_response_2 = {'labels': [unit_test_utils.FAKE_LEGIT_LABEL]}
-    get_entity_types_response = {'entityTypes': [unit_test_utils.FAKE_ENTITY_TYPE]}
-    describe_detector_response = {'detectorVersionSummaries': [{'detectorVersionId': '1'}, {'detectorVersionId': '2'}]}
+    list_tags_response = {"tags": unit_test_utils.FAKE_TAGS}
+    get_event_types_response = {"eventTypes": [unit_test_utils.FAKE_EVENT_TYPE]}
+    get_variables_response_1 = {"variables": [unit_test_utils.FAKE_IP_VARIABLE]}
+    get_variables_response_2 = {"variables": [unit_test_utils.FAKE_EMAIL_VARIABLE]}
+    get_labels_response_1 = {"labels": [unit_test_utils.FAKE_FRAUD_LABEL]}
+    get_labels_response_2 = {"labels": [unit_test_utils.FAKE_LEGIT_LABEL]}
+    get_entity_types_response = {"entityTypes": [unit_test_utils.FAKE_ENTITY_TYPE]}
+    describe_detector_response = {
+        "detectorVersionSummaries": [
+            {"detectorVersionId": "1"},
+            {"detectorVersionId": "2"},
+        ]
+    }
     get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION
-    get_rules_response = {'ruleDetails': [unit_test_utils.FAKE_RULE_DETAIL]}
-    get_outcomes_response = {'outcomes': [unit_test_utils.FAKE_OUTCOME]}
+    get_rules_response = {"ruleDetails": [unit_test_utils.FAKE_RULE_DETAIL]}
+    get_outcomes_response = {"outcomes": [unit_test_utils.FAKE_OUTCOME]}
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.list_tags_for_resource = MagicMock(return_value=list_tags_response)
     mock_afd_client.get_event_types = MagicMock(return_value=get_event_types_response)
     mock_afd_client.get_variables = MagicMock()
-    mock_afd_client.get_variables.side_effect = [get_variables_response_1, get_variables_response_2]
+    mock_afd_client.get_variables.side_effect = [
+        get_variables_response_1,
+        get_variables_response_2,
+    ]
     mock_afd_client.get_labels = MagicMock()
-    mock_afd_client.get_labels.side_effect = [get_labels_response_1, get_labels_response_2]
+    mock_afd_client.get_labels.side_effect = [
+        get_labels_response_1,
+        get_labels_response_2,
+    ]
     mock_afd_client.get_entity_types = MagicMock(return_value=get_entity_types_response)
     mock_afd_client.describe_detector = MagicMock(return_value=describe_detector_response)
     mock_afd_client.get_detector_version = MagicMock(return_value=get_detector_version_response)
@@ -83,12 +94,17 @@ def test_get_model_for_detector():
 
 def test_get_model_for_detector_with_references():
     # Arrange
-    list_tags_response = {'tags': unit_test_utils.FAKE_TAGS}
-    get_event_types_response = {'eventTypes': [unit_test_utils.FAKE_EVENT_TYPE]}
-    describe_detector_response = {'detectorVersionSummaries': [{'detectorVersionId': '1'}, {'detectorVersionId': '2'}]}
+    list_tags_response = {"tags": unit_test_utils.FAKE_TAGS}
+    get_event_types_response = {"eventTypes": [unit_test_utils.FAKE_EVENT_TYPE]}
+    describe_detector_response = {
+        "detectorVersionSummaries": [
+            {"detectorVersionId": "1"},
+            {"detectorVersionId": "2"},
+        ]
+    }
     get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION
-    get_rules_response = {'ruleDetails': [unit_test_utils.FAKE_RULE_DETAIL]}
-    get_outcomes_response = {'outcomes': [unit_test_utils.FAKE_OUTCOME]}
+    get_rules_response = {"ruleDetails": [unit_test_utils.FAKE_RULE_DETAIL]}
+    get_outcomes_response = {"outcomes": [unit_test_utils.FAKE_OUTCOME]}
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.list_tags_for_resource = MagicMock(return_value=list_tags_response)
@@ -120,26 +136,33 @@ def test_get_model_for_detector_with_references():
 
 def test_get_event_type_and_return_event_type_model():
     # Arrange
-    list_tags_response = {'tags': unit_test_utils.FAKE_TAGS}
-    get_event_types_response = {'eventTypes': [unit_test_utils.FAKE_EVENT_TYPE]}
-    get_variables_response_1 = {'variables': [unit_test_utils.FAKE_IP_VARIABLE]}
-    get_variables_response_2 = {'variables': [unit_test_utils.FAKE_EMAIL_VARIABLE]}
-    get_labels_response_1 = {'labels': [unit_test_utils.FAKE_FRAUD_LABEL]}
-    get_labels_response_2 = {'labels': [unit_test_utils.FAKE_LEGIT_LABEL]}
-    get_entity_types_response = {'entityTypes': [unit_test_utils.FAKE_ENTITY_TYPE]}
+    list_tags_response = {"tags": unit_test_utils.FAKE_TAGS}
+    get_event_types_response = {"eventTypes": [unit_test_utils.FAKE_EVENT_TYPE]}
+    get_variables_response_1 = {"variables": [unit_test_utils.FAKE_IP_VARIABLE]}
+    get_variables_response_2 = {"variables": [unit_test_utils.FAKE_EMAIL_VARIABLE]}
+    get_labels_response_1 = {"labels": [unit_test_utils.FAKE_FRAUD_LABEL]}
+    get_labels_response_2 = {"labels": [unit_test_utils.FAKE_LEGIT_LABEL]}
+    get_entity_types_response = {"entityTypes": [unit_test_utils.FAKE_ENTITY_TYPE]}
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.list_tags_for_resource = MagicMock(return_value=list_tags_response)
     mock_afd_client.get_event_types = MagicMock(return_value=get_event_types_response)
     mock_afd_client.get_variables = MagicMock()
-    mock_afd_client.get_variables.side_effect = [get_variables_response_1, get_variables_response_2]
+    mock_afd_client.get_variables.side_effect = [
+        get_variables_response_1,
+        get_variables_response_2,
+    ]
     mock_afd_client.get_labels = MagicMock()
-    mock_afd_client.get_labels.side_effect = [get_labels_response_1, get_labels_response_2]
+    mock_afd_client.get_labels.side_effect = [
+        get_labels_response_1,
+        get_labels_response_2,
+    ]
     mock_afd_client.get_entity_types = MagicMock(return_value=get_entity_types_response)
 
     # Act
-    model_result = model_helpers.get_event_type_and_return_event_type_model(mock_afd_client,
-                                                                            unit_test_utils.create_fake_event_type())
+    model_result = model_helpers.get_event_type_and_return_event_type_model(
+        mock_afd_client, unit_test_utils.create_fake_event_type()
+    )
 
     # Assert
     assert mock_afd_client.list_tags_for_resource.call_count == 6
@@ -159,13 +182,14 @@ def test_get_inline_resources_for_event_type():
 
     # Assert
     assert len(inline_resources) == 3
-    assert len(inline_resources['event_variables']) == len(fake_model.EventVariables)
-    assert len(inline_resources['labels']) == len(fake_model.Labels)
-    assert len(inline_resources['entity_types']) == len(fake_model.EntityTypes)
+    assert len(inline_resources["event_variables"]) == len(fake_model.EventVariables)
+    assert len(inline_resources["labels"]) == len(fake_model.Labels)
+    assert len(inline_resources["entity_types"]) == len(fake_model.EntityTypes)
 
 
-def _assert_referenced_input_model_output_model_equality(actual_model: models.ResourceModel,
-                                                         expected_model: models.ResourceModel):
+def _assert_referenced_input_model_output_model_equality(
+    actual_model: models.ResourceModel, expected_model: models.ResourceModel
+):
     """
     We trim some attributes for referenced entities, so the cfn generated models.py will complain on repr()
     (Opportunity for cfn python plugin to improve by being more robust on repr() and __str__())

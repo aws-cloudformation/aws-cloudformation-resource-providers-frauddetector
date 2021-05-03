@@ -40,9 +40,9 @@ def check_if_get_detector_version_succeeds(frauddetector_client, detector_id, de
     :return: a tuple: (bool, apiResponse)
     """
     try:
-        get_detector_version_response = api_helpers.call_get_detector_version(frauddetector_client,
-                                                                              detector_id,
-                                                                              detector_version_id)
+        get_detector_version_response = api_helpers.call_get_detector_version(
+            frauddetector_client, detector_id, detector_version_id
+        )
         return True, get_detector_version_response
     except frauddetector_client.exceptions.ResourceNotFoundException as RNF:
         LOG.warning(f"Error getting detector {detector_id} version {detector_version_id}: {RNF}")
@@ -125,6 +125,7 @@ def check_if_get_outcomes_succeeds(frauddetector_client, outcome_name):
         get_outcomes_response = api_helpers.call_get_outcomes(frauddetector_client, outcome_name)
         return True, get_outcomes_response
     except frauddetector_client.exceptions.ResourceNotFoundException as RNF:
+        LOG.warning(f"Error getting outcome {outcome_name}: {RNF}")
         return False, None
 
 
@@ -135,5 +136,5 @@ def check_variable_differences(existing_event_variable, desired_event_variable):
         "variableType": existing_event_variable.VariableType != desired_event_variable.VariableType,
         "dataType": existing_event_variable.DataType != desired_event_variable.DataType,
         "dataSource": existing_event_variable.DataSource != desired_event_variable.DataSource,
-        "tags": existing_event_variable.Tags != desired_event_variable.Tags
+        "tags": existing_event_variable.Tags != desired_event_variable.Tags,
     }

@@ -13,7 +13,7 @@ from .helpers import (
     create_worker_helpers,
     update_worker_helpers,
     delete_worker_helpers,
-    api_helpers
+    api_helpers,
 )
 
 # Use this logger to forward log messages to CloudWatch Logs.
@@ -27,7 +27,7 @@ def execute_create_event_type_handler_work(session, model, progress):
     # For contract_create_duplicate, we need to fail if the resource already exists
     get_event_type_works, _ = validation_helpers.check_if_get_event_types_succeeds(afd_client, model.Name)
     if get_event_type_works:
-        raise exceptions.AlreadyExists('event_type', model.Name)
+        raise exceptions.AlreadyExists("event_type", model.Name)
 
     # For contract_invalid_create, fail if any read-only properties are present
     if model.Arn is not None or model.CreatedTime is not None or model.LastUpdatedTime is not None:
@@ -49,7 +49,7 @@ def execute_update_event_type_handler_work(session, model, progress, request):
     # get_event_types will throw RNF Exception if event_type DNE
     get_event_type_works, _ = validation_helpers.check_if_get_event_types_succeeds(afd_client, model.Name)
     if not get_event_type_works:
-        raise exceptions.NotFound('event_type', model.Name)
+        raise exceptions.NotFound("event_type", model.Name)
 
     # # For contract_update_create_only_property, we need to fail if trying to set Name to something different
     previous_name = previous_resource_state.Name
@@ -76,7 +76,7 @@ def execute_delete_event_type_handler_work(session, model, progress):
     # get_event_types will throw RNF Exception if event_type DNE
     get_event_type_works, _ = validation_helpers.check_if_get_event_types_succeeds(afd_client, model.Name)
     if not get_event_type_works:
-        raise exceptions.NotFound('event_type', model.Name)
+        raise exceptions.NotFound("event_type", model.Name)
 
     # Check for existing events, we'll need a DDB get call, since we do not have a plural `GetEvents` API
     # TODO: this, after event ingestion is released
@@ -98,22 +98,24 @@ def execute_read_event_type_handler_work(session, model, progress):
     afd_client = client_helpers.get_afd_client(session)
     # read requests only include primary identifier (Arn). Extract Name from Arn
     if not model.Name:
-        model.Name = model.Arn.split('/')[-1]
+        model.Name = model.Arn.split("/")[-1]
 
     # For contract_delete_read, we need to fail if the resource DNE
     # get_event_types will throw RNF Exception if event_type DNE
-    get_event_types_works, get_event_types_response = validation_helpers.check_if_get_event_types_succeeds(afd_client,
-                                                                                                           model.Name)
+    (
+        get_event_types_works,
+        get_event_types_response,
+    ) = validation_helpers.check_if_get_event_types_succeeds(afd_client, model.Name)
     if not get_event_types_works:
-        raise exceptions.NotFound('event_type', model.Name)
+        raise exceptions.NotFound("event_type", model.Name)
 
     try:
-        event_types = get_event_types_response.get('eventTypes', [])
+        event_types = get_event_types_response.get("eventTypes", [])
         if event_types:
             referenced_resources = model_helpers.get_referenced_resources(model)
             model = model_helpers.get_model_for_event_type(afd_client, event_types[0], referenced_resources)
         else:
-            raise exceptions.NotFound('event_type', model.Name)
+            raise exceptions.NotFound("event_type", model.Name)
         progress.resourceModel = model
         progress.status = OperationStatus.SUCCESS
     except RuntimeError as e:
@@ -127,12 +129,13 @@ def execute_list_event_type_handler_work(session, model, progress):
 
     try:
         get_event_types_response = api_helpers.call_get_event_types(afd_client)
-        event_types = get_event_types_response.get('eventTypes', [])
+        event_types = get_event_types_response.get("eventTypes", [])
 
         # Assume inline for list handler (we have no way of knowing with current implementation)
         empty_references = model_helpers.get_referenced_resources(None)
-        progress.resourceModels =\
-            [model_helpers.get_model_for_event_type(afd_client, et, empty_references) for et in event_types]
+        progress.resourceModels = [
+            model_helpers.get_model_for_event_type(afd_client, et, empty_references) for et in event_types
+        ]
         progress.status = OperationStatus.SUCCESS
     except RuntimeError as e:
         raise exceptions.InternalFailure(f"Error occurred: {e}")

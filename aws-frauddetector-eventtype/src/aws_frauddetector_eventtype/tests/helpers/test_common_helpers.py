@@ -1,7 +1,7 @@
 from ...helpers import (
     common_helpers,
     model_helpers,  # for monkeypatch
-    validation_helpers  # for monkeypatch
+    validation_helpers,  # for monkeypatch
 )
 
 from cloudformation_cli_python_lib import (
@@ -14,8 +14,8 @@ from .. import unit_test_utils
 
 def test_update_tags():
     # Arrange
-    list_tags_response = {'tags': unit_test_utils.FAKE_TAGS}
-    fake_tag_keys = [tag.get('key', '') for tag in unit_test_utils.FAKE_TAGS]
+    list_tags_response = {"tags": unit_test_utils.FAKE_TAGS}
+    fake_tag_keys = [tag.get("key", "") for tag in unit_test_utils.FAKE_TAGS]
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.list_tags_for_resource = MagicMock(return_value=list_tags_response)
@@ -23,12 +23,17 @@ def test_update_tags():
     mock_afd_client.untag_resource = MagicMock()
 
     # Act
-    common_helpers.update_tags(mock_afd_client, unit_test_utils.FAKE_ARN, unit_test_utils.FAKE_TAG_MODELS_DIFFERENT)
+    common_helpers.update_tags(
+        mock_afd_client,
+        unit_test_utils.FAKE_ARN,
+        unit_test_utils.FAKE_TAG_MODELS_DIFFERENT,
+    )
 
     # Assert
     mock_afd_client.untag_resource.assert_called_once_with(resourceARN=unit_test_utils.FAKE_ARN, tagKeys=fake_tag_keys)
-    mock_afd_client.tag_resource.assert_called_once_with(resourceARN=unit_test_utils.FAKE_ARN,
-                                                         tags=unit_test_utils.FAKE_TAGS_DIFFERENT)
+    mock_afd_client.tag_resource.assert_called_once_with(
+        resourceARN=unit_test_utils.FAKE_ARN, tags=unit_test_utils.FAKE_TAGS_DIFFERENT
+    )
 
 
 def test_put_event_type_and_return_progress(monkeypatch):
@@ -38,7 +43,11 @@ def test_put_event_type_and_return_progress(monkeypatch):
     fake_output_model = _add_extra_attributes_for_event_type(fake_output_model)
     mock_get_event_type_and_return_model = MagicMock(return_value=fake_output_model)
 
-    monkeypatch.setattr(model_helpers, 'get_event_type_and_return_model', mock_get_event_type_and_return_model)
+    monkeypatch.setattr(
+        model_helpers,
+        "get_event_type_and_return_model",
+        mock_get_event_type_and_return_model,
+    )
 
     # Act/Assert
     _act_and_assert_put_event_type_for_given_model(mock_afd_client, input_model, output_model)
@@ -63,7 +72,7 @@ def test_put_inline_event_variable():
         defaultValue=fake_event_variable.DefaultValue,
         description=fake_event_variable.Description,
         variableType=fake_event_variable.VariableType,
-        tags=fake_tags
+        tags=fake_tags,
     )
 
 
@@ -80,9 +89,7 @@ def test_put_inline_label():
 
     # Assert
     mock_afd_client.put_label.assert_called_once_with(
-        name=fake_label.Name,
-        description=fake_label.Description,
-        tags=fake_tags
+        name=fake_label.Name, description=fake_label.Description, tags=fake_tags
     )
 
 
@@ -101,7 +108,7 @@ def test_put_inline_entity_type():
     mock_afd_client.put_entity_type.assert_called_once_with(
         name=fake_entity_type.Name,
         description=fake_entity_type.Description,
-        tags=fake_tags
+        tags=fake_tags,
     )
 
 
@@ -113,28 +120,38 @@ def _setup_update_event_variables_test(monkeypatch):
     existing_variable_model = _add_extra_attributes_for_variable(existing_variable_model)
     existing_variables = [existing_variable_model]
     variable_entry_argument = unit_test_utils.create_fake_variable()
-    del variable_entry_argument['createdTime']
-    del variable_entry_argument['lastUpdatedTime']
-    del variable_entry_argument['arn']
+    del variable_entry_argument["createdTime"]
+    del variable_entry_argument["lastUpdatedTime"]
+    del variable_entry_argument["arn"]
     missing_names = [unit_test_utils.FAKE_NAME]
     mock_check_which_variables_exist = MagicMock(return_value=(existing_variables, missing_names))
-    mock_check_variable_differences = MagicMock(return_value={'defaultValue': True,
-                                                              'description': False,
-                                                              'variableType': False})
-    mock_get_variable_entry_argument_from_event_variable_model = \
-        MagicMock(return_value=variable_entry_argument)
+    mock_check_variable_differences = MagicMock(
+        return_value={"defaultValue": True, "description": False, "variableType": False}
+    )
+    mock_get_variable_entry_argument_from_event_variable_model = MagicMock(return_value=variable_entry_argument)
 
-    monkeypatch.setattr(validation_helpers, 'check_which_variables_exist', mock_check_which_variables_exist)
-    monkeypatch.setattr(validation_helpers, 'check_variable_differences', mock_check_variable_differences)
-    monkeypatch.setattr(model_helpers, 'get_variable_entry_argument_from_event_variable_model',
-                        mock_get_variable_entry_argument_from_event_variable_model)
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_which_variables_exist",
+        mock_check_which_variables_exist,
+    )
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_variable_differences",
+        mock_check_variable_differences,
+    )
+    monkeypatch.setattr(
+        model_helpers,
+        "get_variable_entry_argument_from_event_variable_model",
+        mock_get_variable_entry_argument_from_event_variable_model,
+    )
 
     return mock_afd_client, input_model
 
 
 def _setup_put_event_type_test():
-    get_event_types_response = {'eventTypes': [unit_test_utils.FAKE_EVENT_TYPE]}
-    list_tags_response = {'tags': unit_test_utils.FAKE_TAGS}
+    get_event_types_response = {"eventTypes": [unit_test_utils.FAKE_EVENT_TYPE]}
+    list_tags_response = {"tags": unit_test_utils.FAKE_TAGS}
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.put_event_type = MagicMock()

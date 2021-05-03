@@ -3,7 +3,7 @@ from cloudformation_cli_python_lib import (
     OperationStatus,
     exceptions,
     ProgressEvent,
-    SessionProxy
+    SessionProxy,
 )
 
 from . import models
@@ -18,7 +18,7 @@ from .helpers import (
     update_worker_helpers,
     delete_worker_helpers,
     api_helpers,
-    util
+    util,
 )
 
 # Use this logger to forward log messages to CloudWatch Logs.
@@ -26,7 +26,7 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
 
-DRAFT_STATUS = 'DRAFT'
+DRAFT_STATUS = "DRAFT"
 
 
 def execute_create_detector_handler_work(session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent):
@@ -35,7 +35,7 @@ def execute_create_detector_handler_work(session: SessionProxy, model: models.Re
     # For contract_create_duplicate, we need to fail if the resource already exists
     get_detectors_works, _ = validation_helpers.check_if_get_detectors_succeeds(afd_client, model.DetectorId)
     if get_detectors_works:
-        raise exceptions.AlreadyExists('detector', model.DetectorId)
+        raise exceptions.AlreadyExists("detector", model.DetectorId)
 
     # For contract_invalid_create, fail if any read-only properties are present
     if model.Arn is not None or model.CreatedTime is not None or model.LastUpdatedTime is not None:
@@ -48,17 +48,17 @@ def execute_create_detector_handler_work(session: SessionProxy, model: models.Re
     # Create Detector, Rules, Detector Version ID
     model_helpers.put_detector_for_model(afd_client, model)
     rule_dicts = create_worker_helpers.create_rules_for_detector_resource(afd_client, model)
-    detector_version_response = create_worker_helpers.create_detector_version_for_detector_resource(afd_client,
-                                                                                                    model,
-                                                                                                    rule_dicts)
+    detector_version_response = create_worker_helpers.create_detector_version_for_detector_resource(
+        afd_client, model, rule_dicts
+    )
 
     # The DV will be created as draft by default, so if the desired status is not draft, update DV status
     if model.DetectorVersionStatus != DRAFT_STATUS:
         api_helpers.call_update_detector_version_status(
             frauddetector_client=afd_client,
             detector_id=model.DetectorId,
-            detector_version_id=detector_version_response.get('detectorVersionId', '1'),  # version here should be 1
-            status=model.DetectorVersionStatus
+            detector_version_id=detector_version_response.get("detectorVersionId", "1"),  # version here should be 1
+            status=model.DetectorVersionStatus,
         )
 
     # after satisfying all contract tests and AFD requirements, get the resulting model
@@ -70,10 +70,9 @@ def execute_create_detector_handler_work(session: SessionProxy, model: models.Re
     return progress
 
 
-def execute_update_detector_handler_work(session: SessionProxy,
-                                         model: models.ResourceModel,
-                                         progress: ProgressEvent,
-                                         request):
+def execute_update_detector_handler_work(
+    session: SessionProxy, model: models.ResourceModel, progress: ProgressEvent, request
+):
     afd_client = client_helpers.get_afd_client(session)
 
     previous_resource_state: models.ResourceModel = request.previousResourceState
@@ -85,7 +84,7 @@ def execute_update_detector_handler_work(session: SessionProxy,
     # For contract_update_non_existent_resource, we need to fail if the resource DNE
     get_detectors_works, _ = validation_helpers.check_if_get_detectors_succeeds(afd_client, model.DetectorId)
     if not get_detectors_works:
-        raise exceptions.NotFound('detector', model.DetectorId)
+        raise exceptions.NotFound("detector", model.DetectorId)
 
     # Validate existence of dependencies for update (just eventtype for now)
     LOG.debug(f"validating dependencies for update ...")
@@ -97,12 +96,12 @@ def execute_update_detector_handler_work(session: SessionProxy,
         update_worker_helpers.validate_dependencies_for_inline_event_type_update(
             afd_client=afd_client,
             event_type_model=model.EventType,
-            previous_event_type_model=previous_resource_state.EventType
+            previous_event_type_model=previous_resource_state.EventType,
         )
         update_worker_helpers.update_inline_event_type(
             afd_client=afd_client,
             event_type_model=model.EventType,
-            previous_event_type_model=previous_resource_state.EventType
+            previous_event_type_model=previous_resource_state.EventType,
         )
 
     # Create/Update rules and inline outcomes
@@ -116,17 +115,14 @@ def execute_update_detector_handler_work(session: SessionProxy,
 
     # Create/Update DV, set active if desired status is active
     LOG.info(f"Creating / Updating detector versions")
-    detector_versions_to_delete = (
-        update_worker_helpers.update_detector_version_for_detector_update(
-            afd_client=afd_client, model=model, previous_model=previous_resource_state
-        )
+    detector_versions_to_delete = update_worker_helpers.update_detector_version_for_detector_update(
+        afd_client=afd_client, model=model, previous_model=previous_resource_state
     )
 
     # Delete old DVs
     LOG.info(f"Deleting old detector versions: {detector_versions_to_delete}")
     update_worker_helpers.delete_unused_detector_versions_for_detector_update(
-        afd_client=afd_client,
-        unused_detector_versions=detector_versions_to_delete
+        afd_client=afd_client, unused_detector_versions=detector_versions_to_delete
     )
 
     # Delete old rules that are no longer used
@@ -134,14 +130,13 @@ def execute_update_detector_handler_work(session: SessionProxy,
     update_worker_helpers.delete_unused_rules_for_detector_update(
         afd_client=afd_client,
         detector_id=model.DetectorId,
-        unused_rule_versions=rule_versions_to_delete
+        unused_rule_versions=rule_versions_to_delete,
     )
 
     # Delete old inline outcomes that are no longer present in the rules
     LOG.info(f"Deleting no-longer-used inline outcomes: {outcomes_to_delete}")
     update_worker_helpers.delete_unused_inline_outcomes_for_detector_update(
-        afd_client=afd_client,
-        unused_inline_outcome_names=outcomes_to_delete
+        afd_client=afd_client, unused_inline_outcome_names=outcomes_to_delete
     )
 
     # Put detector (for description update)
@@ -154,7 +149,7 @@ def execute_update_detector_handler_work(session: SessionProxy,
         frauddetector_client=afd_client,
         detector_id=model.DetectorId,
         detector_event_type_name=event_type_name,
-        detector_description=model.Description
+        detector_description=model.Description,
     )
 
     LOG.debug(f"updating tags for model ...")
@@ -163,11 +158,7 @@ def execute_update_detector_handler_work(session: SessionProxy,
 
     # after satisfying all contract tests and AFD requirements, get the resulting model
     LOG.info(f"Done updating, validating and generating result model")
-    model = (
-        read_worker_helpers.validate_detector_exists_and_return_detector_resource_model(
-            afd_client, model
-        )
-    )
+    model = read_worker_helpers.validate_detector_exists_and_return_detector_resource_model(afd_client, model)
     progress.resourceModel = model
     progress.status = OperationStatus.SUCCESS
 
@@ -181,7 +172,7 @@ def execute_delete_detector_handler_work(session: SessionProxy, model: models.Re
     # For contract_delete_delete, we need to fail if the resource DNE
     get_detectors_works, _ = validation_helpers.check_if_get_detectors_succeeds(afd_client, model.DetectorId)
     if not get_detectors_works:
-        raise exceptions.NotFound('detector', model.DetectorId)
+        raise exceptions.NotFound("detector", model.DetectorId)
 
     try:
         LOG.debug("deleting DVs")
@@ -208,7 +199,7 @@ def execute_read_detector_handler_work(session: SessionProxy, model: models.Reso
     afd_client = client_helpers.get_afd_client(session)
     # read requests only include primary identifier (Arn). Extract DetectorId from Arn
     if not model.DetectorId:
-        model.DetectorId = model.Arn.split('/')[-1]
+        model.DetectorId = model.Arn.split("/")[-1]
 
     model = read_worker_helpers.validate_detector_exists_and_return_detector_resource_model(afd_client, model)
     progress.resourceModel = model

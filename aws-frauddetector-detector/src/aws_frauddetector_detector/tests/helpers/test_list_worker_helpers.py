@@ -10,11 +10,11 @@ from unittest.mock import MagicMock
 def test_list_detector_models(monkeypatch):
     # Arrange
     mock_afd_client = unit_test_utils.create_mock_afd_client()
-    get_detectors_response = {'detectors': [unit_test_utils.FAKE_DETECTOR, unit_test_utils.FAKE_DETECTOR]}
+    get_detectors_response = {"detectors": [unit_test_utils.FAKE_DETECTOR, unit_test_utils.FAKE_DETECTOR]}
     mock_call_get_detectors = MagicMock(return_value=get_detectors_response)
     mock_get_model_for_detector = MagicMock()
-    monkeypatch.setattr(api_helpers, 'call_get_detectors', mock_call_get_detectors)
-    monkeypatch.setattr(model_helpers, 'get_model_for_detector', mock_get_model_for_detector)
+    monkeypatch.setattr(api_helpers, "call_get_detectors", mock_call_get_detectors)
+    monkeypatch.setattr(model_helpers, "get_model_for_detector", mock_get_model_for_detector)
 
     # Act
     models = list_worker_helpers.list_detector_models(mock_afd_client)

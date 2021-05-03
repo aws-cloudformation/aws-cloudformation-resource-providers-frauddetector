@@ -10,8 +10,10 @@ def test_check_if_get_labels_succeeds_client_error_returns_false():
     mock_afd_client.get_labels = MagicMock()
     mock_afd_client.exceptions.ResourceNotFoundException = ClientError
     # We retry NotFound (for consistency), so return not found twice
-    mock_afd_client.get_labels.side_effect = [ClientError({'Code': '', 'Message': ''}, 'get_labels'),
-                                              ClientError({'Code': '', 'Message': ''}, 'get_labels')]
+    mock_afd_client.get_labels.side_effect = [
+        ClientError({"Code": "", "Message": ""}, "get_labels"),
+        ClientError({"Code": "", "Message": ""}, "get_labels"),
+    ]
 
     # Act
     result = validation_helpers.check_if_get_labels_succeeds(mock_afd_client, unit_test_utils.FAKE_NAME)
@@ -24,7 +26,7 @@ def test_check_if_get_labels_succeeds_client_error_returns_false():
 
 def test_check_if_get_labels_succeeds_client_success_returns_true_and_response():
     # Arrange
-    get_labels_response = {'labels': [unit_test_utils.FAKE_FRAUD_LABEL]}
+    get_labels_response = {"labels": [unit_test_utils.FAKE_FRAUD_LABEL]}
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.get_labels = MagicMock(return_value=get_labels_response)

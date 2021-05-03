@@ -10,9 +10,9 @@ LOG = logging.getLogger(__name__)
 def delete_inline_dependencies(afd_client, model: ResourceModel):
     inline_resources = model_helpers.get_inline_resources(event_type_model=model)
 
-    _delete_inline_event_variables(afd_client, inline_resources['event_variables'])
-    _delete_inline_entity_types(afd_client, inline_resources['entity_types'])
-    _delete_inline_labels(afd_client, inline_resources['labels'])
+    _delete_inline_event_variables(afd_client, inline_resources["event_variables"])
+    _delete_inline_entity_types(afd_client, inline_resources["entity_types"])
+    _delete_inline_labels(afd_client, inline_resources["labels"])
 
 
 def _delete_inline_event_variables(afd_client, inline_variable_names: set):

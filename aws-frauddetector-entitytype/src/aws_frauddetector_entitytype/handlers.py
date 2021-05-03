@@ -27,9 +27,9 @@ test_entrypoint = resource.test_entrypoint
 
 @resource.handler(Action.CREATE)
 def create_handler(
-        session: Optional[SessionProxy],
-        request: ResourceHandlerRequest,
-        callback_context: MutableMapping[str, Any],
+    session: Optional[SessionProxy],
+    request: ResourceHandlerRequest,
+    callback_context: MutableMapping[str, Any],
 ) -> ProgressEvent:
     model = request.desiredResourceState
     progress: ProgressEvent = ProgressEvent(
@@ -42,9 +42,9 @@ def create_handler(
 
 @resource.handler(Action.UPDATE)
 def update_handler(
-        session: Optional[SessionProxy],
-        request: ResourceHandlerRequest,
-        callback_context: MutableMapping[str, Any],
+    session: Optional[SessionProxy],
+    request: ResourceHandlerRequest,
+    callback_context: MutableMapping[str, Any],
 ) -> ProgressEvent:
     model = request.desiredResourceState
     progress: ProgressEvent = ProgressEvent(
@@ -57,9 +57,9 @@ def update_handler(
 
 @resource.handler(Action.DELETE)
 def delete_handler(
-        session: Optional[SessionProxy],
-        request: ResourceHandlerRequest,
-        callback_context: MutableMapping[str, Any],
+    session: Optional[SessionProxy],
+    request: ResourceHandlerRequest,
+    callback_context: MutableMapping[str, Any],
 ) -> ProgressEvent:
     model = request.desiredResourceState
     progress: ProgressEvent = ProgressEvent(
@@ -72,9 +72,9 @@ def delete_handler(
 
 @resource.handler(Action.READ)
 def read_handler(
-        session: Optional[SessionProxy],
-        request: ResourceHandlerRequest,
-        callback_context: MutableMapping[str, Any],
+    session: Optional[SessionProxy],
+    request: ResourceHandlerRequest,
+    callback_context: MutableMapping[str, Any],
 ) -> ProgressEvent:
     model = request.desiredResourceState
     progress: ProgressEvent = ProgressEvent(
@@ -87,9 +87,9 @@ def read_handler(
 
 @resource.handler(Action.LIST)
 def list_handler(
-        session: Optional[SessionProxy],
-        request: ResourceHandlerRequest,
-        callback_context: MutableMapping[str, Any],
+    session: Optional[SessionProxy],
+    request: ResourceHandlerRequest,
+    callback_context: MutableMapping[str, Any],
 ) -> ProgressEvent:
     model = request.desiredResourceState
     progress: ProgressEvent = ProgressEvent(
