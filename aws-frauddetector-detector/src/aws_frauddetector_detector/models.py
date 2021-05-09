@@ -50,6 +50,7 @@ class ResourceModel(BaseModel):
     Arn: Optional[str]
     CreatedTime: Optional[str]
     LastUpdatedTime: Optional[str]
+    AssociatedModels: Optional[Sequence["_Model"]]
 
     @classmethod
     def _deserialize(
@@ -72,6 +73,7 @@ class ResourceModel(BaseModel):
             Arn=json_data.get("Arn"),
             CreatedTime=json_data.get("CreatedTime"),
             LastUpdatedTime=json_data.get("LastUpdatedTime"),
+            AssociatedModels=deserialize_list(json_data.get("AssociatedModels"), Model),
         )
 
 
@@ -313,3 +315,23 @@ class EntityType(BaseModel):
 
 # work around possible type aliasing issues when variable has same name as a model
 _EntityType = EntityType
+
+
+@dataclass
+class Model(BaseModel):
+    Arn: Optional[str]
+
+    @classmethod
+    def _deserialize(
+        cls: Type["_Model"],
+        json_data: Optional[Mapping[str, Any]],
+    ) -> Optional["_Model"]:
+        if not json_data:
+            return None
+        return cls(
+            Arn=json_data.get("Arn"),
+        )
+
+
+# work around possible type aliasing issues when variable has same name as a model
+_Model = Model

@@ -70,6 +70,7 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
         RuleExecutionMode=None,
         Rules=[],
         Tags=None,
+        AssociatedModels=None,
     )
 
     # get event type model

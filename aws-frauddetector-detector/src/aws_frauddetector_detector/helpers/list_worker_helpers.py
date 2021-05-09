@@ -42,6 +42,7 @@ def list_detector_models(afd_client) -> List[models.ResourceModel]:
             RuleExecutionMode=None,
             Rules=[],
             Tags=None,
+            AssociatedModels=None,
         )
         populated_model = model_helpers.get_model_for_detector(afd_client, detector, partial_model)
         models_to_return.append(populated_model)
