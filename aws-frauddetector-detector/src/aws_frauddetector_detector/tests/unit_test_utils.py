@@ -375,6 +375,7 @@ def create_fake_model(is_output_model: bool = False):
         RuleExecutionMode=FAKE_RULE_EXECUTION_MODE,
         Rules=[create_fake_rule(is_output_model)],
         EventType=create_fake_event_type(is_output_model),
+        AssociatedModels=None,
     )
 
 
@@ -391,6 +392,7 @@ def create_fake_model_with_references(is_output_model: bool = False):
         RuleExecutionMode=FAKE_RULE_EXECUTION_MODE,
         Rules=[create_fake_rule_with_referenced_outcome(is_output_model)],
         EventType=create_fake_referenced_event_type(is_output_model),
+        AssociatedModels=None,
     )
 
 

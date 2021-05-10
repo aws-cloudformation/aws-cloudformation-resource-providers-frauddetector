@@ -19,6 +19,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
         "<a href="#description" title="Description">Description</a>" : <i>String</i>,
         "<a href="#rules" title="Rules">Rules</a>" : <i>[ <a href="rule.md">Rule</a>, ... ]</i>,
         "<a href="#eventtype" title="EventType">EventType</a>" : <i><a href="eventtype.md">EventType</a></i>,
+        "<a href="#associatedmodels" title="AssociatedModels">AssociatedModels</a>" : <i>[ <a href="model.md">Model</a>, ... ]</i>
     }
 }
 </pre>
@@ -37,6 +38,8 @@ Properties:
     <a href="#rules" title="Rules">Rules</a>: <i>
       - <a href="rule.md">Rule</a></i>
     <a href="#eventtype" title="EventType">EventType</a>: <i><a href="eventtype.md">EventType</a></i>
+    <a href="#associatedmodels" title="AssociatedModels">AssociatedModels</a>: <i>
+      - <a href="model.md">Model</a></i>
 </pre>
 
 ## Properties
@@ -116,6 +119,16 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 _Required_: Yes
 
 _Type_: <a href="eventtype.md">EventType</a>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### AssociatedModels
+
+The models to associate with this detector.
+
+_Required_: No
+
+_Type_: List of <a href="model.md">Model</a>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
@@ -222,3 +235,7 @@ Returns the <code>CreatedTime</code> value.
 #### LastUpdatedTime
 
 Returns the <code>LastUpdatedTime</code> value.
+
+#### Arn
+
+Returns the <code>Arn</code> value.

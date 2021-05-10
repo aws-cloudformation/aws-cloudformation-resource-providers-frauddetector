@@ -365,6 +365,16 @@
         }
       },
       "additionalProperties": false
+    },
+    "Model": {
+      "description": "A model to associate with a detector.",
+      "type": "object",
+      "properties": {
+        "Arn": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -434,6 +444,16 @@
     "LastUpdatedTime": {
       "description": "The time when the detector was last updated.",
       "type": "string"
+    },
+    "AssociatedModels": {
+      "description": "The models to associate with this detector.",
+      "type": "array",
+      "uniqueItems": false,
+      "insertionOrder": false,
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/definitions/Model"
+      }
     }
   },
   "additionalProperties": false,
@@ -468,7 +488,8 @@
     "/properties/EventType/Labels/*/LastUpdatedTime",
     "/properties/EventType/EntityTypes/*/Arn",
     "/properties/EventType/EntityTypes/*/CreatedTime",
-    "/properties/EventType/EntityTypes/*/LastUpdatedTime"
+    "/properties/EventType/EntityTypes/*/LastUpdatedTime",
+    "/properties/AssociatedModels/*/Arn"
   ],
   "primaryIdentifier": [
     "/properties/Arn"
