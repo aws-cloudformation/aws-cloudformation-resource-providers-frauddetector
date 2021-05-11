@@ -565,6 +565,13 @@ def call_get_external_models(frauddetector_client, model_endpoint: str = None):
     return frauddetector_client.get_external_models(**args)
 
 
+@retry_not_found_exceptions
+@api_call_with_debug_logs
+def call_get_model_version(frauddetector_client, model_id: str, model_type: str, model_version_number: str):
+    args = {"modelId": model_id, "modelType": model_type, "modelVersionNumber": model_version_number}
+    return frauddetector_client.get_model_version(**args)
+
+
 # Delete APIs
 
 

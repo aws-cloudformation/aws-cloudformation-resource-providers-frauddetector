@@ -17,6 +17,7 @@ def validate_dependencies_for_detector_create(afd_client, model: models.Resource
     _validate_event_type_for_detector_create(afd_client, model)
     _validate_rules_for_detector_create(afd_client, model)
     validation_helpers.validate_external_models_for_detector_model(afd_client, model)
+    _validate_model_versions_for_detector_create(afd_client, model)
 
 
 def create_rules_for_detector_resource(afd_client, model: models.ResourceModel) -> List[dict]:
@@ -33,17 +34,47 @@ def create_detector_version_for_detector_resource(
     # abstracted DVs will have the same tags as the Detector resource provider
     tags = model_helpers.get_tags_from_tag_models(model.Tags)
     external_models = model_helpers.get_external_model_endpoints_from_model(model)
+    model_versions = model_helpers.get_model_versions_from_model(model)
     # TODO: support model versions
     return api_helpers.call_create_detector_version(
         frauddetector_client=afd_client,
         detector_id=model.DetectorId,
         rules=rule_dicts,
         rule_execution_mode=model.RuleExecutionMode,
-        model_versions=None,
+        model_versions=model_versions,
         external_model_endpoints=external_models,
         detector_version_description=model.Description,
         detector_version_tags=tags,
     )
+
+
+def _validate_model_versions_for_detector_create(afd_client, model: models.ResourceModel):
+
+    if model.AssociatedModels is None:
+        return
+
+    for item in model.AssociatedModels:
+
+        if util.is_external_model_arn(item.Arn):
+            continue
+
+        if not util.is_model_version_arn(item.Arn):
+            raise exceptions.InvalidRequest("Unexpected ARN provided in AssociatedModels")
+
+        model_id, model_type, model_version_number = model_helpers.get_model_version_details_from_arn(item.Arn)
+
+        get_model_version_worked, response = validation_helpers.check_if_get_model_version_succeeds(
+            frauddetector_client=afd_client,
+            model_id=model_id,
+            model_type=model_type,
+            model_version_number=model_version_number,
+        )
+
+        if not get_model_version_worked:
+            raise exceptions.NotFound("ModelVersion", item.Arn)
+
+        if response["status"] != "ACTIVE":
+            raise exceptions.InvalidRequest("Specified model must be in status:ACTIVE")
 
 
 def _validate_outcomes_for_rule(afd_client, rule_model: models.Rule):

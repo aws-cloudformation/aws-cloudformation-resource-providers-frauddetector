@@ -535,13 +535,39 @@ def _get_entity_types_and_return_entity_types_model(
 def get_external_model_arns_from_model(model: models.ResourceModel) -> Set[str]:
     if model.AssociatedModels is None:
         return set()
-    return {m.Arn for m in model.AssociatedModels if util.is_arn_external_model_arn(m.Arn)}
+    return {m.Arn for m in model.AssociatedModels if util.is_external_model_arn(m.Arn)}
 
 
 def get_external_model_endpoints_from_model(model: models.ResourceModel) -> List[str]:
     if model.AssociatedModels is None:
         return []
-    return [util.extract_name_from_arn(m.Arn) for m in model.AssociatedModels if util.is_arn_external_model_arn(m.Arn)]
+    return [util.extract_name_from_arn(m.Arn) for m in model.AssociatedModels if util.is_external_model_arn(m.Arn)]
+
+
+# Model Versions for Detector
+
+
+def get_model_versions_from_model(model: models.ResourceModel) -> List[dict]:
+    if model.AssociatedModels is None:
+        return []
+
+    model_versions = []
+
+    for m in model.AssociatedModels:
+        model_id, model_type, model_version_number = get_model_version_details_from_arn(m.Arn)
+        model_versions.append(
+            {"modelId": model_id, "modelType": model_type, "modelVersionNumber": model_version_number}
+        )
+
+    return model_versions
+
+
+def get_model_version_details_from_arn(arn):
+    segmented_arn = arn.split("/")
+    model_version_number = segmented_arn[-1]
+    model_id = segmented_arn[-2]
+    model_type = segmented_arn[-3]
+    return model_id, model_type, model_version_number
 
 
 # Referenced/Inline Resources

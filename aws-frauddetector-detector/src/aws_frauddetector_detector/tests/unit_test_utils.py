@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 FAKE_ARN = "arn:aws:frauddetector:region:123456789012:afdresourcetype/afdresourcename"
 FAKE_EXTERNAL_MODEL_ARN = "arn:aws:frauddetector:region:123456789012:external-model/afdresourcename"
+FAKE_MODEL_VERSION_ARN = "arn:aws:frauddetector:us-east-2:123456789012:model-version/model_type/model_name/1.0"
 FAKE_ARN_PREFIX = "arn:aws:frauddetector:region:123456789012:afdresourcetype/"
 FAKE_NAME = "afdresourcename"
 FAKE_ACTIVE_DV_STATUS = "ACTIVE"

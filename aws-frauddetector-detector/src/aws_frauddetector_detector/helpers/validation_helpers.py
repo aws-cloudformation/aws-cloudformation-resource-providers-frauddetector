@@ -134,6 +134,27 @@ def check_if_get_outcomes_succeeds(frauddetector_client, outcome_name):
         return False, None
 
 
+def check_if_get_model_version_succeeds(frauddetector_client, model_id, model_type, model_version_number):
+    """
+    This calls get_model_version and returns True if it worked, along with the API response (True, response)
+    If the call to get_outcomes fails, this returns (False, None)
+    :param frauddetector_client: afd boto3 client to use to make the request
+    :param model_id:  the model id of the model you want to get
+    :param model_type:  the model type of the model you want to get
+    :param model_version_number: the model version number of the model version you want to get
+    :return: a tuple: (bool, apiResponse)
+    """
+
+    try:
+        get_model_version_response = api_helpers.call_get_model_version(
+            frauddetector_client, model_id, model_type, model_version_number
+        )
+        return True, get_model_version_response
+    except frauddetector_client.exceptions.ResourceNotFoundException as RNF:
+        LOG.warning(f"Error getting model version {model_version_number} for model {model_id}: {RNF}")
+        return False, None
+
+
 def validate_external_models_for_detector_model(afd_client, model: models.ResourceModel):
     LOG.info("validating external models for detector")
     existing_external_model_response = api_helpers.call_get_external_models(afd_client)
