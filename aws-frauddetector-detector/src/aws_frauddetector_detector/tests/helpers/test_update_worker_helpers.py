@@ -5,6 +5,7 @@ from aws_frauddetector_detector.helpers import (
     common_helpers,
     model_helpers,
 )
+from aws_frauddetector_detector import models
 from cloudformation_cli_python_lib import (
     exceptions,
 )
@@ -65,6 +66,38 @@ def test_validate_dependencies_for_detector_update_inline_eventtype_success(
 
     # Assert
     assert mock_check_if_get_event_types_succeeds.call_count == 0
+
+
+def test_validate_dependencies_for_detector_update_external_model_dne_throws_exception(
+    monkeypatch,
+):
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn=unit_test_utils.FAKE_EXTERNAL_MODEL.get("arn", "not/found"))]
+    fake_previous_model = unit_test_utils.create_fake_model()
+    mock_check_if_get_event_types_succeeds = MagicMock()
+    mock_get_external_models = MagicMock(return_value={"externalModels": []})
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_if_get_event_types_succeeds",
+        mock_check_if_get_event_types_succeeds,
+    )
+    mock_afd_client.get_external_models = mock_get_external_models
+
+    # Act
+    exception_thrown = None
+    try:
+        update_worker_helpers.validate_dependencies_for_detector_update(
+            mock_afd_client, fake_model, fake_previous_model
+        )
+    except exceptions.NotFound as e:
+        exception_thrown = e
+
+    # Assert
+    assert mock_check_if_get_event_types_succeeds.call_count == 0
+    assert mock_get_external_models.call_count == 1
+    assert exception_thrown is not None
 
 
 def test_validate_dependencies_for_detector_update_referenced_eventtype_success(

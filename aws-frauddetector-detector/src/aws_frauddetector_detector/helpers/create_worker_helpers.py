@@ -16,6 +16,7 @@ LOG.setLevel(logging.DEBUG)
 def validate_dependencies_for_detector_create(afd_client, model: models.ResourceModel):
     _validate_event_type_for_detector_create(afd_client, model)
     _validate_rules_for_detector_create(afd_client, model)
+    validation_helpers.validate_external_models_for_detector_model(afd_client, model)
 
 
 def create_rules_for_detector_resource(afd_client, model: models.ResourceModel) -> List[dict]:
@@ -31,14 +32,15 @@ def create_detector_version_for_detector_resource(
 ) -> dict:
     # abstracted DVs will have the same tags as the Detector resource provider
     tags = model_helpers.get_tags_from_tag_models(model.Tags)
-    # TODO: support external model endpoints and model versions
+    external_models = model_helpers.get_external_model_endpoints_from_model(model)
+    # TODO: support model versions
     return api_helpers.call_create_detector_version(
         frauddetector_client=afd_client,
         detector_id=model.DetectorId,
         rules=rule_dicts,
         rule_execution_mode=model.RuleExecutionMode,
         model_versions=None,
-        external_model_endpoints=None,
+        external_model_endpoints=external_models,
         detector_version_description=model.Description,
         detector_version_tags=tags,
     )

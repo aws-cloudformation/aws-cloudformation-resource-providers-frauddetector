@@ -20,7 +20,7 @@ def validate_dependencies_for_detector_update(
     afd_client, model: models.ResourceModel, previous_model: models.ResourceModel
 ):
     # TODO: revisit  this validation when/if we support in-place teardown
-    #   For now, throw bad request for unsupported event type update
+    #   For now, throw bad request for unsupported event type update and validate external models
     #   (Other updates that would require teardown will throw exception and trigger rollback)
     if model.EventType.Name != previous_model.EventType.Name:
         raise exceptions.InvalidRequest(f"Error: EventType.Name update is not allowed")
@@ -34,6 +34,7 @@ def validate_dependencies_for_detector_update(
         ) = validation_helpers.check_if_get_event_types_succeeds(afd_client, event_type_name)
         if not get_event_types_succeeded:
             raise exceptions.NotFound("detector.EventType", event_type_name)
+    validation_helpers.validate_external_models_for_detector_model(afd_client, model)
 
 
 def update_rules_and_inline_outcomes_for_detector_update(
