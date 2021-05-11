@@ -1,6 +1,11 @@
 import logging
 
-from . import api_helpers
+from cloudformation_cli_python_lib import (
+    exceptions,
+)
+
+from . import api_helpers, model_helpers
+from .. import models
 
 # Use this logger to forward log messages to CloudWatch Logs.
 LOG = logging.getLogger(__name__)
@@ -127,6 +132,20 @@ def check_if_get_outcomes_succeeds(frauddetector_client, outcome_name):
     except frauddetector_client.exceptions.ResourceNotFoundException as RNF:
         LOG.warning(f"Error getting outcome {outcome_name}: {RNF}")
         return False, None
+
+
+def validate_external_models_for_detector_model(afd_client, model: models.ResourceModel):
+    LOG.info("validating external models for detector")
+    existing_external_model_response = api_helpers.call_get_external_models(afd_client)
+    existing_external_models = existing_external_model_response.get("externalModels", [])
+    existing_external_model_arns = {
+        external_model.get("arn", "not/found") for external_model in existing_external_models
+    }
+
+    for requested_external_model_arn in model_helpers.get_external_model_arns_from_model(model):
+        if requested_external_model_arn not in existing_external_model_arns:
+            LOG.warning(f"validation failed for external model: {requested_external_model_arn}")
+            raise exceptions.NotFound("associatedModel", requested_external_model_arn)
 
 
 def check_variable_differences(existing_event_variable, desired_event_variable):

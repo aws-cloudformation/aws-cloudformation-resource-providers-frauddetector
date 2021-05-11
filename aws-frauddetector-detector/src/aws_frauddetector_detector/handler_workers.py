@@ -42,6 +42,7 @@ def execute_create_detector_handler_work(session: SessionProxy, model: models.Re
         raise exceptions.InvalidRequest("Error occurred: cannot create read-only properties.")
 
     # Validate existence of referenced resources, validate and create inline resources (except for Rules, Detector, DV)
+    #   Also check existence of external models
     # TODO: split out creation from validation
     create_worker_helpers.validate_dependencies_for_detector_create(afd_client, model)
 

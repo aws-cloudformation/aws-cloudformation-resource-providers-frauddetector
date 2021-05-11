@@ -3,6 +3,7 @@ from cloudformation_cli_python_lib import SessionProxy, ProgressEvent, Operation
 from unittest.mock import MagicMock
 
 FAKE_ARN = "arn:aws:frauddetector:region:123456789012:afdresourcetype/afdresourcename"
+FAKE_EXTERNAL_MODEL_ARN = "arn:aws:frauddetector:region:123456789012:external-model/afdresourcename"
 FAKE_ARN_PREFIX = "arn:aws:frauddetector:region:123456789012:afdresourcetype/"
 FAKE_NAME = "afdresourcename"
 FAKE_ACTIVE_DV_STATUS = "ACTIVE"
@@ -131,6 +132,19 @@ FAKE_DETECTOR_VERSION = {
     "rules": [{"detectorId": FAKE_NAME, "ruleId": FAKE_NAME, "ruleVersion": FAKE_VERSION_ID}],
     "status": FAKE_ACTIVE_DV_STATUS,
 }
+FAKE_DETECTOR_VERSION_WITH_EXTERNAL_MODEL = {
+    "arn": FAKE_ARN,
+    "createdTime": FAKE_TIME,
+    "description": FAKE_DESCRIPTION,
+    "detectorId": FAKE_NAME,
+    "detectorVersionId": FAKE_VERSION_ID,
+    "externalModelEndpoints": [FAKE_NAME],
+    "lastUpdatedTime": FAKE_TIME,
+    "modelVersions": [],
+    "ruleExecutionMode": FAKE_RULE_EXECUTION_MODE,
+    "rules": [{"detectorId": FAKE_NAME, "ruleId": FAKE_NAME, "ruleVersion": FAKE_VERSION_ID}],
+    "status": FAKE_ACTIVE_DV_STATUS,
+}
 FAKE_NEW_DETECTOR_VERSION = {
     "arn": FAKE_ARN,
     "createdTime": FAKE_TIME,
@@ -155,6 +169,27 @@ FAKE_RULE_DETAIL = {
     "expression": FAKE_EXPRESSION,
     "language": FAKE_RULE_LANGUAGE,
     "lastUpdatedTime": FAKE_TIME,
+}
+FAKE_EXTERNAL_MODEL = {
+    "arn": FAKE_EXTERNAL_MODEL_ARN,
+    "createdTime": FAKE_TIME,
+    "inputConfiguration": {
+        "csvInputTemplate": "string",
+        "eventTypeName": "string",
+        "format": "string",
+        "jsonInputTemplate": "string",
+        "useEventVariables": True,
+    },
+    "invokeModelEndpointRoleArn": FAKE_ARN,
+    "lastUpdatedTime": FAKE_TIME,
+    "modelEndpoint": FAKE_NAME,
+    "modelEndpointStatus": "string",
+    "modelSource": "string",
+    "outputConfiguration": {
+        "csvIndexToVariableMap": {"string": "string"},
+        "format": "string",
+        "jsonKeyToVariableMap": {"string": "string"},
+    },
 }
 
 
@@ -375,7 +410,7 @@ def create_fake_model(is_output_model: bool = False):
         RuleExecutionMode=FAKE_RULE_EXECUTION_MODE,
         Rules=[create_fake_rule(is_output_model)],
         EventType=create_fake_event_type(is_output_model),
-        AssociatedModels=None,
+        AssociatedModels=[],
     )
 
 
@@ -392,7 +427,7 @@ def create_fake_model_with_references(is_output_model: bool = False):
         RuleExecutionMode=FAKE_RULE_EXECUTION_MODE,
         Rules=[create_fake_rule_with_referenced_outcome(is_output_model)],
         EventType=create_fake_referenced_event_type(is_output_model),
-        AssociatedModels=None,
+        AssociatedModels=[],
     )
 
 

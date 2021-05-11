@@ -557,6 +557,14 @@ def call_get_event_types(frauddetector_client, event_type_name: str = None):
     return frauddetector_client.get_event_types(**args)
 
 
+@paginated_api_call(item_to_collect="externalModels")
+@api_call_with_debug_logs
+def call_get_external_models(frauddetector_client, model_endpoint: str = None):
+    args = {"modelEndpoint": model_endpoint}
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.get_external_models(**args)
+
+
 # Delete APIs
 
 

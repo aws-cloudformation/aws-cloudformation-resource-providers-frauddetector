@@ -1,7 +1,12 @@
 from ...helpers import validation_helpers
+from ... import models
 from botocore.exceptions import ClientError
 from unittest.mock import MagicMock
 from .. import unit_test_utils
+
+from cloudformation_cli_python_lib import (
+    exceptions,
+)
 
 
 def test_check_if_get_labels_succeeds_client_error_returns_false():
@@ -146,3 +151,41 @@ def test_check_if_get_event_types_succeeds_client_success_returns_true_and_respo
     assert len(result) == 2
     assert result[0] is True
     assert result[1] is get_event_types_response
+
+
+def test_validate_external_models_for_detector_model_model_exists():
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    mock_get_external_models = MagicMock(return_value={"externalModels": [unit_test_utils.FAKE_EXTERNAL_MODEL]})
+    mock_afd_client.get_external_models = mock_get_external_models
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn=unit_test_utils.FAKE_EXTERNAL_MODEL.get("arn", "not/found"))]
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.validate_external_models_for_detector_model(mock_afd_client, fake_model)
+    except exceptions.NotFound as e:
+        exception_thrown = e
+
+    # Assert
+    assert exception_thrown is None
+
+
+def test_validate_external_models_for_detector_model_model_dne_throw_exception():
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    mock_get_external_models = MagicMock(return_value={"externalModels": []})
+    mock_afd_client.get_external_models = mock_get_external_models
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn=unit_test_utils.FAKE_EXTERNAL_MODEL.get("arn", "not/found"))]
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.validate_external_models_for_detector_model(mock_afd_client, fake_model)
+    except exceptions.NotFound as e:
+        exception_thrown = e
+
+    # Assert
+    assert exception_thrown is not None

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Set
 from cloudformation_cli_python_lib import (
     exceptions,
 )
@@ -94,6 +94,18 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
     model_to_return.DetectorVersionId = desired_detector_version.get("detectorVersionId", "-1")
     model_to_return.DetectorVersionStatus = desired_detector_version.get("status", "")
     model_to_return.RuleExecutionMode = desired_detector_version.get("ruleExecutionMode", "")
+
+    # TODO: add model versions as well for AssociatedModels.
+    associated_models: List[models.Model] = []
+    model_endpoints: List[str] = desired_detector_version.get("externalModelEndpoints", [])
+    for model_endpoint in model_endpoints:
+        get_external_models_response = api_helpers.call_get_external_models(frauddetector_client, model_endpoint)
+        external_models = get_external_models_response.get("externalModels", [])
+        if not external_models:
+            # we should never see this block get executed
+            raise exceptions.NotFound("associatedModel", model_endpoint)
+        associated_models.append(models.Model(Arn=external_models[0].get("arn", "not/found")))
+    model_to_return.AssociatedModels = associated_models
 
     # get rule models to attach
     referenced_outcome_names = referenced_resources.get("rule_outcomes")
@@ -515,6 +527,21 @@ def _get_entity_types_and_return_entity_types_model(
             del entity_type_model.Description
         entity_type_models.append(entity_type_model)
     return entity_type_models
+
+
+# External Models for Detector
+
+
+def get_external_model_arns_from_model(model: models.ResourceModel) -> Set[str]:
+    if model.AssociatedModels is None:
+        return set()
+    return {m.Arn for m in model.AssociatedModels if util.is_arn_external_model_arn(m.Arn)}
+
+
+def get_external_model_endpoints_from_model(model: models.ResourceModel) -> List[str]:
+    if model.AssociatedModels is None:
+        return []
+    return [util.extract_name_from_arn(m.Arn) for m in model.AssociatedModels if util.is_arn_external_model_arn(m.Arn)]
 
 
 # Referenced/Inline Resources

@@ -50,9 +50,10 @@ def test_get_model_for_detector():
             {"detectorVersionId": "2"},
         ]
     }
-    get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION
+    get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION_WITH_EXTERNAL_MODEL
     get_rules_response = {"ruleDetails": [unit_test_utils.FAKE_RULE_DETAIL]}
     get_outcomes_response = {"outcomes": [unit_test_utils.FAKE_OUTCOME]}
+    get_external_models_response = {"externalModels": [unit_test_utils.FAKE_EXTERNAL_MODEL]}
 
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.list_tags_for_resource = MagicMock(return_value=list_tags_response)
@@ -72,9 +73,16 @@ def test_get_model_for_detector():
     mock_afd_client.get_detector_version = MagicMock(return_value=get_detector_version_response)
     mock_afd_client.get_rules = MagicMock(return_value=get_rules_response)
     mock_afd_client.get_outcomes = MagicMock(return_value=get_outcomes_response)
+    mock_afd_client.get_external_models = MagicMock(return_value=get_external_models_response)
 
     fake_detector = unit_test_utils.FAKE_DETECTOR
     fake_model = unit_test_utils.create_fake_model()
+
+    associated_models = [models.Model(Arn=unit_test_utils.FAKE_EXTERNAL_MODEL_ARN)]
+    fake_model.AssociatedModels = associated_models
+
+    output_model = unit_test_utils.create_fake_model(is_output_model=True)
+    output_model.AssociatedModels = associated_models
 
     # Act
     model_result = model_helpers.get_model_for_detector(mock_afd_client, fake_detector, fake_model)
@@ -89,7 +97,8 @@ def test_get_model_for_detector():
     assert mock_afd_client.get_detector_version.call_count == 1
     assert mock_afd_client.get_rules.call_count == 1
     assert mock_afd_client.get_outcomes.call_count == 1
-    assert model_result == unit_test_utils.create_fake_model(is_output_model=True)
+    assert mock_afd_client.get_external_models.call_count == 1
+    assert model_result == output_model
 
 
 def test_get_model_for_detector_with_references():
