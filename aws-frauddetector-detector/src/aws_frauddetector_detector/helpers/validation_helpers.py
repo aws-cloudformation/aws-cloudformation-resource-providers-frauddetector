@@ -4,7 +4,7 @@ from cloudformation_cli_python_lib import (
     exceptions,
 )
 
-from . import api_helpers, model_helpers
+from . import api_helpers, model_helpers, util
 from .. import models
 
 # Use this logger to forward log messages to CloudWatch Logs.
@@ -167,6 +167,34 @@ def validate_external_models_for_detector_model(afd_client, model: models.Resour
         if requested_external_model_arn not in existing_external_model_arns:
             LOG.warning(f"validation failed for external model: {requested_external_model_arn}")
             raise exceptions.NotFound("associatedModel", requested_external_model_arn)
+
+
+def validate_model_versions_for_detector_create(afd_client, model: models.ResourceModel):
+
+    if model.AssociatedModels is None:
+        return
+
+    for item in model.AssociatedModels:
+
+        if util.is_external_model_arn(item.Arn):
+            continue
+
+        model_id, model_type, model_version_number = util.get_model_version_details_from_arn(item.Arn)
+
+        get_model_version_worked, response = check_if_get_model_version_succeeds(
+            frauddetector_client=afd_client,
+            model_id=model_id,
+            model_type=model_type,
+            model_version_number=model_version_number,
+        )
+
+        if not get_model_version_worked:
+            raise exceptions.NotFound("ModelVersion", item.Arn)
+
+        if response["status"] != "ACTIVE":
+            raise exceptions.InvalidRequest(
+                "Specified model must be in status:ACTIVE, ModelVersion arn='{}'".format(item.Arn)
+            )
 
 
 def check_variable_differences(existing_event_variable, desired_event_variable):

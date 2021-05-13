@@ -554,20 +554,12 @@ def get_model_versions_from_model(model: models.ResourceModel) -> List[dict]:
     model_versions = []
 
     for m in model.AssociatedModels:
-        model_id, model_type, model_version_number = get_model_version_details_from_arn(m.Arn)
+        model_id, model_type, model_version_number = util.get_model_version_details_from_arn(m.Arn)
         model_versions.append(
             {"modelId": model_id, "modelType": model_type, "modelVersionNumber": model_version_number}
         )
 
     return model_versions
-
-
-def get_model_version_details_from_arn(arn):
-    segmented_arn = arn.split("/")
-    model_version_number = segmented_arn[-1]
-    model_id = segmented_arn[-2]
-    model_type = segmented_arn[-3]
-    return model_id, model_type, model_version_number
 
 
 # Referenced/Inline Resources

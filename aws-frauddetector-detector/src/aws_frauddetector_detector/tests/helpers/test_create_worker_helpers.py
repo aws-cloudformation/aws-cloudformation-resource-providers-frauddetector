@@ -267,6 +267,9 @@ def test_validate_dependencies_for_detector_create_with_invalid_model_version_ar
     assert mock_get_external_models.call_count == 1
     assert mock_check_get_model_version.call_count == 0  # get_model_version should not be called
     assert exception_thrown is not None
+    assert str(exception_thrown) == "Unexpected ARN provided in AssociatedModels: {}".format(
+        fake_model.AssociatedModels[0].Arn
+    )
 
 
 def test_validate_dependencies_for_detector_create_model_version_not_active(monkeypatch):
@@ -314,6 +317,9 @@ def test_validate_dependencies_for_detector_create_model_version_not_active(monk
     assert mock_get_external_models.call_count == 1
     assert mock_check_get_model_version.call_count == 1
     assert exception_thrown is not None
+    assert str(exception_thrown) == "Specified model must be in status:ACTIVE, ModelVersion arn='{}'".format(
+        unit_test_utils.FAKE_MODEL_VERSION_ARN
+    )
 
 
 def test_validate_dependencies_for_detector_create_get_model_version_fails(monkeypatch):
