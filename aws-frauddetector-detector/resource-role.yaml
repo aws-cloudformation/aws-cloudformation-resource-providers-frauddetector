@@ -41,6 +41,7 @@ Resources:
                 - "frauddetector:GetEventTypes"
                 - "frauddetector:GetExternalModels"
                 - "frauddetector:GetLabels"
+                - "frauddetector:GetModelVersion"
                 - "frauddetector:GetOutcomes"
                 - "frauddetector:GetRules"
                 - "frauddetector:GetVariables"
