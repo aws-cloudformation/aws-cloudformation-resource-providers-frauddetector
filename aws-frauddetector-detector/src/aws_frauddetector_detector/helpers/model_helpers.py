@@ -95,7 +95,6 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
     model_to_return.DetectorVersionStatus = desired_detector_version.get("status", "")
     model_to_return.RuleExecutionMode = desired_detector_version.get("ruleExecutionMode", "")
 
-    # TODO: add model versions as well for AssociatedModels.
     associated_models: List[models.Model] = []
     model_endpoints: List[str] = desired_detector_version.get("externalModelEndpoints", [])
     for model_endpoint in model_endpoints:
@@ -105,6 +104,11 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
             # we should never see this block get executed
             raise exceptions.NotFound("associatedModel", model_endpoint)
         associated_models.append(models.Model(Arn=external_models[0].get("arn", "not/found")))
+
+    model_versions: List[dict] = desired_detector_version.get("modelVersions", [])
+    for model_version in model_versions:
+        associated_models.append(models.Model(Arn=model_version["arn"]))
+
     model_to_return.AssociatedModels = associated_models
 
     # get rule models to attach

@@ -50,7 +50,7 @@ def test_get_model_for_detector():
             {"detectorVersionId": "2"},
         ]
     }
-    get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION_WITH_EXTERNAL_MODEL
+    get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION_WITH_EXTERNAL_MODEL_AND_MODEL_VERSION
     get_rules_response = {"ruleDetails": [unit_test_utils.FAKE_RULE_DETAIL]}
     get_outcomes_response = {"outcomes": [unit_test_utils.FAKE_OUTCOME]}
     get_external_models_response = {"externalModels": [unit_test_utils.FAKE_EXTERNAL_MODEL]}
@@ -74,11 +74,15 @@ def test_get_model_for_detector():
     mock_afd_client.get_rules = MagicMock(return_value=get_rules_response)
     mock_afd_client.get_outcomes = MagicMock(return_value=get_outcomes_response)
     mock_afd_client.get_external_models = MagicMock(return_value=get_external_models_response)
+    mock_afd_client.get_external_models = MagicMock(return_value=get_external_models_response)
 
     fake_detector = unit_test_utils.FAKE_DETECTOR
     fake_model = unit_test_utils.create_fake_model()
 
-    associated_models = [models.Model(Arn=unit_test_utils.FAKE_EXTERNAL_MODEL_ARN)]
+    associated_models = [
+        models.Model(Arn=unit_test_utils.FAKE_EXTERNAL_MODEL_ARN),
+        models.Model(Arn=unit_test_utils.FAKE_MODEL_VERSION_ARN),
+    ]
     fake_model.AssociatedModels = associated_models
 
     output_model = unit_test_utils.create_fake_model(is_output_model=True)

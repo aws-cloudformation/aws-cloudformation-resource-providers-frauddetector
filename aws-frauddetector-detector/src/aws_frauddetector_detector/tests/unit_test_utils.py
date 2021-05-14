@@ -112,6 +112,12 @@ FAKE_EVENT_TYPE = {
     "lastUpdatedTime": FAKE_TIME,
     "name": FAKE_NAME,
 }
+FAKE_MODEL_VERSION = {
+    "arn": FAKE_MODEL_VERSION_ARN,
+    "modelId": "model_name",
+    "modelType": "ONLINE_FRAUD_INSIGHTS",
+    "modelVersionNumber": "1.0",
+}
 FAKE_DETECTOR = {
     "arn": FAKE_ARN,
     "createdTime": FAKE_TIME,
@@ -133,7 +139,7 @@ FAKE_DETECTOR_VERSION = {
     "rules": [{"detectorId": FAKE_NAME, "ruleId": FAKE_NAME, "ruleVersion": FAKE_VERSION_ID}],
     "status": FAKE_ACTIVE_DV_STATUS,
 }
-FAKE_DETECTOR_VERSION_WITH_EXTERNAL_MODEL = {
+FAKE_DETECTOR_VERSION_WITH_EXTERNAL_MODEL_AND_MODEL_VERSION = {
     "arn": FAKE_ARN,
     "createdTime": FAKE_TIME,
     "description": FAKE_DESCRIPTION,
@@ -141,7 +147,7 @@ FAKE_DETECTOR_VERSION_WITH_EXTERNAL_MODEL = {
     "detectorVersionId": FAKE_VERSION_ID,
     "externalModelEndpoints": [FAKE_NAME],
     "lastUpdatedTime": FAKE_TIME,
-    "modelVersions": [],
+    "modelVersions": [FAKE_MODEL_VERSION],
     "ruleExecutionMode": FAKE_RULE_EXECUTION_MODE,
     "rules": [{"detectorId": FAKE_NAME, "ruleId": FAKE_NAME, "ruleVersion": FAKE_VERSION_ID}],
     "status": FAKE_ACTIVE_DV_STATUS,
