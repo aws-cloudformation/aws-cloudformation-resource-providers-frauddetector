@@ -169,7 +169,7 @@ def validate_external_models_for_detector_model(afd_client, model: models.Resour
             raise exceptions.NotFound("associatedModel", requested_external_model_arn)
 
 
-def validate_model_versions_for_detector_create(afd_client, model: models.ResourceModel):
+def validate_model_versions_for_detector_model(afd_client, model: models.ResourceModel):
 
     if model.AssociatedModels is None:
         return

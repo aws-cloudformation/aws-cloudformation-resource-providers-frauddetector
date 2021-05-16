@@ -74,7 +74,6 @@ def test_get_model_for_detector():
     mock_afd_client.get_rules = MagicMock(return_value=get_rules_response)
     mock_afd_client.get_outcomes = MagicMock(return_value=get_outcomes_response)
     mock_afd_client.get_external_models = MagicMock(return_value=get_external_models_response)
-    mock_afd_client.get_external_models = MagicMock(return_value=get_external_models_response)
 
     fake_detector = unit_test_utils.FAKE_DETECTOR
     fake_model = unit_test_utils.create_fake_model()

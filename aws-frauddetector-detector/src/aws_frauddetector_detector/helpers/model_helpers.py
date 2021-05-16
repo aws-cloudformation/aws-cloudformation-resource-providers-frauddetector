@@ -107,6 +107,10 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
 
     model_versions: List[dict] = desired_detector_version.get("modelVersions", [])
     for model_version in model_versions:
+        if "arn" not in model_version:
+            # we should never see this block get executed
+            raise exceptions.NotFound("associatedModel", model_version)
+
         associated_models.append(models.Model(Arn=model_version["arn"]))
 
     model_to_return.AssociatedModels = associated_models

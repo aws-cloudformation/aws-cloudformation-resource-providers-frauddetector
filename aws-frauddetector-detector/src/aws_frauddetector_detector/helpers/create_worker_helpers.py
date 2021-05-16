@@ -17,7 +17,7 @@ def validate_dependencies_for_detector_create(afd_client, model: models.Resource
     _validate_event_type_for_detector_create(afd_client, model)
     _validate_rules_for_detector_create(afd_client, model)
     validation_helpers.validate_external_models_for_detector_model(afd_client, model)
-    validation_helpers.validate_model_versions_for_detector_create(afd_client, model)
+    validation_helpers.validate_model_versions_for_detector_model(afd_client, model)
 
 
 def create_rules_for_detector_resource(afd_client, model: models.ResourceModel) -> List[dict]:

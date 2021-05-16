@@ -112,12 +112,6 @@ FAKE_EVENT_TYPE = {
     "lastUpdatedTime": FAKE_TIME,
     "name": FAKE_NAME,
 }
-FAKE_MODEL_VERSION = {
-    "arn": FAKE_MODEL_VERSION_ARN,
-    "modelId": "model_name",
-    "modelType": "ONLINE_FRAUD_INSIGHTS",
-    "modelVersionNumber": "1.0",
-}
 FAKE_DETECTOR = {
     "arn": FAKE_ARN,
     "createdTime": FAKE_TIME,
@@ -147,7 +141,14 @@ FAKE_DETECTOR_VERSION_WITH_EXTERNAL_MODEL_AND_MODEL_VERSION = {
     "detectorVersionId": FAKE_VERSION_ID,
     "externalModelEndpoints": [FAKE_NAME],
     "lastUpdatedTime": FAKE_TIME,
-    "modelVersions": [FAKE_MODEL_VERSION],
+    "modelVersions": [
+        {
+            "arn": FAKE_MODEL_VERSION_ARN,
+            "modelId": "model_name",
+            "modelType": "ONLINE_FRAUD_INSIGHTS",
+            "modelVersionNumber": "1.0",
+        }
+    ],
     "ruleExecutionMode": FAKE_RULE_EXECUTION_MODE,
     "rules": [{"detectorId": FAKE_NAME, "ruleId": FAKE_NAME, "ruleVersion": FAKE_VERSION_ID}],
     "status": FAKE_ACTIVE_DV_STATUS,
@@ -449,6 +450,19 @@ def create_fake_variable():
         "lastUpdatedTime": FAKE_TIME,
         "name": IP_LOWER,
         "variableType": IP_ADDRESS,
+    }
+
+
+def create_fake_model_version():
+    return {
+        "arn": FAKE_MODEL_VERSION_ARN,
+        "externalEventsDetail": {"dataAccessRoleArn": "string", "dataLocation": "string"},
+        "modelId": "string",
+        "modelType": "string",
+        "modelVersionNumber": "string",
+        "status": "ACTIVE",
+        "trainingDataSchema": {"labelSchema": {"labelMapper": {"string": ["string"]}}, "modelVariables": ["string"]},
+        "trainingDataSource": "string",
     }
 
 
