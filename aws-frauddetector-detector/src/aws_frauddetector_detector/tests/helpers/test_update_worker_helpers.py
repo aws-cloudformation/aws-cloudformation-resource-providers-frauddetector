@@ -6,12 +6,12 @@ from aws_frauddetector_detector.helpers import (
     model_helpers,
 )
 from aws_frauddetector_detector import models
+from botocore.exceptions import ClientError
 from cloudformation_cli_python_lib import (
     exceptions,
 )
 from .. import unit_test_utils
 from unittest.mock import MagicMock
-
 
 # VALIDATION
 mock_check_if_get_event_types_succeeds = MagicMock()
@@ -98,6 +98,139 @@ def test_validate_dependencies_for_detector_update_external_model_dne_throws_exc
     assert mock_check_if_get_event_types_succeeds.call_count == 0
     assert mock_get_external_models.call_count == 1
     assert exception_thrown is not None
+
+
+def test_validate_dependencies_for_detector_update_model_version_happy_case(
+    monkeypatch,
+):
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn=unit_test_utils.FAKE_MODEL_VERSION_ARN)]
+    fake_previous_model = unit_test_utils.create_fake_model()
+
+    mock_check_get_model_version = MagicMock(return_value=unit_test_utils.create_fake_model_version())
+    mock_afd_client.get_model_version = mock_check_get_model_version
+    mock_check_if_get_event_types_succeeds = MagicMock()
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_if_get_event_types_succeeds",
+        mock_check_if_get_event_types_succeeds,
+    )
+
+    # Act
+    update_worker_helpers.validate_dependencies_for_detector_update(mock_afd_client, fake_model, fake_previous_model)
+
+    # Assert
+    assert mock_check_if_get_event_types_succeeds.call_count == 0
+    assert mock_check_get_model_version.call_count == 1
+
+
+def test_validate_dependencies_for_detector_update_model_version_invalid_arn(
+    monkeypatch,
+):
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn="invalid_arn")]
+    fake_previous_model = unit_test_utils.create_fake_model()
+    mock_check_if_get_event_types_succeeds = MagicMock()
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_if_get_event_types_succeeds",
+        mock_check_if_get_event_types_succeeds,
+    )
+
+    # Act
+    exception_thrown = None
+    try:
+        update_worker_helpers.validate_dependencies_for_detector_update(
+            mock_afd_client, fake_model, fake_previous_model
+        )
+    except exceptions.InvalidRequest as e:
+        exception_thrown = e
+
+    # Assert
+    assert mock_check_if_get_event_types_succeeds.call_count == 0
+    assert exception_thrown is not None
+    assert str(exception_thrown) == "Unexpected ARN provided in AssociatedModels: {}".format(
+        fake_model.AssociatedModels[0].Arn
+    )
+
+
+def test_validate_dependencies_for_detector_update_model_version_rnf(
+    monkeypatch,
+):
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn=unit_test_utils.FAKE_MODEL_VERSION_ARN)]
+    fake_previous_model = unit_test_utils.create_fake_model()
+
+    mock_check_if_get_event_types_succeeds = MagicMock()
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_if_get_event_types_succeeds",
+        mock_check_if_get_event_types_succeeds,
+    )
+
+    mock_afd_client.exceptions.ResourceNotFoundException = ClientError
+    mock_check_get_model_version = MagicMock()
+    mock_check_get_model_version.side_effect = ClientError({"Code": "", "Message": ""}, "get_model_version")
+    mock_afd_client.get_model_version = mock_check_get_model_version
+
+    # Act
+    exception_thrown = None
+    try:
+        update_worker_helpers.validate_dependencies_for_detector_update(
+            mock_afd_client, fake_model, fake_previous_model
+        )
+    except exceptions.NotFound as e:
+        exception_thrown = e
+
+    # Assert
+    assert mock_check_if_get_event_types_succeeds.call_count == 0
+    assert mock_check_get_model_version.call_count == 1
+    assert exception_thrown is not None
+
+
+def test_validate_dependencies_for_detector_update_model_version_not_active(
+    monkeypatch,
+):
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn=unit_test_utils.FAKE_MODEL_VERSION_ARN)]
+    fake_previous_model = unit_test_utils.create_fake_model()
+
+    return_value = unit_test_utils.create_fake_model_version()
+    return_value["status"] = "TRAINING_IN_PROGRESS"
+    mock_check_get_model_version = MagicMock(return_value=return_value)
+    mock_afd_client.get_model_version = mock_check_get_model_version
+
+    mock_check_if_get_event_types_succeeds = MagicMock()
+    monkeypatch.setattr(
+        validation_helpers,
+        "check_if_get_event_types_succeeds",
+        mock_check_if_get_event_types_succeeds,
+    )
+
+    # Act
+    exception_thrown = None
+    try:
+        update_worker_helpers.validate_dependencies_for_detector_update(
+            mock_afd_client, fake_model, fake_previous_model
+        )
+    except exceptions.InvalidRequest as e:
+        exception_thrown = e
+
+    # Assert
+    assert mock_check_if_get_event_types_succeeds.call_count == 0
+    assert mock_check_get_model_version.call_count == 1
+    assert exception_thrown is not None
+    assert str(exception_thrown) == "Specified model must be in status:ACTIVE, ModelVersion arn='{}'".format(
+        unit_test_utils.FAKE_MODEL_VERSION_ARN
+    )
 
 
 def test_validate_dependencies_for_detector_update_referenced_eventtype_success(

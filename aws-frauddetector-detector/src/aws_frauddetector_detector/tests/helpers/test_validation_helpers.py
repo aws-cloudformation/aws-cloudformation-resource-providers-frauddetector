@@ -189,3 +189,86 @@ def test_validate_external_models_for_detector_model_model_dne_throw_exception()
 
     # Assert
     assert exception_thrown is not None
+
+
+def test_validate_model_versions_for_detector_model_happy_case():
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    mock_check_get_model_version = MagicMock(return_value=unit_test_utils.create_fake_model_version())
+    mock_afd_client.get_model_version = mock_check_get_model_version
+
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn=unit_test_utils.FAKE_MODEL_VERSION_ARN)]
+
+    # Act
+    validation_helpers.validate_model_versions_for_detector_model(mock_afd_client, fake_model)
+
+    # Assert
+    assert mock_check_get_model_version.call_count == 1
+
+
+def test_validate_model_versions_for_detector_model_get_model_version_throws_rnf():
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    mock_afd_client.exceptions.ResourceNotFoundException = ClientError
+    mock_check_get_model_version = MagicMock()
+    mock_check_get_model_version.side_effect = ClientError({"Code": "", "Message": ""}, "get_model_version")
+    mock_afd_client.get_model_version = mock_check_get_model_version
+
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn=unit_test_utils.FAKE_MODEL_VERSION_ARN)]
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.validate_model_versions_for_detector_model(mock_afd_client, fake_model)
+    except exceptions.NotFound as e:
+        exception_thrown = e
+
+    # Assert
+    assert mock_check_get_model_version.call_count == 1
+    assert exception_thrown is not None
+
+
+def test_validate_model_versions_for_detector_model_invalid_arn():
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    mock_check_get_model_version = MagicMock(return_value=unit_test_utils.create_fake_model_version())
+    mock_afd_client.get_model_version = mock_check_get_model_version
+
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn="invalid_arn")]
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.validate_model_versions_for_detector_model(mock_afd_client, fake_model)
+    except exceptions.InvalidRequest as e:
+        exception_thrown = e
+
+    # Assert
+    assert mock_check_get_model_version.call_count == 0  # exception thrown before get_model_version check
+    assert exception_thrown is not None
+
+
+def test_validate_model_versions_for_detector_model_model_version_not_active():
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    return_value = unit_test_utils.create_fake_model_version()
+    return_value["status"] = "TRAINING_IN_PROGRESS"
+    mock_check_get_model_version = MagicMock(return_value=return_value)
+    mock_afd_client.get_model_version = mock_check_get_model_version
+
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.AssociatedModels = [models.Model(Arn=unit_test_utils.FAKE_MODEL_VERSION_ARN)]
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.validate_model_versions_for_detector_model(mock_afd_client, fake_model)
+    except exceptions.InvalidRequest as e:
+        exception_thrown = e
+
+    # Assert
+    assert mock_check_get_model_version.call_count == 1  # exception thrown after get_model_version check
+    assert exception_thrown is not None
