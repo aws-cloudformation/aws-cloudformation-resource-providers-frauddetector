@@ -95,7 +95,6 @@ def update_detector_version_for_detector_update(
     # update detector version - create if previous is not draft
     # update tags
     # return set of unused detector versions (tuple: detector_id, detector_version_id)
-    # TODO: update this for models + external models when we support them in CFN
     desired_rules = []
     for rule_model in model.Rules:
         rule_dict = {
@@ -104,6 +103,10 @@ def update_detector_version_for_detector_update(
             "ruleVersion": rule_model.RuleVersion,  # rule version needs to be set before this
         }
         desired_rules.append(rule_dict)
+
+    external_models = model_helpers.get_external_model_endpoints_from_model(model)
+    model_versions = model_helpers.get_model_versions_from_model(model)
+
     if previous_model.DetectorVersionStatus != DRAFT_STATUS:
         LOG.info("previous detector version status was not DRAFT. creating a new detector version")
         api_helpers.call_create_detector_version(
@@ -111,8 +114,8 @@ def update_detector_version_for_detector_update(
             detector_id=model.DetectorId,
             rules=desired_rules,
             rule_execution_mode=model.RuleExecutionMode,
-            model_versions=[],
-            external_model_endpoints=[],
+            model_versions=model_versions,
+            external_model_endpoints=external_models,
             detector_version_description=model.Description,
             detector_version_tags=model_helpers.get_tags_from_tag_models(model.Tags),
         )
@@ -124,8 +127,8 @@ def update_detector_version_for_detector_update(
             detector_version_id=model.DetectorVersionId,
             rules=desired_rules,
             rule_execution_mode=model.RuleExecutionMode,
-            model_versions=[],
-            external_model_endpoints=[],
+            model_versions=model_versions,
+            external_model_endpoints=external_models,
             detector_version_description=model.Description,
         )
     # get arn of max version detector version in order to update tags and model

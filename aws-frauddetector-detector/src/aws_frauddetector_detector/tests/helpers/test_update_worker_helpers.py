@@ -11,7 +11,7 @@ from cloudformation_cli_python_lib import (
     exceptions,
 )
 from .. import unit_test_utils
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, ANY
 
 # VALIDATION
 mock_check_if_get_event_types_succeeds = MagicMock()
@@ -381,6 +381,7 @@ def test_update_detector_version_for_detector_update(monkeypatch):
 
     global mock_call_describe_detector
     global mock_call_get_detector_version
+    global mock_call_create_detector_version
 
     fake_dv_summary_with_draft_status = {
         "description": unit_test_utils.FAKE_DESCRIPTION,
@@ -396,6 +397,7 @@ def test_update_detector_version_for_detector_update(monkeypatch):
         ]
     }
     mock_call_describe_detector = MagicMock(return_value=describe_detector_response)
+    mock_call_create_detector_version = MagicMock(return_value=None)
 
     _setup_monkeypatch_for_update_workers(monkeypatch)
 
@@ -407,6 +409,16 @@ def test_update_detector_version_for_detector_update(monkeypatch):
     # Assert
     assert mock_call_describe_detector.call_count == 2
     assert len(detector_versions_to_delete) == 1  # we create a new DV when existing DV is not DRAFT
+    mock_call_create_detector_version.assert_called_once_with(
+        frauddetector_client=mock_afd_client,
+        detector_id=fake_model.DetectorId,
+        rules=ANY,
+        rule_execution_mode=fake_model.RuleExecutionMode,
+        model_versions=[],
+        external_model_endpoints=[],
+        detector_version_description=fake_model.Description,
+        detector_version_tags=ANY,
+    )
 
 
 def test_update_detector_version_for_detector_update_draft_dv(monkeypatch):
@@ -420,11 +432,13 @@ def test_update_detector_version_for_detector_update_draft_dv(monkeypatch):
 
     global mock_call_describe_detector
     global mock_call_get_detector_version
+    global mock_call_update_detector_version
 
     describe_detector_response = {"detectorVersionSummaries": [unit_test_utils.FAKE_DETECTOR_VERSION]}
     get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION
     mock_call_describe_detector = MagicMock(return_value=describe_detector_response)
     mock_call_get_detector_version = MagicMock(return_value=get_detector_version_response)
+    mock_call_update_detector_version = MagicMock(return_value=None)
 
     _setup_monkeypatch_for_update_workers(monkeypatch)
 
@@ -435,6 +449,117 @@ def test_update_detector_version_for_detector_update_draft_dv(monkeypatch):
 
     # Assert
     assert len(detector_versions_to_delete) == 0  # we do NOT create a new DV when existing DV is DRAFT
+    mock_call_update_detector_version.assert_called_once_with(
+        frauddetector_client=mock_afd_client,
+        detector_id=fake_model.DetectorId,
+        detector_version_id=ANY,
+        rules=ANY,
+        rule_execution_mode=fake_model.RuleExecutionMode,
+        model_versions=[],
+        external_model_endpoints=[],
+        detector_version_description=ANY,
+    )
+
+
+def test_update_detector_version_for_detector_update_with_associated_models(monkeypatch):
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    fake_model = unit_test_utils.create_fake_model()
+    fake_previous_model = unit_test_utils.create_fake_model()
+
+    # 2 model differences
+    fake_model.Description = "different description"
+    fake_model.AssociatedModels = [
+        models.Model(Arn=unit_test_utils.FAKE_MODEL_VERSION_ARN),
+        models.Model(Arn=unit_test_utils.FAKE_EXTERNAL_MODEL.get("arn", "not/found")),
+    ]
+
+    global mock_call_describe_detector
+    global mock_call_get_detector_version
+    global mock_call_create_detector_version
+
+    fake_dv_summary_with_draft_status = {
+        "description": unit_test_utils.FAKE_DESCRIPTION,
+        "detectorVersionId": unit_test_utils.FAKE_VERSION_ID,
+        "lastUpdatedTime": unit_test_utils.FAKE_TIME,
+        "status": unit_test_utils.FAKE_DRAFT_DV_STATUS,
+    }
+
+    describe_detector_response = {
+        "detectorVersionSummaries": [
+            fake_dv_summary_with_draft_status,
+            unit_test_utils.FAKE_NEW_DETECTOR_VERSION,
+        ]
+    }
+    mock_call_describe_detector = MagicMock(return_value=describe_detector_response)
+    mock_call_create_detector_version = MagicMock(return_value=None)
+
+    _setup_monkeypatch_for_update_workers(monkeypatch)
+
+    # Act
+    detector_versions_to_delete = update_worker_helpers.update_detector_version_for_detector_update(
+        mock_afd_client, fake_model, fake_previous_model
+    )
+
+    # Assert
+    assert mock_call_describe_detector.call_count == 2
+    assert len(detector_versions_to_delete) == 1  # we create a new DV when existing DV is not DRAFT
+    mock_call_create_detector_version.assert_called_once_with(
+        frauddetector_client=mock_afd_client,
+        detector_id=fake_model.DetectorId,
+        rules=ANY,
+        rule_execution_mode=fake_model.RuleExecutionMode,
+        model_versions=unit_test_utils.FAKE_MODEL_VERSION_LIST,
+        external_model_endpoints=[unit_test_utils.FAKE_NAME],
+        detector_version_description=fake_model.Description,
+        detector_version_tags=ANY,
+    )
+
+
+def test_update_detector_version_for_detector_update_draft_dv_with_associated_models(monkeypatch):
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    fake_model = unit_test_utils.create_fake_model()
+    fake_model.DetectorVersionStatus = unit_test_utils.FAKE_DRAFT_DV_STATUS
+    fake_previous_model = unit_test_utils.create_fake_model()
+    fake_previous_model.DetectorVersionStatus = unit_test_utils.FAKE_DRAFT_DV_STATUS
+
+    # 2 model differences
+    fake_model.Description = "different description"
+    fake_model.AssociatedModels = [
+        models.Model(Arn=unit_test_utils.FAKE_MODEL_VERSION_ARN),
+        models.Model(Arn=unit_test_utils.FAKE_EXTERNAL_MODEL.get("arn", "not/found")),
+    ]
+
+    global mock_call_describe_detector
+    global mock_call_get_detector_version
+    global mock_call_update_detector_version
+
+    describe_detector_response = {"detectorVersionSummaries": [unit_test_utils.FAKE_DETECTOR_VERSION]}
+    get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION
+    mock_call_describe_detector = MagicMock(return_value=describe_detector_response)
+    mock_call_get_detector_version = MagicMock(return_value=get_detector_version_response)
+    mock_call_update_detector_version = MagicMock(return_value=None)
+
+    _setup_monkeypatch_for_update_workers(monkeypatch)
+
+    # Act
+    detector_versions_to_delete = update_worker_helpers.update_detector_version_for_detector_update(
+        mock_afd_client, fake_model, fake_previous_model
+    )
+
+    # Assert
+    assert len(detector_versions_to_delete) == 0  # we do NOT create a new DV when existing DV is DRAFT
+    mock_call_update_detector_version.assert_called_once_with(
+        frauddetector_client=mock_afd_client,
+        detector_id=fake_model.DetectorId,
+        detector_version_id=ANY,
+        rules=ANY,
+        rule_execution_mode=fake_model.RuleExecutionMode,
+        model_versions=unit_test_utils.FAKE_MODEL_VERSION_LIST,
+        external_model_endpoints=[unit_test_utils.FAKE_NAME],
+        detector_version_description=fake_model.Description,
+    )
 
 
 def test_delete_unused_detector_versions_for_detector_update(monkeypatch):
@@ -537,7 +662,7 @@ def test_validate_dependencies_for_inline_event_type_update(monkeypatch):
     assert mock_put_inline_entity_type.call_count == 1
     assert mock_create_inline_event_variable.call_count == 0
     assert mock_call_update_variable.call_count == 2
-    assert mock_update_tags.call_count == 7
+    assert mock_update_tags.call_count == 8
 
 
 def test_validate_dependencies_for_inline_event_type_update_referenced_dependencies(
@@ -595,7 +720,7 @@ def test_validate_dependencies_for_inline_event_type_update_referenced_dependenc
     assert mock_put_inline_entity_type.call_count == 1  # we call put entity type regardless for simplicity
     assert mock_create_inline_event_variable.call_count == 0
     assert mock_call_update_variable.call_count == 2  # we call update variable regardless for simplicity
-    assert mock_update_tags.call_count == 7
+    assert mock_update_tags.call_count == 8
 
 
 def _setup_monkeypatch_for_update_workers(monkeypatch):
