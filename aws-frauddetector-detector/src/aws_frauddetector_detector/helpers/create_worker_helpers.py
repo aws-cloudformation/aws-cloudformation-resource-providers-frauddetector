@@ -35,7 +35,6 @@ def create_detector_version_for_detector_resource(
     tags = model_helpers.get_tags_from_tag_models(model.Tags)
     external_models = model_helpers.get_external_model_endpoints_from_model(model)
     model_versions = model_helpers.get_model_versions_from_model(model)
-    # TODO: support model versions
     return api_helpers.call_create_detector_version(
         frauddetector_client=afd_client,
         detector_id=model.DetectorId,
