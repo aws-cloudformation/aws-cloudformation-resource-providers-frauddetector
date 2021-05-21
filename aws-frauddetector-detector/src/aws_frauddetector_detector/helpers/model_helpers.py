@@ -107,11 +107,15 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
 
     model_versions: List[dict] = desired_detector_version.get("modelVersions", [])
     for model_version in model_versions:
-        if "arn" not in model_version:
+
+        required_attributes = {"modelId", "modelType", "modelVersionNumber"}
+        if not required_attributes.issubset(model_version.keys()):
             # we should never see this block get executed
+            LOG.error(f"get DV did not include enough information in model versions: {desired_detector_version}")
             raise exceptions.NotFound("associatedModel", model_version)
 
-        associated_models.append(models.Model(Arn=model_version["arn"]))
+        model_version_arn = get_model_version_arn_from_model_version(frauddetector_client, model_version)
+        associated_models.append(models.Model(Arn=model_version_arn))
 
     model_to_return.AssociatedModels = associated_models
 
@@ -136,6 +140,20 @@ def get_model_for_detector(frauddetector_client, detector, model: models.Resourc
     model_to_return.Tags = get_tag_models_from_tags(detector_tags)
 
     return model_to_return
+
+
+def get_model_version_arn_from_model_version(frauddetector_client, model_version: dict) -> str:
+    get_mv_response = api_helpers.call_get_model_version(
+        frauddetector_client=frauddetector_client,
+        model_id=model_version.get("modelId", "not_found"),
+        model_type=model_version.get("modelType", "not_found"),
+        model_version_number=model_version.get("modelVersionNumber", "not_found"),
+    )
+    if "arn" not in get_mv_response:
+        # we should never see this block get executed
+        LOG.error(f"get MV did not include arn: {get_mv_response}")
+        raise exceptions.NotFound("associatedModel", model_version)
+    return get_mv_response.get("arn")
 
 
 # Rules
