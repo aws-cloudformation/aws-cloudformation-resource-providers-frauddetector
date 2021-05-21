@@ -51,6 +51,7 @@ def test_get_model_for_detector():
         ]
     }
     get_detector_version_response = unit_test_utils.FAKE_DETECTOR_VERSION_WITH_EXTERNAL_MODEL_AND_MODEL_VERSION
+    get_model_version_response = unit_test_utils.create_fake_model_version()
     get_rules_response = {"ruleDetails": [unit_test_utils.FAKE_RULE_DETAIL]}
     get_outcomes_response = {"outcomes": [unit_test_utils.FAKE_OUTCOME]}
     get_external_models_response = {"externalModels": [unit_test_utils.FAKE_EXTERNAL_MODEL]}
@@ -74,6 +75,7 @@ def test_get_model_for_detector():
     mock_afd_client.get_rules = MagicMock(return_value=get_rules_response)
     mock_afd_client.get_outcomes = MagicMock(return_value=get_outcomes_response)
     mock_afd_client.get_external_models = MagicMock(return_value=get_external_models_response)
+    mock_afd_client.get_model_version = MagicMock(return_value=get_model_version_response)
 
     fake_detector = unit_test_utils.FAKE_DETECTOR
     fake_model = unit_test_utils.create_fake_model()
@@ -101,6 +103,7 @@ def test_get_model_for_detector():
     assert mock_afd_client.get_rules.call_count == 1
     assert mock_afd_client.get_outcomes.call_count == 1
     assert mock_afd_client.get_external_models.call_count == 1
+    assert mock_afd_client.get_model_version.call_count == 1
     assert model_result == output_model
 
 
