@@ -12,8 +12,18 @@ then
   cd "$PATH_TO_RP" || exit
   printf "\r\nvalidating resource provider json ...\r\n"
   cfn validate
+  if [ $? -ne 0 ]
+  then
+    printf "\r\nERROR - cfn validate failed!\r\n"
+    exit 1
+  fi
   printf "\r\ngenerating code from resource provider json ...\r\n"
   cfn generate
+  if [ $? -ne 0 ]
+  then
+    printf "\r\nERROR - cfn generate failed!\r\n"
+    exit 1
+  fi
   printf "\r\nrunning pre-commit ...\r\n"
   pre-commit run --all-files
   printf "\r\nrunning pre-commit again ...\r\n"
@@ -25,6 +35,11 @@ then
   fi
   printf "\r\nsubmitting cfn dry run ...\r\n"
   cfn submit --dry-run
+  if [ $? -ne 0 ]
+  then
+    printf "\r\nERROR - cfn submit --dry-run failed!\r\n"
+    exit 1
+  fi
   printf "\r\nstarting sam local lambda ...\r\n"
   sam local start-lambda
 else

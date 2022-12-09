@@ -2,6 +2,21 @@
 
 This repository contains AWS-owned resource providers for the `AWS::FraudDetector::*` namespace.
 
+## TLDR
+
+1. Create a new python environment however you see fit
+2. Docker must be installed on the machine (requirement for cfn sam)
+3. SAM CLI must be installed on the machine
+   1. See [the SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) for instructions on how to install.
+   2. NOTE: installing SAM with your development python environment might cause problems. I suggest installing SAM separately.
+   3. Verify SAM installation with `sam --version`
+4. Run `pip install -r dev_requirements.txt` to install dependencies
+5. Run `./run_unit_tests` to run unit tests
+6. Run `./view_coverage` to open coverage results in a browser
+7. Run `./cfn_server` to run local lambda containing resource provider handler code
+8. Run `./cfn_test` in a separate window to run contract tests
+9. Run `./cfn_submit` to submit resource providers to CFN registry for manual testing
+
 ## Development
 
 #### Requirements
