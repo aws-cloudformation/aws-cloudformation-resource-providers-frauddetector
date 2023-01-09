@@ -1,9 +1,8 @@
-cloudformation-cli==0.2.7
-cloudformation-cli-python-lib==2.1.5
-cloudformation-cli-python-plugin==2.1.2
+cloudformation-cli==0.2.27
+cloudformation-cli-python-lib==2.1.14
+cloudformation-cli-python-plugin==2.1.6
 botocore
 boto3
 pre-commit
 pytest-cov
 pyflakes
-git+https://github.com/privetjr/cloudformation-cli.git@develop_readonly_sequence_members_clean_squashed
