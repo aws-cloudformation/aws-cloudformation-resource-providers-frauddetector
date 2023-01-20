@@ -1,5 +1,5 @@
 from typing import List
-from . import validation_helpers
+from . import validation_helpers, util
 
 import functools
 import logging
@@ -110,6 +110,49 @@ def paginated_api_call(
     return paginated_api_call_decorator
 
 
+def batch_call_limit(request_attribute_to_split: str, response_items_to_collect: List[str], limit: int = 100):
+    """
+    For a method that calls a batch API with a request limit of 100,
+    decorate with @batch_call_limit to get an exhaustive list returned,
+    automatically separating the request into chunks of 100.
+    :param request_attribute_to_split: string representing the key of the request attribute that needs to be
+            limited to the specified limit.
+    :param response_items_to_collect: strings representing the keys of the response that should be accumulated.
+            The response attributes for these keys should be arrays.
+    :param limit: the maximum number of request attributes per request. Default is 100.
+    :return: an exhaustive list, containing the accumulated items from all of the batch API calls
+    """
+
+    def batch_call_limit_decorator(func):
+        @functools.wraps(func)
+        def api_call_wrapper(*args, **kwargs):
+            if request_attribute_to_split not in kwargs:
+                LOG.warning(
+                    f"request item {request_attribute_to_split} was not found in kwargs: {kwargs}. "
+                    "This might be a bug!"
+                )
+            all_request_keys = kwargs.get(request_attribute_to_split, [])
+            request_chunk_generator = util.split_array_into_chunks(all_request_keys, limit)
+            full_response = {key: [] for key in response_items_to_collect}
+
+            def collect_items_from_current_response(current_response):
+                for item_key in response_items_to_collect:
+                    full_response[item_key].extend(current_response.get(item_key, []))
+
+            for request_chunk in request_chunk_generator:
+                kwargs[request_attribute_to_split] = request_chunk
+                LOG.debug(f"batch call chunk kwargs: {kwargs}")
+                response = func(*args, **kwargs)
+                LOG.debug(f"batch call chunk response: {response}")
+                collect_items_from_current_response(response)
+            LOG.debug(f"full batch call response: {full_response}")
+            return full_response
+
+        return api_call_wrapper
+
+    return batch_call_limit_decorator
+
+
 # Put APIs
 
 
@@ -186,7 +229,7 @@ def call_put_event_type(
         "labels": label_names,
         "description": event_type_description,
     }
-    validation_helpers.remove_none_arguments(args)
+    args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.put_event_type(**args)
 
 
@@ -213,8 +256,17 @@ def call_create_variable(
         "variableType": variable_type,
         "tags": variable_tags,
     }
-    validation_helpers.remove_none_arguments(args)
+    args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.create_variable(**args)
+
+
+@batch_call_limit(request_attribute_to_split="variable_entries", response_items_to_collect=["errors"], limit=25)
+@api_call_with_debug_logs
+def call_batch_create_variable(frauddetector_client, variable_entries: List[dict], tags: List[dict]):
+    args = {"tags": tags, "variableEntries": variable_entries}
+    args = validation_helpers.remove_none_arguments(args)
+    validation_helpers.check_variable_entries_are_valid(args)
+    return frauddetector_client.batch_create_variable(**args)
 
 
 # Update APIs
@@ -245,7 +297,7 @@ def call_update_variable(
         "variableType": variable_type,
         "name": variable_name,
     }
-    validation_helpers.remove_none_arguments(args)
+    args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.update_variable(**args)
 
 
@@ -263,8 +315,16 @@ def call_get_variables(frauddetector_client, variable_name: str = None):
     :return: get a single variable if variable_name is specified, otherwise get all variables
     """
     args = {"name": variable_name}
-    validation_helpers.remove_none_arguments(args)
+    args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_variables(**args)
+
+
+@batch_call_limit(request_attribute_to_split="names", response_items_to_collect=["errors", "variables"])
+@api_call_with_debug_logs
+def call_batch_get_variable(frauddetector_client, names: List[str]):
+    args = {"names": names}
+    args = validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.batch_get_variable(**args)
 
 
 @retry_not_found_exceptions
@@ -272,7 +332,7 @@ def call_get_variables(frauddetector_client, variable_name: str = None):
 @api_call_with_debug_logs
 def call_get_labels(frauddetector_client, label_name: str = None):
     args = {"name": label_name}
-    validation_helpers.remove_none_arguments(args)
+    args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_labels(**args)
 
 
@@ -281,7 +341,7 @@ def call_get_labels(frauddetector_client, label_name: str = None):
 @api_call_with_debug_logs
 def call_get_entity_types(frauddetector_client, entity_type_name: str = None):
     args = {"name": entity_type_name}
-    validation_helpers.remove_none_arguments(args)
+    args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_entity_types(**args)
 
 
@@ -290,7 +350,7 @@ def call_get_entity_types(frauddetector_client, entity_type_name: str = None):
 @api_call_with_debug_logs
 def call_get_event_types(frauddetector_client, event_type_name: str = None):
     args = {"name": event_type_name}
-    validation_helpers.remove_none_arguments(args)
+    args = validation_helpers.remove_none_arguments(args)
     return frauddetector_client.get_event_types(**args)
 
 

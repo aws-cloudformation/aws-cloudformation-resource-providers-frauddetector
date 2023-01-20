@@ -2,6 +2,9 @@ from ...helpers import validation_helpers
 from botocore.exceptions import ClientError
 from unittest.mock import MagicMock
 from .. import unit_test_utils
+from cloudformation_cli_python_lib import (
+    exceptions,
+)
 
 
 def test_check_if_get_labels_succeeds_client_error_returns_false():
@@ -146,3 +149,73 @@ def test_check_if_get_event_types_succeeds_client_success_returns_true_and_respo
     assert len(result) == 2
     assert result[0] is True
     assert result[1] is get_event_types_response
+
+
+def test_check_batch_get_variable_errors_happy_case():
+    # Arrange
+    batch_get_variable_response = {"errors": [], "variables": []}
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    mock_afd_client.batch_get_variable = MagicMock(return_value=batch_get_variable_response)
+
+    # Act
+    result = validation_helpers.check_batch_get_variable_errors(mock_afd_client, [])
+
+    # Assert
+    assert len(result) == 2
+    assert result[0] is True
+    assert result[1] == batch_get_variable_response
+
+
+def test_check_batch_get_variable_errors_client_error_case():
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    mock_afd_client.exceptions.ResourceNotFoundException = ClientError
+    # We retry NotFound (for consistency), so return not found twice
+    mock_afd_client.batch_get_variable.side_effect = [
+        ClientError({"Code": "", "Message": ""}, "batch_get_variable"),
+        ClientError({"Code": "", "Message": ""}, "batch_get_variable"),
+    ]
+
+    # Act
+    result = validation_helpers.check_batch_get_variable_errors(mock_afd_client, ["name1", "name2"])
+
+    # Assert
+    assert len(result) == 2
+    assert result[0] is False
+    assert result[1] == {}
+
+
+def test_check_variable_entries_are_valid_missing_attributes():
+    # Arrange
+    variable_entries = [{"missing": "attributes"}]
+    args = {"variableEntries": variable_entries}
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.check_variable_entries_are_valid(args)
+    except exceptions.InvalidRequest as invalid_request_exception:
+        exception_thrown = invalid_request_exception
+
+    # Assert
+    assert exception_thrown is not None
+    assert "did not have the following required attributes" in f"{exception_thrown}"
+
+
+def test_check_variable_entries_are_valid_extra_attributes():
+    # Arrange
+    variable_entries = [
+        {"dataSource": "valid", "dataType": "valid", "defaultValue": "valid", "name": "valid", "extra": "attribute"}
+    ]
+    args = {"variableEntries": variable_entries}
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.check_variable_entries_are_valid(args)
+    except exceptions.InvalidRequest as invalid_request_exception:
+        exception_thrown = invalid_request_exception
+
+    # Assert
+    assert exception_thrown is not None
+    assert "unrecognized attributes" in f"{exception_thrown}"
