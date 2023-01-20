@@ -1,6 +1,6 @@
 from cloudformation_cli_python_lib import OperationStatus, exceptions, ProgressEvent
 from functools import partial
-from typing import List, Callable
+from typing import List, Callable, Tuple
 from .. import models
 from . import model_helpers, api_helpers, validation_helpers, util
 
@@ -64,7 +64,7 @@ def put_event_type_for_model(put_event_type_func: Callable, model: models.Resour
 # Variables
 
 
-def create_inline_event_variable(frauddetector_client, event_variable):
+def create_inline_event_variable(frauddetector_client, event_variable: models.EventVariable):
     if hasattr(event_variable, "Tags"):
         tags = model_helpers.get_tags_from_tag_models(event_variable.Tags)
         create_variable_func = partial(
@@ -82,6 +82,39 @@ def create_inline_event_variable(frauddetector_client, event_variable):
         variable_description=event_variable.Description,
         variable_type=event_variable.VariableType,
     )
+
+
+def create_inline_event_variables(frauddetector_client, event_variables: List[models.EventVariable]):
+    LOG.info(f"creating inline event variables: {event_variables}")
+    tags, variable_entries = _get_tags_and_variable_entries_from_inline_event_variables(event_variables)
+    api_helpers.call_batch_create_variable(frauddetector_client, variable_entries=variable_entries, tags=tags)
+
+
+def _get_tags_and_variable_entries_from_inline_event_variables(
+    event_variables: List[models.EventVariable],
+) -> Tuple[list, list]:
+    """
+    This function takes in a list of event variables and returns a list of tags and a list of variable entries
+    """
+    tags = []
+    variable_entries = []
+    for event_variable in event_variables:
+        if not event_variable.Inline:
+            continue
+        new_tags = model_helpers.get_tags_from_tag_models(event_variable.Tags)
+        if new_tags:
+            tags.extend(new_tags)
+        variable_entries.append(
+            {
+                "dataSource": event_variable.DataSource,
+                "dataType": event_variable.DataType,
+                "defaultValue": event_variable.DefaultValue,
+                "description": event_variable.Description,
+                "name": event_variable.Name,
+                "variableType": event_variable.VariableType,
+            }
+        )
+    return tags, variable_entries
 
 
 # Labels
