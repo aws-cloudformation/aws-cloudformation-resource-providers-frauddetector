@@ -53,7 +53,7 @@ def test_put_event_type_and_return_progress(monkeypatch):
     _act_and_assert_put_event_type_for_given_model(mock_afd_client, input_model, output_model)
 
 
-def test_put_inline_event_variable():
+def test_create_inline_event_variable():
     # Arrange
     mock_afd_client = unit_test_utils.create_mock_afd_client()
     mock_afd_client.create_variable = MagicMock()
@@ -73,6 +73,27 @@ def test_put_inline_event_variable():
         description=fake_event_variable.Description,
         variableType=fake_event_variable.VariableType,
         tags=fake_tags,
+    )
+
+
+def test_create_inline_event_variables():
+    # Arrange
+    mock_afd_client = unit_test_utils.create_mock_afd_client()
+    mock_afd_client.batch_create_variable = MagicMock()
+    fake_input_model = unit_test_utils.create_fake_model()
+    fake_event_variables = fake_input_model.EventVariables
+    # Calling internal (would-be-package-private) method to re-build expected arguments
+    tags, variable_entries = common_helpers._get_tags_and_variable_entries_from_inline_event_variables(
+        fake_event_variables
+    )
+
+    # Act
+    common_helpers.create_inline_event_variables(mock_afd_client, fake_event_variables)
+
+    # Assert
+    mock_afd_client.batch_create_variable.assert_called_once_with(
+        tags=tags,
+        variableEntries=variable_entries,
     )
 
 
