@@ -1,0 +1,924 @@
+{
+  "Name": "cfntesteventtype",
+  "Description": "eventtype for cfn contract tests",
+  "Tags": [
+    {
+      "Key": "cfncontracttest",
+      "Value": "1"
+    }
+  ],
+  "EventVariables": [
+    {
+      "Name": "email_var_new_cfn_contract_test",
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "EMAIL_ADDRESS"
+    },
+    {
+      "Name": "ip_var_new_cfn_contract_test",
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "IP_ADDRESS"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_1"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_2"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_3"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_4"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_5"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_6"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_7"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_8"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_9"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_10"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_11"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_12"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_13"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_14"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_15"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_16"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_17"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_18"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_19"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_20"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_21"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_22"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_23"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_24"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_25"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_26"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_27"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_28"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_29"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_30"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_31"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_32"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_33"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_34"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_35"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_36"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_37"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_38"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_39"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_40"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_41"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_42"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_43"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_44"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_45"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_46"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_47"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_48"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_49"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_50"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_51"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_52"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_53"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_54"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_55"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_56"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_57"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_58"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_59"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_60"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_61"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_62"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_63"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_64"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_65"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_66"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_67"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_68"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_69"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_70"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_71"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_72"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_73"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_74"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_75"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_76"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_77"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_78"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_79"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_80"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_81"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_82"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_83"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_84"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_85"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_86"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_87"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_88"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_89"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_90"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_91"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_92"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_93"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_94"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_95"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_96"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_97"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_98"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_99"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_100"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_101"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_102"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_103"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_104"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_105"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_106"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_107"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_108"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_109"
+    },
+    {
+      "DataSource": "EVENT",
+      "DataType": "STRING",
+      "DefaultValue": "DEFAULT",
+      "Inline": true,
+      "VariableType": "CATEGORICAL",
+      "Name": "email_var_new_cfn_contract_test_110"
+    }
+  ],
+  "Labels": [
+    {
+      "Inline": true,
+      "Name": "legit_label_from_cfn_contract_test"
+    },
+    {
+      "Inline": true,
+      "Name": "fraud_label_from_cfn_contract_test"
+    }
+  ],
+  "EntityTypes": [
+    {
+      "Inline": true,
+      "Name": "new_entity_type_from_cfn_contract_test"
+    }
+  ]
+}
