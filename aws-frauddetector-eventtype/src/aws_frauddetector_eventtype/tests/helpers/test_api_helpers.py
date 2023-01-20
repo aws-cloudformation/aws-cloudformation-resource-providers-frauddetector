@@ -2,6 +2,7 @@ from ...helpers import api_helpers, validation_helpers  # for assertion
 from .. import unit_test_utils
 from unittest.mock import MagicMock
 from botocore.exceptions import ClientError
+from typing import List
 
 NUMBER_OF_ITEMS_PER_PAGE = 2
 MAX_PAGES = 10
@@ -113,6 +114,26 @@ def test_paginated_api_call_matches_criteria():
     assert test_fn.call_count == MAX_PAGES
 
 
+def test_batch_call_limit_decorator():
+    test_fn = MagicMock()
+    test_fn.side_effect = [
+        {
+            "errors": [{"name": f"{i}.{j}"} for j in range(NUMBER_OF_ITEMS_PER_PAGE)],
+        }
+        for i in range(MAX_PAGES)
+    ]
+    names_to_fetch = [f"some_name_{i}" for i in range(NUMBER_OF_ITEMS_PER_PAGE * MAX_PAGES)]
+
+    @api_helpers.api_call_with_debug_logs
+    @api_helpers.batch_call_limit("names", ["errors"], limit=NUMBER_OF_ITEMS_PER_PAGE)
+    def call_test_fn(names: List[str]):
+        return test_fn(names)
+
+    response = call_test_fn(names=names_to_fetch)
+    assert len(response["errors"]) == NUMBER_OF_ITEMS_PER_PAGE * MAX_PAGES
+    assert test_fn.call_count == MAX_PAGES
+
+
 def test_get_calls(monkeypatch):
     required_arguments = [
         {
@@ -134,6 +155,13 @@ def test_get_calls(monkeypatch):
             "api_helper_call_func": api_helpers.call_get_event_types,
             "api_name": "get_event_types",
             "args": {},
+        },
+        {
+            "api_helper_call_func": api_helpers.call_batch_get_variable,
+            "api_name": "batch_get_variable",
+            "args": {
+                "names": [unit_test_utils.FAKE_IP_VARIABLE.get("name")],
+            },
         },
     ]
     for api_call_to_test in required_arguments:
@@ -232,7 +260,22 @@ def test_create_calls(monkeypatch):
                 "variable_data_type": unit_test_utils.FAKE_IP_VARIABLE.get("dataType"),
                 "variable_default_value": unit_test_utils.FAKE_IP_VARIABLE.get("defaultValue"),
             },
-        }
+        },
+        {
+            "api_helper_call_func": api_helpers.call_batch_create_variable,
+            "api_name": "batch_create_variable",
+            "args": {
+                "tags": None,
+                "variable_entries": [
+                    {
+                        "dataSource": unit_test_utils.FAKE_IP_VARIABLE.get("dataSource"),
+                        "dataType": unit_test_utils.FAKE_IP_VARIABLE.get("dataType"),
+                        "defaultValue": unit_test_utils.FAKE_IP_VARIABLE.get("defaultValue"),
+                        "name": unit_test_utils.FAKE_IP_VARIABLE.get("name"),
+                    }
+                ],
+            },
+        },
     ]
     for api_call_to_test in required_arguments:
         _test_api_helper_call(monkeypatch=monkeypatch, **api_call_to_test)

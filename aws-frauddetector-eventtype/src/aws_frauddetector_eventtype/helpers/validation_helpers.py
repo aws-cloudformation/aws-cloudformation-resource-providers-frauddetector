@@ -1,16 +1,36 @@
 import logging
+from typing import List, Tuple, Dict
+from cloudformation_cli_python_lib import (
+    exceptions,
+)
 
+import botocore
 from . import api_helpers
 
 # Use this logger to forward log messages to CloudWatch Logs.
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
+LOG.setLevel(logging.INFO)
 
 
 def remove_none_arguments(args):
-    keys_to_remove = {key for key, value in args.items() if value is None}
-    for key in keys_to_remove:
-        del args[key]
+    LOG.debug(f"received arguments {args} to remove None from")
+    if type(args) is str or args is None:
+        LOG.debug("Args is string or none. returning args")
+        return args
+    new_args = {}
+    LOG.debug(f"Checking args items for args: {args}")
+    for key, value in args.items():
+        LOG.debug(f"arg item key: {key}, value: {value}")
+        if type(value) is dict:
+            new_value = remove_none_arguments(value)
+        elif type(value) is list:
+            new_value = [remove_none_arguments(item) for item in value]
+        else:
+            new_value = value
+        if new_value is not None:
+            new_args[key] = new_value
+    args = new_args
+    LOG.debug(f"returning new args: {args}")
     return args
 
 
@@ -28,6 +48,20 @@ def check_if_get_variables_succeeds(frauddetector_client, variable_name):
     except frauddetector_client.exceptions.ResourceNotFoundException as RNF:
         LOG.warning(f"Error getting variable {variable_name}: {RNF}")
         return False, None
+
+
+def check_batch_get_variable_errors(frauddetector_client, variable_names: List[str]) -> Tuple[bool, Dict[str, list]]:
+    """
+    Call batch_get_variable for all of the variable names supplied.
+    If the call succeeds, return (True, response).
+    If the call does not succeed, return (False, {}).
+    """
+    try:
+        response = api_helpers.call_batch_get_variable(frauddetector_client=frauddetector_client, names=variable_names)
+        return True, response
+    except botocore.exceptions.ClientError as client_error:
+        LOG.warning(f"Error calling batch get variable: {client_error}")
+        return False, {}
 
 
 def check_if_get_entity_types_succeeds(frauddetector_client, entity_type_name):
@@ -87,3 +121,33 @@ def check_variable_differences(existing_event_variable, desired_event_variable):
         "dataSource": existing_event_variable.DataSource != desired_event_variable.DataSource,
         "tags": existing_event_variable.Tags != desired_event_variable.Tags,
     }
+
+
+def check_variable_entries_are_valid(arguments_to_check: dict):
+    variable_entries_to_check = arguments_to_check.get("variableEntries", [])
+    required_attributes = {"dataSource", "dataType", "defaultValue", "name"}
+    all_attributes = {
+        "dataSource",
+        "dataType",
+        "defaultValue",
+        "description",
+        "name",
+        "variableType",
+    }
+    for variable_entry in variable_entries_to_check:
+        variable_attributes = set(variable_entry.keys())
+        if not required_attributes.issubset(variable_attributes):
+            missing_attributes = required_attributes.difference(variable_attributes)
+            missing_attributes_message = (
+                f"Variable Entries did not have the following required attributes: {missing_attributes}"
+            )
+            LOG.warning(missing_attributes_message)
+            raise exceptions.InvalidRequest(missing_attributes_message)
+        if not variable_attributes.issubset(all_attributes):
+            unrecognized_attributes = variable_attributes.difference(all_attributes)
+            unrecognized_attributes_message = (
+                f"Error: variable entries has unrecognized attributes: {unrecognized_attributes}"
+            )
+            LOG.warning(unrecognized_attributes_message)
+            raise exceptions.InvalidRequest(unrecognized_attributes_message)
+    return True
