@@ -1,11 +1,12 @@
 import logging
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional, Sequence
 from cloudformation_cli_python_lib import (
     exceptions,
 )
 
 import botocore
-from . import api_helpers
+from . import api_helpers, util
+from ..models import EventVariable
 
 # Use this logger to forward log messages to CloudWatch Logs.
 LOG = logging.getLogger(__name__)
@@ -112,6 +113,14 @@ def check_if_get_labels_succeeds(frauddetector_client, label_name):
         return False, None
 
 
+def check_batch_get_variables_for_event_variables(afd_client, variable_names: list) -> dict:
+    success, response = check_batch_get_variable_errors(frauddetector_client=afd_client, variable_names=variable_names)
+    if not success:
+        LOG.warning("BatchGetVariable returned an unexpected failure, unable to complete CFN changeset execution.")
+        raise exceptions.InternalFailure("Error occurred while getting variables, please try again later.")
+    return response
+
+
 def check_variable_differences(existing_event_variable, desired_event_variable):
     return {
         "defaultValue": existing_event_variable.DefaultValue != desired_event_variable.DefaultValue,
@@ -151,3 +160,44 @@ def check_variable_entries_are_valid(arguments_to_check: dict):
             LOG.warning(unrecognized_attributes_message)
             raise exceptions.InvalidRequest(unrecognized_attributes_message)
     return True
+
+
+def validate_event_variables_attributes(
+    event_variables: Optional[Sequence[EventVariable]],
+) -> Tuple[Dict[str, EventVariable], List[str]]:
+    variables_by_name: Dict[str, EventVariable] = {}
+    variable_names: List[str] = []
+    for event_variable in event_variables:
+        if event_variable.Inline:
+            if event_variable.Name is None:
+                raise exceptions.InvalidRequest("Error occurred: inline event variables must include Name!")
+            variable_name = event_variable.Name
+        else:
+            if event_variable.Arn is None:
+                raise exceptions.InvalidRequest("Error occurred: non-inline event variables must include Arn!")
+            variable_name = util.extract_name_from_arn(event_variable.Arn)
+        variables_by_name[variable_name] = event_variable
+        variable_names.append(variable_name)
+    return variables_by_name, variable_names
+
+
+def validate_missing_variables_for_create(
+    batch_get_variable_errors: list, variables_by_name: Dict[str, EventVariable]
+) -> List[EventVariable]:
+    inline_variables_to_create: List[EventVariable] = []
+    for error in batch_get_variable_errors:
+        errored_variable_name = error.get("name", None)
+        modeled_variable = variables_by_name.pop(errored_variable_name, None)
+        if not modeled_variable.Inline:
+            raise exceptions.NotFound("event_variable", modeled_variable.Arn)
+        inline_variables_to_create.append(modeled_variable)
+    return inline_variables_to_create
+
+
+def validate_all_event_variables_have_been_validated(unvalidated_variables: dict):
+    if len(unvalidated_variables) != 0:
+        LOG.error(
+            "validate_dependencies_for_create did not validate all event variables! "
+            "This is a bug in AFD's CFN Implementation!"
+        )
+        raise exceptions.InternalFailure("Error occurred while validating event variables, please try again later.")
