@@ -56,14 +56,13 @@ def execute_update_event_type_handler_work(session, model, progress, request):
     if model.Name != previous_name:
         raise exceptions.NotUpdatable(f"Error occurred: cannot update create-only property 'Name'")
 
-    LOG.debug(f"updating tags for model ...")
-    # since put_event_type does not update tags, update tags separately
-    common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
-
     # Validate existence of referenced resources, validate and update inline resources
-    # TODO: also check for when teardown is required, compare against AllowTeardown parameter, etc.
     LOG.debug(f"validating dependencies for update ...")
     update_worker_helpers.validate_dependencies_for_update(afd_client, model, previous_resource_state)
+
+    # since put_event_type does not update tags, update tags separately
+    LOG.debug(f"updating tags for model ...")
+    common_helpers.update_tags(afd_client, afd_resource_arn=model.Arn, new_tags=model.Tags)
 
     # after satisfying contract call put event_type
     return common_helpers.put_event_type_and_return_progress(afd_client, model, progress)
@@ -74,12 +73,21 @@ def execute_delete_event_type_handler_work(session, model, progress):
 
     # For contract_delete_delete, we need to fail if the resource DNE
     # get_event_types will throw RNF Exception if event_type DNE
-    get_event_type_works, _ = validation_helpers.check_if_get_event_types_succeeds(afd_client, model.Name)
+    get_event_type_works, get_response = validation_helpers.check_if_get_event_types_succeeds(afd_client, model.Name)
     if not get_event_type_works:
         raise exceptions.NotFound("event_type", model.Name)
 
-    # Check for existing events, we'll need a DDB get call, since we do not have a plural `GetEvents` API
-    # TODO: this, after event ingestion is released
+    # Check for existing events
+    loaded_event_types = get_response.get("eventTypes", [])
+    if loaded_event_types:
+        ingested_event_stats = loaded_event_types[0].get("ingestionStatistics", {})
+        ingested_count = ingested_event_stats.get("numberOfEvents", 0)
+        if ingested_count > 0:
+            raise exceptions.InvalidRequest(
+                f"Error occurred: cannot delete event type '{model.Name}' because it has {ingested_count} "
+                + "events ingested. Use the DeleteEventsByEventType API or the DeleteEvent API to remove "
+                + "ingested events and try again."
+            )
 
     try:
         LOG.debug("deleting event type")

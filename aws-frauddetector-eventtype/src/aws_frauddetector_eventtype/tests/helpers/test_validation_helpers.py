@@ -1,10 +1,14 @@
-from ...helpers import validation_helpers
+from ...helpers import validation_helpers, util
+from ...models import EventVariable
 from botocore.exceptions import ClientError
 from unittest.mock import MagicMock
 from .. import unit_test_utils
 from cloudformation_cli_python_lib import (
     exceptions,
 )
+
+
+FAKE_VALID_ARN = "arn:aws:frauddetector:us-east-1:123456789012:variable/fake"
 
 
 def test_check_if_get_labels_succeeds_client_error_returns_false():
@@ -219,3 +223,140 @@ def test_check_variable_entries_are_valid_extra_attributes():
     # Assert
     assert exception_thrown is not None
     assert "unrecognized attributes" in f"{exception_thrown}"
+
+
+def test_validate_event_variables_attributes_inline_without_name():
+    # Arrange
+    event_variables = [
+        EventVariable(
+            Inline=True,
+            Name=None,
+            Arn="some_arn",
+            DataSource="some_data_source",
+            DataType="some_data_type",
+            DefaultValue="some_default_value",
+            Description="some_description",
+            Tags=None,
+            CreatedTime="some_time_created",
+            LastUpdatedTime="some_time_updated",
+            VariableType="some_variable_type",
+        )
+    ]
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.validate_event_variables_attributes(event_variables)
+    except exceptions.InvalidRequest as invalid_request_exception:
+        exception_thrown = invalid_request_exception
+
+    # Assert
+    assert exception_thrown is not None
+    assert "inline event variables must include Name" in f"{exception_thrown}"
+
+
+def test_validate_event_variables_attributes_referenced_without_arn():
+    # Arrange
+    event_variables = [
+        EventVariable(
+            Inline=False,
+            Name="some_name",
+            Arn=None,
+            DataSource="some_data_source",
+            DataType="some_data_type",
+            DefaultValue="some_default_value",
+            Description="some_description",
+            Tags=None,
+            CreatedTime="some_time_created",
+            LastUpdatedTime="some_time_updated",
+            VariableType="some_variable_type",
+        )
+    ]
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.validate_event_variables_attributes(event_variables)
+    except exceptions.InvalidRequest as invalid_request_exception:
+        exception_thrown = invalid_request_exception
+
+    # Assert
+    assert exception_thrown is not None
+    assert "non-inline event variables must include Arn" in f"{exception_thrown}"
+
+
+def test_validate_event_variables_attributes_happy_case():
+    # Arrange
+    event_variables = [
+        EventVariable(
+            Inline=True,
+            Name="some_name",
+            Arn=None,
+            DataSource="some_data_source",
+            DataType="some_data_type",
+            DefaultValue="some_default_value",
+            Description="some_description",
+            Tags=None,
+            CreatedTime="some_time_created",
+            LastUpdatedTime="some_time_updated",
+            VariableType="some_variable_type",
+        ),
+        EventVariable(
+            Inline=False,
+            Name=None,
+            Arn=FAKE_VALID_ARN,
+            DataSource="some_data_source",
+            DataType="some_data_type",
+            DefaultValue="some_default_value",
+            Description="some_description",
+            Tags=None,
+            CreatedTime="some_time_created",
+            LastUpdatedTime="some_time_updated",
+            VariableType="some_variable_type",
+        ),
+    ]
+
+    # Act
+    vars_by_name, var_names = validation_helpers.validate_event_variables_attributes(event_variables)
+
+    # Assert
+    assert len(vars_by_name) == 2
+    assert "some_name" in vars_by_name
+    assert util.extract_name_from_arn(FAKE_VALID_ARN) in vars_by_name
+    assert len(var_names) == 2
+    assert "some_name" in var_names
+    assert util.extract_name_from_arn(FAKE_VALID_ARN) in var_names
+
+
+def test_validate_missing_variables_for_create_reference_missing():
+    # Arrange
+    missing_var_arn = "arn:aws:frauddetector:us-west-1:123123123123:variable/missing_var"
+    errors = [{"name": "missing_var"}]
+    vars_by_name = {
+        "missing_var": EventVariable(
+            Inline=False,
+            Name="missing_var",
+            Arn=missing_var_arn,
+            DataSource="some_data_source",
+            DataType="some_data_type",
+            DefaultValue="some_default_value",
+            Description="some_description",
+            Tags=None,
+            CreatedTime="some_time_created",
+            LastUpdatedTime="some_time_updated",
+            VariableType="some_variable_type",
+        )
+    }
+
+    # Act
+    exception_thrown = None
+    try:
+        validation_helpers.validate_missing_variables_for_create(errors, vars_by_name)
+    except exceptions.NotFound as rnf_exception:
+        exception_thrown = rnf_exception
+
+    # Assert
+    assert exception_thrown is not None
+    assert "event_variable" in f"{exception_thrown}"
+    assert missing_var_arn in f"{exception_thrown}"
+    assert "was not found" in f"{exception_thrown}"
