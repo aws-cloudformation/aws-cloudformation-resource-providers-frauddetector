@@ -2,9 +2,10 @@ import logging
 from cloudformation_cli_python_lib import (
     exceptions,
 )
+from typing import List, Tuple, Dict, Optional, Sequence, Set
 
 from . import validation_helpers, api_helpers, common_helpers, util
-from ..models import ResourceModel
+from ..models import ResourceModel, EventVariable
 
 # Use this logger to forward log messages to CloudWatch Logs.
 LOG = logging.getLogger(__name__)
@@ -12,83 +13,123 @@ LOG.setLevel(logging.DEBUG)
 
 
 def validate_dependencies_for_update(afd_client, model: ResourceModel, previous_model: ResourceModel):
-    # TODO: revisit  this validation when/if we support in-place teardown
-    # is_teardown_required = _determine_if_teardown_is_required(afd_client, model, previous_model)
-    # if is_teardown_required and not model.AllowTeardown:
-    #     raise RuntimeError(TEARDOWN_CONFLICT_MESSAGE)
-    _validate_event_variables_for_update(afd_client, model, previous_model)
+    # Validate changes and get changes to make to inline resources
+    inline_vars_to_create, inline_vars_to_update = _validate_event_variables_for_update(
+        afd_client, model, previous_model
+    )
+    # TODO: delay creation of inline entity types and labels until validation is complete
     _validate_entity_types_for_update(afd_client, model, previous_model)
     _validate_labels_for_update(afd_client, model, previous_model)
 
+    # Create and Update inline resources as necessary
+    common_helpers.create_inline_event_variables(frauddetector_client=afd_client, event_variables=inline_vars_to_create)
+    _update_inline_event_variables_for_update(frauddetector_client=afd_client, event_variables=inline_vars_to_update)
 
-def _validate_event_variables_for_update(afd_client, model: ResourceModel, previous_model: ResourceModel):
-    previous_variables = {variable.Name: variable for variable in previous_model.EventVariables}
-    new_event_variable_names = set()
-    for event_variable in model.EventVariables:
-        _validate_event_variable_for_update(afd_client, event_variable, previous_variables)
-        new_event_variable_names.add(event_variable.Name)
-
-    # remove previous inline variables that are no longer in the event type
-    for previous_variable_name, previous_variable in previous_variables.items():
-        if previous_variable_name not in new_event_variable_names and previous_variable.Inline:
-            api_helpers.call_delete_variable(frauddetector_client=afd_client, variable_name=previous_variable_name)
+    # TODO: return changes to inline resources for rollback when put event type fails
 
 
-def _validate_event_variable_for_update(afd_client, event_variable, previous_variables):
-    if event_variable.Inline:
-        _validate_inline_event_variable_for_update(afd_client, event_variable, previous_variables)
-    else:
-        _validate_referenced_event_variable_for_update(afd_client, event_variable)
+def _validate_event_variables_for_update(
+    afd_client, model: ResourceModel, previous_model: ResourceModel
+) -> Tuple[List[EventVariable], List[EventVariable]]:
+    # Validate event variable model changes.
+    # As it stands today, event variables cannot be removed from an event type, but they can be added or changed.
+    new_variables_by_name, new_variable_names = validation_helpers.validate_event_variables_attributes(
+        model.EventVariables
+    )
+    changed_variable_names = _validate_event_variable_model_changes_for_update(
+        previous_model.EventVariables, new_variables_by_name
+    )
+
+    # Call BatchGetVariables to check state for event variables.
+    response = validation_helpers.check_batch_get_variables_for_event_variables(afd_client, new_variable_names)
+
+    # Validate event variable changes against the state of the system.
+    inline_variables_to_create = validation_helpers.validate_missing_variables_for_create(
+        response.get("errors", []), new_variables_by_name
+    )
+    inline_variables_to_update = _validate_existing_variables_for_update(
+        response.get("variables", []), new_variables_by_name, changed_variable_names
+    )
+    validation_helpers.validate_all_event_variables_have_been_validated(new_variables_by_name)
+
+    # Return inline variables to create and update
+    return inline_variables_to_create, inline_variables_to_update
 
 
-def _validate_referenced_event_variable_for_update(afd_client, event_variable):
-    event_variable_name = util.extract_name_from_arn(event_variable.Arn)
-    get_variables_worked, _ = validation_helpers.check_if_get_variables_succeeds(afd_client, event_variable_name)
-    if not get_variables_worked:
-        raise exceptions.NotFound("event_variable", event_variable.Arn)
+def _validate_event_variable_model_changes_for_update(
+    previous_variables: Optional[Sequence[EventVariable]], new_variables_by_name: Dict[str, EventVariable]
+) -> Set[str]:
+    variable_names_with_model_changes = set()
+    for previous_variable in previous_variables:
+        # Get variable name from previous variable model
+        if previous_variable.Inline:
+            variable_name = previous_variable.Name
+        else:
+            variable_name = util.extract_name_from_arn(previous_variable.Arn)
 
-
-def _validate_inline_event_variable_for_update(afd_client, event_variable, previous_variables):
-    if not event_variable.Name:
-        raise exceptions.InvalidRequest("Error occurred: inline event variables must include Name!")
-
-    # TODO: update this logic if we support in-place Teardown
-    #       This difference would require teardown if we were to support it
-
-    # check for differences in dataSource or dataType
-    differences = {}
-    previous_variable = previous_variables.get(event_variable.Name, None)
-    if previous_variable:
-        differences = validation_helpers.check_variable_differences(previous_variable, event_variable)
-    if differences["dataSource"] or differences["dataType"]:
-        raise exceptions.InvalidRequest("Error occurred: cannot update event variable data source or data type!")
-
-    if not previous_variable:
-        # create inline variable that does not already exist
-        common_helpers.create_inline_event_variable(frauddetector_client=afd_client, event_variable=event_variable)
-    else:
-        # get existing variable to get arn. Arn is readonly property, so it will not be attached to input model
-        (
-            get_variables_worked,
-            get_variables_response,
-        ) = validation_helpers.check_if_get_variables_succeeds(afd_client, event_variable.Name)
-        if not get_variables_worked:
-            raise RuntimeError(f"Previously existing event variable {event_variable.Name} no longer exists!")
-        event_variable.Arn = get_variables_response.get("variables")[0].get("arn")
-        # update existing inline variable
-        if hasattr(event_variable, "Tags"):
-            common_helpers.update_tags(
-                frauddetector_client=afd_client,
-                afd_resource_arn=event_variable.Arn,
-                new_tags=event_variable.Tags,
+        # Validate event variables aren't removed.
+        if variable_name not in new_variables_by_name:
+            raise exceptions.InvalidRequest(
+                f"Error: cannot remove event variables! Event variable {variable_name} was removed."
             )
-        var_type = [None, event_variable.VariableType][event_variable.VariableType != previous_variable.VariableType]
+        new_variable = new_variables_by_name.get(variable_name)
+
+        # Validate variable is not switched from referenced to inline.
+        # Variables can be switched from inline to referenced (not inline), but not vice versa.
+        # It cannot be determined if referenced variables are managed by a separate CloudFormation stack.
+        if not previous_variable.Inline and new_variable.Inline:
+            raise exceptions.InvalidRequest(
+                f"Error: cannot update referenced event variable {variable_name} to be inline! "
+                "Event variables can be updated from inline to referenced, but not vice versa."
+            )
+
+        # Validate event variables don't have any other invalid changes.
+        differences = validation_helpers.check_variable_differences(previous_variable, new_variable)
+        if differences["dataSource"] or differences["dataType"]:
+            raise exceptions.InvalidRequest(
+                "Error occurred: cannot update event variable data source or data type! "
+                f"Event variable {variable_name} changed data source or data type."
+            )
+        if differences["variableType"] and previous_variable.VariableType is not None:
+            raise exceptions.InvalidRequest(
+                "Error occurred: cannot update event variable variable-type! "
+                f"Event variable {variable_name} changed variable-type."
+            )
+        total_number_of_changes = sum([is_different for attribute, is_different in differences.items()])
+        if total_number_of_changes > 0:
+            variable_names_with_model_changes.add(variable_name)
+    return variable_names_with_model_changes
+
+
+def _validate_existing_variables_for_update(
+    batch_get_variable_variables: list, variables_by_name: Dict[str, EventVariable], changed_variable_names: Set[str]
+) -> List[EventVariable]:
+    inline_variables_to_update: List[EventVariable] = []
+    for existing_variable in batch_get_variable_variables:
+        variable_name = existing_variable.get("name", None)
+        modeled_variable = variables_by_name.pop(variable_name, None)
+        if not modeled_variable.Inline or variable_name not in changed_variable_names:
+            continue
+        # Arn is readonly property, so it will not be attached to input model for inline event variable.
+        modeled_variable.Arn = existing_variable.get("arn", None)
+        inline_variables_to_update.append(modeled_variable)
+    return inline_variables_to_update
+
+
+def _update_inline_event_variables_for_update(frauddetector_client, event_variables: List[EventVariable]) -> None:
+    for event_variable in event_variables:
+        if event_variable.Tags:
+            common_helpers.update_tags(
+                frauddetector_client=frauddetector_client,
+                afd_resource_arn=event_variable.Arn,
+                new_tags=list(event_variable.Tags),
+            )
         api_helpers.call_update_variable(
             variable_name=event_variable.Name,
-            frauddetector_client=afd_client,
+            frauddetector_client=frauddetector_client,
             variable_default_value=event_variable.DefaultValue,
             variable_description=event_variable.Description,
-            variable_type=var_type,
+            variable_type=event_variable.VariableType,
         )
 
 
@@ -160,6 +201,7 @@ def _validate_labels_for_update(afd_client, model: ResourceModel, previous_model
         new_label_names.add(label.Name)
 
     # remove previous inline labels that are no longer in the event type
+    # TODO: throw invalid request for this invalid update
     for previous_label_name, previous_label in previous_labels.items():
         if previous_label_name not in new_label_names and previous_label.Inline:
             api_helpers.call_delete_label(frauddetector_client=afd_client, label_name=previous_label_name)

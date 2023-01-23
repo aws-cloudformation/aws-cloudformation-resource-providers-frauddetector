@@ -2,9 +2,10 @@ import logging
 from cloudformation_cli_python_lib import (
     exceptions,
 )
+from typing import Dict, List
 
 from . import validation_helpers, common_helpers, util
-from ..models import ResourceModel
+from ..models import ResourceModel, EventVariable
 
 # Use this logger to forward log messages to CloudWatch Logs.
 LOG = logging.getLogger(__name__)
@@ -12,39 +13,31 @@ LOG.setLevel(logging.DEBUG)
 
 
 def validate_dependencies_for_create(afd_client, model: ResourceModel):
-    _validate_event_variables_for_create(afd_client, model)
+    inline_vars_to_create: List[EventVariable] = _validate_event_variables_for_create(afd_client, model)
+    common_helpers.create_inline_event_variables(frauddetector_client=afd_client, event_variables=inline_vars_to_create)
+
     _validate_entity_types_for_create(afd_client, model)
     _validate_labels_for_create(afd_client, model)
 
 
-def _validate_event_variables_for_create(afd_client, model: ResourceModel):
-    for event_variable in model.EventVariables:
-        _validate_event_variable_for_create(afd_client, event_variable)
+def _validate_event_variables_for_create(afd_client, model: ResourceModel) -> List[EventVariable]:
+    variables_by_name, variable_names = validation_helpers.validate_event_variables_attributes(model.EventVariables)
+    response = validation_helpers.check_batch_get_variables_for_event_variables(afd_client, variable_names)
+    inline_variables_to_create = validation_helpers.validate_missing_variables_for_create(
+        response.get("errors", []), variables_by_name
+    )
+    _validate_existing_variables_for_create(response.get("variables", []), variables_by_name)
+    validation_helpers.validate_all_event_variables_have_been_validated(variables_by_name)
+    # Return a list of event variables that need to be created inline
+    return inline_variables_to_create
 
 
-def _validate_event_variable_for_create(afd_client, event_variable):
-    if event_variable.Inline:
-        _validate_inline_event_variable_for_create(afd_client, event_variable)
-    else:
-        _validate_referenced_event_variable_for_create(afd_client, event_variable)
-
-
-def _validate_referenced_event_variable_for_create(afd_client, event_variable):
-    event_variable_name = util.extract_name_from_arn(event_variable.Arn)
-    get_variables_worked, _ = validation_helpers.check_if_get_variables_succeeds(afd_client, event_variable_name)
-    if not get_variables_worked:
-        raise exceptions.NotFound("event_variable", event_variable.Arn)
-
-
-def _validate_inline_event_variable_for_create(afd_client, event_variable):
-    if event_variable.Name is None:
-        raise exceptions.InvalidRequest("Error occurred: inline event variables must include Name!")
-
-    get_variables_worked, _ = validation_helpers.check_if_get_variables_succeeds(afd_client, event_variable.Name)
-    if get_variables_worked:
-        raise exceptions.AlreadyExists("event_variable", event_variable.Name)
-
-    common_helpers.create_inline_event_variable(frauddetector_client=afd_client, event_variable=event_variable)
+def _validate_existing_variables_for_create(batch_get_variable_variables: list, variables_by_name: dict):
+    for variable in batch_get_variable_variables:
+        succeeded_variable_name = variable.get("name", None)
+        modeled_variable = variables_by_name.pop(succeeded_variable_name, None)
+        if modeled_variable.Inline:
+            raise exceptions.AlreadyExists("event_variable", modeled_variable.Name)
 
 
 def _validate_entity_types_for_create(afd_client, model: ResourceModel):
