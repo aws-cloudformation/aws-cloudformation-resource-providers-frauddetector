@@ -109,3 +109,120 @@ def paginated_api_call(
         return api_call_wrapper
 
     return paginated_api_call_decorator
+
+
+# Create APIs
+
+
+@api_call_with_debug_logs
+def call_create_list(
+    frauddetector_client,
+    list_name: str,
+    list_variable_type: str,
+    list_description: str,
+    list_elements: List[str],
+    list_tags: List[dict] = None,
+):
+    args = {
+        "name": list_name,
+        "elements": list(list_elements),
+        "variableType": list_variable_type,
+        "description": list_description,
+        "tags": list_tags,
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.create_list(**args)
+
+
+# Update APIs
+
+
+@retry_not_found_exceptions
+@api_call_with_debug_logs
+def call_update_list(
+    frauddetector_client,
+    list_name: str,
+    list_variable_type: str,
+    list_description: str,
+    list_elements: List[str] = {},
+    list_tags: List[dict] = None,
+):
+    args = {
+        "name": list_name,
+        "elements": list(list_elements),
+        "variableType": list_variable_type,
+        "description": list_description,
+        "tags": list_tags,
+        "updateMode": LIST_UPDATE_REPLACE,
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.update_list(**args)
+
+
+# Get APIs
+
+
+@retry_not_found_exceptions
+@paginated_api_call(item_to_collect="lists")
+@api_call_with_debug_logs
+def call_get_lists_metadata(frauddetector_client, list_name: str = None):
+    args = {"name": list_name}
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.get_lists_metadata(**args)
+
+
+@retry_not_found_exceptions
+@paginated_api_call(item_to_collect="elements")
+@api_call_with_debug_logs
+def call_get_list_elements(frauddetector_client, list_name: str):
+    args = {"name": list_name}
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.get_list_elements(**args)
+
+
+# Delete APIs
+
+
+@api_call_with_debug_logs
+def call_delete_list(frauddetector_client, list_name: str):
+    return frauddetector_client.delete_list(name=list_name)
+
+
+# Tagging
+@retry_not_found_exceptions
+@paginated_api_call(item_to_collect="tags")
+@api_call_with_debug_logs
+def call_list_tags_for_resource(frauddetector_client, resource_arn: str):
+    """
+    Call list_tags_for_resource for a given ARN with the given frauddetector client.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param resource_arn: ARN of the resource to get tags for
+    :return: result has an exhaustive list of tags attached to the resource
+    """
+    return frauddetector_client.list_tags_for_resource(resourceARN=resource_arn)
+
+
+@retry_not_found_exceptions
+@api_call_with_debug_logs
+def call_tag_resource(frauddetector_client, resource_arn: str, tags: List[dict]):
+    """
+    Call tag_resource with the given frauddetector client and parameters.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param resource_arn: ARN of the resource to attach tags to
+    :param tags: tags to attach to the resource, as a list of dicts [{'key': '...', 'value': '...'}]
+    :return: success will return a 200 with no body
+    """
+    return frauddetector_client.tag_resource(resourceARN=resource_arn, tags=tags)
+
+
+@retry_not_found_exceptions
+@api_call_with_debug_logs
+def call_untag_resource(frauddetector_client, resource_arn: str, tag_keys: List[str]):
+    """
+    Call untag_resource with the given frauddetector client and parameters.
+    :param frauddetector_client: boto3 frauddetector client to use to make the call
+    :param resource_arn: ARN of the resource to remove tags from
+    :param tag_keys: tags to attach to the resource, as a list of str ['key1', 'key2']
+    :return: success will return a 200 with no body
+    """
+    return frauddetector_client.untag_resource(resourceARN=resource_arn, tagKeys=tag_keys)

@@ -146,6 +146,11 @@ def test_get_calls(monkeypatch):
             "args": {},
         },
         {
+            "api_helper_call_func": api_helpers.call_get_lists_metadata,
+            "api_name": "get_lists_metadata",
+            "args": {},
+        },
+        {
             "api_helper_call_func": api_helpers.call_batch_get_variable,
             "api_name": "batch_get_variable",
             "args": {
@@ -258,6 +263,14 @@ def test_delete_calls(monkeypatch):
                 "should_check_validation_helper": False,
             },
         },
+        {
+            "api_helper_call_func": api_helpers.call_delete_list,
+            "api_name": "delete_list",
+            "args": {
+                "list_name": unit_test_utils.FAKE_EVENT_TYPE.get("name"),
+                "should_check_validation_helper": False,
+            },
+        },
     ]
     for api_call_to_test in required_arguments:
         current_args = api_call_to_test.get("args", {})
@@ -284,6 +297,16 @@ def test_create_calls(monkeypatch):
             },
         },
         {
+            "api_helper_call_func": api_helpers.call_create_list,
+            "api_name": "create_list",
+            "args": {
+                "list_name": unit_test_utils.FAKE_LIST.get("name"),
+                "list_variable_type": unit_test_utils.FAKE_LIST.get("variableType"),
+                "list_description": unit_test_utils.FAKE_LIST.get("description"),
+                "list_elements": unit_test_utils.FAKE_LIST.get("elements"),
+            },
+        },
+        {
             "api_helper_call_func": api_helpers.call_batch_create_variable,
             "api_name": "batch_create_variable",
             "args": {"variable_entries_to_create": unit_test_utils.FAKE_VARIABLE_ENTRIES},
@@ -303,7 +326,17 @@ def test_update_calls(monkeypatch):
                 "variable_default_value": unit_test_utils.FAKE_IP_VARIABLE.get("defaultValue"),
                 "variable_description": unit_test_utils.FAKE_IP_VARIABLE.get("description"),
             },
-        }
+        },
+        {
+            "api_helper_call_func": api_helpers.call_update_list,
+            "api_name": "update_list",
+            "args": {
+                "list_description": unit_test_utils.FAKE_LIST.get("description"),
+                "list_elements": unit_test_utils.FAKE_LIST.get("elements"),
+                "list_variable_type": unit_test_utils.FAKE_LIST.get("variableType"),
+                "list_name": unit_test_utils.FAKE_LIST.get("name"),
+            },
+        },
     ]
     for api_call_to_test in required_arguments:
         _test_api_helper_call(monkeypatch=monkeypatch, **api_call_to_test)

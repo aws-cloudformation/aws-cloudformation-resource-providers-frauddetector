@@ -16,6 +16,7 @@ MAXIMUM_NUMBER_OF_PAGES = 100
 # Number of seconds to wait for eventually consistency for `retry_not_found_exceptions` decorator
 CONSISTENCY_SLEEP_TIME = 1.0
 
+LIST_UPDATE_REPLACE = "REPLACE"
 
 # Wrapper/decorator
 
@@ -287,6 +288,26 @@ def call_batch_create_variable(
     return frauddetector_client.batch_create_variable(**args)
 
 
+@api_call_with_debug_logs
+def call_create_list(
+    frauddetector_client,
+    list_name: str,
+    list_variable_type: str,
+    list_description: str,
+    list_elements: List[str] = [],
+    list_tags: List[dict] = None,
+):
+    args = {
+        "name": list_name,
+        "elements": list_elements,
+        "variableType": list_variable_type,
+        "description": list_description,
+        "tags": list_tags,
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.create_list(**args)
+
+
 # Update APIs
 @retry_not_found_exceptions
 @api_call_with_debug_logs
@@ -312,6 +333,28 @@ def call_update_variable(
     }
     validation_helpers.remove_none_arguments(args)
     return frauddetector_client.update_variable(**args)
+
+
+@retry_not_found_exceptions
+@api_call_with_debug_logs
+def call_update_list(
+    frauddetector_client,
+    list_name: str,
+    list_variable_type: str,
+    list_description: str,
+    list_elements: List[str],
+    list_tags: List[dict] = None,
+):
+    args = {
+        "name": list_name,
+        "elements": list_elements,
+        "variableType": list_variable_type,
+        "description": list_description,
+        "tags": list_tags,
+        "updateMode": LIST_UPDATE_REPLACE,
+    }
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.update_list(**args)
 
 
 # Get APIs
@@ -383,6 +426,24 @@ def call_get_event_types(frauddetector_client, event_type_name: str = None):
     return frauddetector_client.get_event_types(**args)
 
 
+@retry_not_found_exceptions
+@paginated_api_call(item_to_collect="lists")
+@api_call_with_debug_logs
+def call_get_lists_metadata(frauddetector_client, list_name: str = None):
+    args = {"name": list_name}
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.get_lists_metadata(**args)
+
+
+@retry_not_found_exceptions
+@paginated_api_call(item_to_collect="elements")
+@api_call_with_debug_logs
+def call_get_list_elements(frauddetector_client, list_name: str):
+    args = {"name": list_name}
+    validation_helpers.remove_none_arguments(args)
+    return frauddetector_client.get_list_elements(**args)
+
+
 @api_call_with_debug_logs
 def call_batch_get_variable(frauddetector_client, variable_names: List[str]):
     return frauddetector_client.batch_get_variable(names=variable_names)
@@ -425,6 +486,11 @@ def call_delete_entity_type(frauddetector_client, entity_type_name: str):
 @api_call_with_debug_logs
 def call_delete_label(frauddetector_client, label_name: str):
     return frauddetector_client.delete_label(name=label_name)
+
+
+@api_call_with_debug_logs
+def call_delete_list(frauddetector_client, list_name: str):
+    return frauddetector_client.delete_list(name=list_name)
 
 
 # Tagging
