@@ -46,8 +46,8 @@ def create_handler(
                 stack_id_or_name=request.stackId,
                 logical_resource_id=request.logicalResourceIdentifier,
                 client_request_token=request.clientRequestToken,
-                max_length=255
-                )
+                max_length=255,
+            )
 
         if isinstance(session, SessionProxy):
             client = session.client("s3")

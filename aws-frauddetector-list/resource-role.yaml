@@ -30,11 +30,14 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - "initech:CreateReport"
-                - "initech:DeleteReport"
-                - "initech:DescribeReport"
-                - "initech:ListReports"
-                - "initech:UpdateReport"
+                - "frauddetector:CreateList"
+                - "frauddetector:DeleteList"
+                - "frauddetector:GetListElements"
+                - "frauddetector:GetListsMetadata"
+                - "frauddetector:ListTagsForResource"
+                - "frauddetector:TagResource"
+                - "frauddetector:UntagResource"
+                - "frauddetector:UpdateList"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
