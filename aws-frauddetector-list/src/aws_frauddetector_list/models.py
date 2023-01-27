@@ -125,7 +125,6 @@ _Tag = Tag
 
 @dataclass
 class TypeConfigurationModel(BaseModel):
-
     @classmethod
     def _deserialize(
         cls: Type["_TypeConfigurationModel"],
@@ -133,10 +132,8 @@ class TypeConfigurationModel(BaseModel):
     ) -> Optional["_TypeConfigurationModel"]:
         if not json_data:
             return None
-        return cls(
-        )
+        return cls()
 
 
 # work around possible type aliasing issues when variable has same name as a model
 _TypeConfigurationModel = TypeConfigurationModel
-
