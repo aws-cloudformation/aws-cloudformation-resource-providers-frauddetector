@@ -1,0 +1,9 @@
+{
+  "Name": "test_create_list",
+  "Description": "test list",
+  "Elements": [
+    "test",
+    "test1",
+    "test2"
+  ]
+}

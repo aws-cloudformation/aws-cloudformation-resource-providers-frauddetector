@@ -112,6 +112,15 @@ FAKE_DETECTOR = {
     "eventTypeName": FAKE_NAME,
     "lastUpdatedTime": FAKE_TIME,
 }
+FAKE_LIST = {
+    "arn": FAKE_ARN,
+    "createdTime": FAKE_TIME,
+    "description": FAKE_DESCRIPTION,
+    "elements": [],
+    "name": FAKE_NAME,
+    "lastUpdatedTime": FAKE_TIME,
+    "variableType": IP_ADDRESS,
+}
 
 
 def create_in_progress_progress(model):
@@ -126,6 +135,8 @@ def create_fake_model(is_output_model: bool = False):
         Tags=FAKE_TAG_MODELS,
         CreatedTime=[None, FAKE_TIME][is_output_model],
         LastUpdatedTime=[None, FAKE_TIME][is_output_model],
+        Elements=[],
+        VariableType=IP_ADDRESS,
     )
 
 
