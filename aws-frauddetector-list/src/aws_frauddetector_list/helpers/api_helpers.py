@@ -123,9 +123,10 @@ def call_create_list(
     list_elements: List[str],
     list_tags: List[dict] = None,
 ):
+    elements = [] if list_elements is None else list_elements
     args = {
         "name": list_name,
-        "elements": list(list_elements),
+        "elements": elements,
         "variableType": list_variable_type,
         "description": list_description,
         "tags": list_tags,
@@ -144,12 +145,13 @@ def call_update_list(
     list_name: str,
     list_variable_type: str,
     list_description: str,
-    list_elements: List[str] = {},
+    list_elements: List[str],
     list_tags: List[dict] = None,
 ):
+    elements = [] if list_elements is None else list_elements
     args = {
         "name": list_name,
-        "elements": list(list_elements),
+        "elements": elements,
         "variableType": list_variable_type,
         "description": list_description,
         "tags": list_tags,
