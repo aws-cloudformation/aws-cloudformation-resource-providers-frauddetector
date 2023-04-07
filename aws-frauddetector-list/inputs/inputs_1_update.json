@@ -1,6 +1,13 @@
 {
-  "Name": "test_create_list",
+  "Name": "test_create_list_1",
   "Description": "test list",
+  "VariableType": "EMAIL_ADDRESS",
+  "Tags": [
+    {
+      "Key": "test",
+      "Value": "val"
+    }
+  ],
   "Elements": [
     "test",
     "test1",

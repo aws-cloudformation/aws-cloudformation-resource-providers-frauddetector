@@ -2,5 +2,7 @@
   "Name": "test_invalid_list2",
   "Description": "list for cfn contract tests",
   "Arn": "testarn",
-  "Elements": ["test"]
+  "Elements": [
+    "test"
+  ]
 }

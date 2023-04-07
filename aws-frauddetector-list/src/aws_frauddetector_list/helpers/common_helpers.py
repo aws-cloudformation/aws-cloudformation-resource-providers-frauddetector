@@ -28,8 +28,7 @@ def create_list_and_return_progress(frauddetector_client, model, progress):
             list_elements=model.Elements,
             list_variable_type=model.VariableType,
         )
-        progress.resourceModel = model_helpers.get_lists_and_return_model_for_list(frauddetector_client, model.Name)
-        progress.status = OperationStatus.SUCCESS
+        _return_success(frauddetector_client, model, progress)
         LOG.info(f"just finished a create list call: {progress.resourceModel}")
     except RuntimeError as e:
         progress.status = OperationStatus.FAILED
@@ -46,12 +45,17 @@ def update_list_and_return_progress(frauddetector_client, model, progress):
             list_elements=model.Elements,
             list_variable_type=model.VariableType,
         )
-        progress.resourceModel = model_helpers.get_lists_and_return_model_for_list(frauddetector_client, model.Name)
-        progress.status = OperationStatus.SUCCESS
+        _return_success(frauddetector_client, model, progress)
         LOG.info(f"just finished an update list call: {progress.resourceModel}")
     except RuntimeError as e:
         progress.status = OperationStatus.FAILED
         raise exceptions.InternalFailure(f"Error occurred: {e}")
+    return progress
+
+
+def _return_success(frauddetector_client, model, progress):
+    progress.resourceModel = model_helpers.get_lists_and_return_model_for_list(frauddetector_client, model.Name)
+    progress.status = OperationStatus.SUCCESS
     return progress
 
 

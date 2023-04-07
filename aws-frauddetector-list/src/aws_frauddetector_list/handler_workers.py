@@ -73,6 +73,8 @@ def execute_delete_list_handler_work(session, model, progress):
 
     # For contract_delete_delete, we need to fail if the resource DNE
     # get lists will throw RNF Exception if list DNE
+    if model.Arn and not model.Name:
+        model.Name = model.Arn.split("/")[-1]
     get_lists_metadata_works, _ = validation_helpers.check_if_get_lists_metadata_succeeds(afd_client, model.Name)
     if not get_lists_metadata_works:
         raise exceptions.NotFound("list", model.Name)

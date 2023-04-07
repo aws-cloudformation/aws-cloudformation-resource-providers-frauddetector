@@ -2,13 +2,10 @@ import logging
 from typing import Any, MutableMapping, Optional
 from cloudformation_cli_python_lib import (
     Action,
-    HandlerErrorCode,
     OperationStatus,
     ProgressEvent,
     Resource,
     SessionProxy,
-    exceptions,
-    identifier_utils,
 )
 
 from . import handler_workers
@@ -16,6 +13,10 @@ from .models import ResourceHandlerRequest, ResourceModel
 
 # Use this logger to forward log messages to CloudWatch Logs.
 LOG = logging.getLogger(__name__)
+
+CALLBACK_STATUS_IN_PROGRESS = {
+    "status": OperationStatus.IN_PROGRESS,
+}
 TYPE_NAME = "AWS::FraudDetector::List"
 
 resource = Resource(TYPE_NAME, ResourceModel)
@@ -33,6 +34,13 @@ def create_handler(
         status=OperationStatus.IN_PROGRESS,
         resourceModel=model,
     )
+    if _is_callback(callback_context):
+        return _callback_helper(
+            session,
+            request,
+            callback_context,
+            model,
+        )
     LOG.info(f"calling create with the following request: {request}")
     return handler_workers.execute_create_list_handler_work(session, model, progress)
 
@@ -97,3 +105,48 @@ def list_handler(
     )
     LOG.info(f"calling list with the following request: {request}")
     return handler_workers.execute_list_list_handler_work(session, model, progress)
+
+
+def _callback_helper(
+    session: Optional[SessionProxy],
+    request: ResourceHandlerRequest,
+    callback_context: MutableMapping[str, Any],
+    model: Optional[ResourceModel],
+) -> ProgressEvent:
+    """Define a callback logic used for resource stabilization."""
+    LOG.debug("_callback_helper()")
+
+    # Call the Read handler to determine status.
+    rh = read_handler(
+        session,
+        request,
+        callback_context,
+    )
+    LOG.debug(f"Callback: Read handler status: {rh.status}")
+    # Return success if the Read handler returns success.
+    if rh.status == OperationStatus.SUCCESS:
+        return ProgressEvent(
+            status=OperationStatus.SUCCESS,
+            resourceModel=model,
+        )
+    elif rh.errorCode:
+        return ProgressEvent(
+            status=OperationStatus.FAILED,
+            resourceModel=model,
+        )
+    else:
+        return ProgressEvent(
+            status=OperationStatus.IN_PROGRESS,
+            resourceModel=model,
+        )
+
+
+def _is_callback(
+    callback_context: MutableMapping[str, Any],
+) -> bool:
+    """Logic to determine whether or not a handler invocation is new."""
+
+    # If there is a callback context status set, then assume this is a
+    # handler invocation (e.g., Create handler) for a previous request
+    # that is still in progress.
+    return callback_context.get("status") == CALLBACK_STATUS_IN_PROGRESS["status"]
