@@ -135,6 +135,8 @@ def create_fake_model(is_output_model: bool = False):
         Tags=FAKE_TAG_MODELS,
         CreatedTime=[None, FAKE_TIME][is_output_model],
         LastUpdatedTime=[None, FAKE_TIME][is_output_model],
+        Elements=[],
+        VariableType=IP_ADDRESS,
     )
 
 
@@ -157,8 +159,8 @@ def create_mock_afd_client():
     return mock_afd_client
 
 
-def create_mock_session(mock_afd_client):
+def create_mock_session():
     mock_session_impl = MagicMock(name="mock_session_impl")
-    mock_session_impl.client = MagicMock(return_value=mock_afd_client)
+    mock_session_impl.client = MagicMock(return_value=MagicMock(name="mock_afd_client"))
     mock_session = SessionProxy(session=mock_session_impl)
     return mock_session

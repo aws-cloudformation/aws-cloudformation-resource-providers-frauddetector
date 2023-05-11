@@ -116,50 +116,9 @@ def test_paginated_api_call_matches_criteria():
 def test_get_calls(monkeypatch):
     required_arguments = [
         {
-            "api_helper_call_func": api_helpers.call_get_outcomes,
-            "api_name": "get_outcomes",
-            "args": {},
-        },
-        {
-            "api_helper_call_func": api_helpers.call_get_variables,
-            "api_name": "get_variables",
-            "args": {},
-        },
-        {
-            "api_helper_call_func": api_helpers.call_get_detectors,
-            "api_name": "get_detectors",
-            "args": {},
-        },
-        {
-            "api_helper_call_func": api_helpers.call_get_labels,
-            "api_name": "get_labels",
-            "args": {},
-        },
-        {
-            "api_helper_call_func": api_helpers.call_get_entity_types,
-            "api_name": "get_entity_types",
-            "args": {},
-        },
-        {
-            "api_helper_call_func": api_helpers.call_get_event_types,
-            "api_name": "get_event_types",
-            "args": {},
-        },
-        {
             "api_helper_call_func": api_helpers.call_get_lists_metadata,
             "api_name": "get_lists_metadata",
             "args": {},
-        },
-        {
-            "api_helper_call_func": api_helpers.call_batch_get_variable,
-            "api_name": "batch_get_variable",
-            "args": {
-                "variable_names": [
-                    unit_test_utils.IP_LOWER,
-                    unit_test_utils.EMAIL_LOWER,
-                ],
-                "should_check_validation_helper": False,
-            },
         },
     ]
     for api_call_to_test in required_arguments:
@@ -174,95 +133,8 @@ def test_get_calls(monkeypatch):
         )
 
 
-def test_put_calls(monkeypatch):
-    required_arguments = [
-        {
-            "api_helper_call_func": api_helpers.call_put_outcome,
-            "api_name": "put_outcome",
-            "args": {"outcome_name": unit_test_utils.FAKE_OUTCOME.get("name")},
-        },
-        {
-            "api_helper_call_func": api_helpers.call_put_detector,
-            "api_name": "put_detector",
-            "args": {
-                "detector_id": unit_test_utils.FAKE_DETECTOR.get("detectorId"),
-                "detector_event_type_name": unit_test_utils.FAKE_DETECTOR.get("eventTypeName"),
-            },
-        },
-        {
-            "api_helper_call_func": api_helpers.call_put_label,
-            "api_name": "put_label",
-            "args": {"label_name": unit_test_utils.FAKE_FRAUD_LABEL.get("name")},
-        },
-        {
-            "api_helper_call_func": api_helpers.call_put_entity_type,
-            "api_name": "put_entity_type",
-            "args": {"entity_type_name": unit_test_utils.FAKE_ENTITY_TYPE.get("name")},
-        },
-        {
-            "api_helper_call_func": api_helpers.call_put_event_type,
-            "api_name": "put_event_type",
-            "args": {
-                "event_type_name": unit_test_utils.FAKE_EVENT_TYPE.get("name"),
-                "entity_type_names": unit_test_utils.FAKE_EVENT_TYPE.get("entityTypes"),
-                "event_variable_names": unit_test_utils.FAKE_EVENT_TYPE.get("eventVariables"),
-            },
-        },
-    ]
-    for api_call_to_test in required_arguments:
-        _test_api_helper_call(monkeypatch=monkeypatch, **api_call_to_test)
-
-
 def test_delete_calls(monkeypatch):
     required_arguments = [
-        {
-            "api_helper_call_func": api_helpers.call_delete_outcome,
-            "api_name": "delete_outcome",
-            "args": {
-                "outcome_name": unit_test_utils.FAKE_OUTCOME.get("name"),
-                "should_check_validation_helper": False,
-            },
-        },
-        {
-            "api_helper_call_func": api_helpers.call_delete_detector,
-            "api_name": "delete_detector",
-            "args": {
-                "detector_id": unit_test_utils.FAKE_DETECTOR.get("detectorId"),
-                "should_check_validation_helper": False,
-            },
-        },
-        {
-            "api_helper_call_func": api_helpers.call_delete_variable,
-            "api_name": "delete_variable",
-            "args": {
-                "variable_name": unit_test_utils.FAKE_IP_VARIABLE.get("name"),
-                "should_check_validation_helper": False,
-            },
-        },
-        {
-            "api_helper_call_func": api_helpers.call_delete_label,
-            "api_name": "delete_label",
-            "args": {
-                "label_name": unit_test_utils.FAKE_FRAUD_LABEL.get("name"),
-                "should_check_validation_helper": False,
-            },
-        },
-        {
-            "api_helper_call_func": api_helpers.call_delete_entity_type,
-            "api_name": "delete_entity_type",
-            "args": {
-                "entity_type_name": unit_test_utils.FAKE_ENTITY_TYPE.get("name"),
-                "should_check_validation_helper": False,
-            },
-        },
-        {
-            "api_helper_call_func": api_helpers.call_delete_event_type,
-            "api_name": "delete_event_type",
-            "args": {
-                "event_type_name": unit_test_utils.FAKE_EVENT_TYPE.get("name"),
-                "should_check_validation_helper": False,
-            },
-        },
         {
             "api_helper_call_func": api_helpers.call_delete_list,
             "api_name": "delete_list",
@@ -287,16 +159,6 @@ def test_delete_calls(monkeypatch):
 def test_create_calls(monkeypatch):
     required_arguments = [
         {
-            "api_helper_call_func": api_helpers.call_create_variable,
-            "api_name": "create_variable",
-            "args": {
-                "variable_name": unit_test_utils.FAKE_IP_VARIABLE.get("name"),
-                "variable_data_source": unit_test_utils.FAKE_IP_VARIABLE.get("dataSource"),
-                "variable_data_type": unit_test_utils.FAKE_IP_VARIABLE.get("dataType"),
-                "variable_default_value": unit_test_utils.FAKE_IP_VARIABLE.get("defaultValue"),
-            },
-        },
-        {
             "api_helper_call_func": api_helpers.call_create_list,
             "api_name": "create_list",
             "args": {
@@ -305,12 +167,7 @@ def test_create_calls(monkeypatch):
                 "list_description": unit_test_utils.FAKE_LIST.get("description"),
                 "list_elements": unit_test_utils.FAKE_LIST.get("elements"),
             },
-        },
-        {
-            "api_helper_call_func": api_helpers.call_batch_create_variable,
-            "api_name": "batch_create_variable",
-            "args": {"variable_entries_to_create": unit_test_utils.FAKE_VARIABLE_ENTRIES},
-        },
+        }
     ]
     for api_call_to_test in required_arguments:
         _test_api_helper_call(monkeypatch=monkeypatch, **api_call_to_test)
@@ -318,15 +175,6 @@ def test_create_calls(monkeypatch):
 
 def test_update_calls(monkeypatch):
     required_arguments = [
-        {
-            "api_helper_call_func": api_helpers.call_update_variable,
-            "api_name": "update_variable",
-            "args": {
-                "variable_name": unit_test_utils.FAKE_IP_VARIABLE.get("name"),
-                "variable_default_value": unit_test_utils.FAKE_IP_VARIABLE.get("defaultValue"),
-                "variable_description": unit_test_utils.FAKE_IP_VARIABLE.get("description"),
-            },
-        },
         {
             "api_helper_call_func": api_helpers.call_update_list,
             "api_name": "update_list",
